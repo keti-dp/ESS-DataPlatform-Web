@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "rest_framework",
 ]
 
 MIDDLEWARE = [
@@ -123,3 +124,15 @@ STATIC_URL = "/static/"
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+REST_FRAMEWORK = {
+    "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
+    "DEFAULT_AUTHENTICATION_CLASSES": ("config.authenticate.CustomJWTTokenUserAuthentication",),
+}
+
+REST_SESSION_LOGIN = False
+
+SIMPLE_JWT = {
+    "SIGNING_KEY": os.getenv("JWT_SECRET_KEY"),
+    "VERIFYING_KEY": os.getenv("JWT_SECRET_KEY"),
+}
