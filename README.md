@@ -29,3 +29,9 @@ $ source .venv/bin/activate
 ```sh
 (.venv) $ python manage.py runserver
 ```
+
+- Docker 환경
+```sh
+root $ docker build -t web .
+root $ docker run -i -p 8002:8002 web
+```
