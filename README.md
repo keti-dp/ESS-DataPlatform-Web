@@ -6,6 +6,8 @@ ESS(에너지 저장 장치) 데이터플랫폼 웹 프로젝트
 - Ubuntu Linux 20.04LTS
 - python3 (>=3.8)
 - python3-venv
+- python3-dev
+- libpq-dev
 
 ## Installation
 
