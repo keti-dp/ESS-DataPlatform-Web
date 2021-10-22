@@ -83,8 +83,28 @@ DATABASES = {
         "NAME": os.getenv("DEFAULT_DB_NAME"),
         "USER": os.getenv("DEFAULT_DB_USER"),
         "PASSWORD": os.getenv("DEFAULT_DB_PASSWORD"),
-    }
+        "TEST": {
+            "DEPENDENCIES": ["ess"],
+            "NAME": os.getenv("DEFAULT_TEST_DB_NAME"),
+        },
+    },
+    "ess": {
+        "ENGINE": os.getenv("ESS_DB_ENGINE"),
+        "HOST": os.getenv("ESS_DB_HOST"),
+        "PORT": os.getenv("ESS_DB_PORT"),
+        "NAME": os.getenv("ESS_DB_NAME"),
+        "USER": os.getenv("ESS_DB_USER"),
+        "PASSWORD": os.getenv("ESS_DB_PASSWORD"),
+        "TEST": {
+            "DEPENDENCIES": [],
+            "NAME": os.getenv("ESS_TEST_DB_NAME"),
+        },
+    },
 }
+
+DATABASE_ROUTERS = [
+    "ess.routers.ESSRouter",
+]
 
 
 # Password validation
