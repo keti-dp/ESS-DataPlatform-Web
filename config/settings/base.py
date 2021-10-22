@@ -80,7 +80,7 @@ DATABASES = {
         "ENGINE": os.getenv("DEFAULT_DB_ENGINE"),
         "HOST": os.getenv("DEFAULT_DB_HOST"),
         "PORT": os.getenv("DEFAULT_DB_PORT"),
-        "NAME": os.getenv("DEFAULT_DB_PORT"),
+        "NAME": os.getenv("DEFAULT_DB_NAME"),
         "USER": os.getenv("DEFAULT_DB_USER"),
         "PASSWORD": os.getenv("DEFAULT_DB_PASSWORD"),
         "TEST": {
