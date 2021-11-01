@@ -1,9 +1,25 @@
 from datetime import datetime
 from datetime import timedelta
+from django.db import connections, DataError
+from rest_framework import status
+from rest_framework.views import Response
 from rest_framework.generics import ListAPIView
 from .models import Bank, Etc, Pcs, Rack
 from .paginations import LargeResultsSetPagination
-from .serializer import BankSerializer, EtcSerializer, PcsSerializer, RackSerializer
+from .serializer import (
+    BankSerializer,
+    EtcSerializer,
+    PcsSerializer,
+    RackSerializer,
+    BankAvgSoCSerializer,
+    RackAvgSoCSerializer,
+)
+
+
+def dictfetchall(cursor):
+    "Return all rows from a cursor as a dict"
+    columns = [col[0] for col in cursor.description]
+    return [dict(zip(columns, row)) for row in cursor.fetchall()]
 
 
 class BankListView(ListAPIView):
@@ -76,3 +92,103 @@ class RackListView(ListAPIView):
             queryset = queryset.filter(bank_id=bank_id, timestamp__gte=date, timestamp__lt=new_date)
 
         return queryset
+
+
+class BankAvgSoCListView(ListAPIView):
+    def get(self, request, *args, **kwargs):
+        try:
+            time_bucket_width = request.query_params.get("time-bucket-width")
+            bank_id = self.kwargs["bank_id"]
+            start_date = request.query_params.get("date")
+            end_date = datetime.strptime(start_date, "%Y-%m-%d") + timedelta(days=1)
+
+            with connections["ess"].cursor() as cursor:
+                query = """
+                    SELECT time_bucket(%(time_bucket_width)s, "TIMESTAMP") "time", AVG("BANK_SOC") avg_bank_soc 
+                    FROM bank 
+                    WHERE "BANK_ID" = %(bank_id)s AND "TIMESTAMP" BETWEEN %(start_date)s AND %(end_date)s 
+                    GROUP BY "time" ORDER BY "time" 
+                """
+
+                params = {
+                    "time_bucket_width": time_bucket_width,
+                    "bank_id": bank_id,
+                    "start_date": start_date,
+                    "end_date": end_date,
+                }
+
+                cursor.execute(query, params)
+
+                data = dictfetchall(cursor)
+
+            serializer = BankAvgSoCSerializer(data=data, many=True)
+
+            if serializer.is_valid():
+                return Response(serializer.data)
+
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except ValueError:
+            return Response(
+                {"code": "400", "exception type": "Value Error", "message": "올바른 요청 파라미터를 입력하세요.(date)"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except DataError:
+            return Response(
+                {
+                    "code": "400",
+                    "exception type": "Data Error",
+                    "message": "올바른 요청 파라미터를 입력하세요.(time-bucket-width)",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+
+class RackAvgSoCListView(ListAPIView):
+    def get(self, request, *args, **kwargs):
+        try:
+            time_bucket_width = request.query_params.get("time-bucket-width")
+            bank_id = self.kwargs["bank_id"]
+            rack_id = self.kwargs["rack_id"]
+            start_date = request.query_params.get("date")
+            end_date = datetime.strptime(start_date, "%Y-%m-%d") + timedelta(days=1)
+
+            with connections["ess"].cursor() as cursor:
+                query = """
+                    SELECT time_bucket(%(time_bucket_width)s, "TIMESTAMP") "time", AVG("RACK_SOC") avg_rack_soc 
+                    FROM rack
+                    WHERE ("BANK_ID" = %(bank_id)s AND "RACK_ID" = %(rack_id)s) AND "TIMESTAMP" BETWEEN %(start_date)s AND %(end_date)s 
+                    GROUP BY "time" ORDER BY "time" 
+                """
+
+                params = {
+                    "time_bucket_width": time_bucket_width,
+                    "bank_id": bank_id,
+                    "rack_id": rack_id,
+                    "start_date": start_date,
+                    "end_date": end_date,
+                }
+
+                cursor.execute(query, params)
+
+                data = dictfetchall(cursor)
+
+            serializer = RackAvgSoCSerializer(data=data, many=True)
+
+            if serializer.is_valid():
+                return Response(serializer.data)
+
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except ValueError:
+            return Response(
+                {"code": "400", "exception type": "Value Error", "message": "올바른 요청 파라미터를 입력하세요.(date)"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except DataError:
+            return Response(
+                {
+                    "code": "400",
+                    "exception type": "Data Error",
+                    "message": "올바른 요청 파라미터를 입력하세요.(time-bucket-width)",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
