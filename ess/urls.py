@@ -1,5 +1,13 @@
 from django.urls import path
-from .views import BankListView, EtcListView, PcsListView, RackListView, BankAvgSoCListView, RackAvgSoCListView
+from .views import (
+    BankListView,
+    EtcListView,
+    PcsListView,
+    RackListView,
+    BankAvgSoCListView,
+    RackAvgSoCListView,
+    AvgBankPowerListView,
+)
 
 urlpatterns = [
     path("operation-sites/<int:operation_num>/banks/<int:bank_id>/", BankListView.as_view(), name="bank-list"),
@@ -15,5 +23,10 @@ urlpatterns = [
         "operation-sites/<int:operation_site_num>/banks/<int:bank_id>/racks/<int:rack_id>/stats/rack-avg-soc/",
         RackAvgSoCListView.as_view(),
         name="rack-avg-soc-list",
+    ),
+    path(
+        "operation-sites/<int:operation_site_num>/banks/<int:bank_id>/stats/avg-bank-power/",
+        AvgBankPowerListView.as_view(),
+        name="avg-bank-power-list",
     ),
 ]

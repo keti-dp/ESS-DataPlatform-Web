@@ -34,3 +34,8 @@ class BankAvgSoCSerializer(serializers.Serializer):
 class RackAvgSoCSerializer(serializers.Serializer):
     time = serializers.DateTimeField()
     avg_rack_soc = serializers.FloatField()
+
+
+class AvgBankPowerSerializer(serializers.Serializer):
+    time = serializers.DateTimeField()
+    avg_bank_power = serializers.FloatField()
