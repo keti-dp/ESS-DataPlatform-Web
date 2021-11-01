@@ -24,3 +24,13 @@ class RackSerializer(serializers.ModelSerializer):
     class Meta:
         model = Rack
         fields = "__all__"
+
+
+class BankAvgSoCSerializer(serializers.Serializer):
+    time = serializers.DateTimeField()
+    avg_bank_soc = serializers.FloatField()
+
+
+class RackAvgSoCSerializer(serializers.Serializer):
+    time = serializers.DateTimeField()
+    avg_rack_soc = serializers.FloatField()
