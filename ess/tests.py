@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 from django.db import connections
 from django.test import TestCase
 from .models import Bank, Etc, Pcs, Rack
@@ -26,6 +27,26 @@ class BankTestCase(TestCase):
             row = cursor.fetchall()
 
         self.assertEqual(len(row), 24)
+
+    def test_daily_avg_bank_power_per_minute(self):
+        with connections["ess"].cursor() as cursor:
+            start_date = "2021-10-20"
+            end_date = datetime.strptime(start_date, "%Y-%m-%d") + timedelta(days=1)
+
+            query = """
+                SELECT time_bucket('1minutes', "TIMESTAMP") "time", AVG("BANK_POWER") avg_bank_power
+                FROM bank 
+                WHERE "BANK_ID" = %(bank_id)s AND "TIMESTAMP" BETWEEN %(start_date)s AND %(end_date)s 
+                GROUP BY "time" ORDER BY "time"
+            """
+
+            params = {"bank_id": 1, "start_date": start_date, "end_date": end_date}
+
+            cursor.execute(query, params)
+
+            row = cursor.fetchall()
+
+            self.assertEqual(len(row), 60 * 24)
 
 
 class RackTestCase(TestCase):
