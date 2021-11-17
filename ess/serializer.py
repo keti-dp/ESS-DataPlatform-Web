@@ -40,7 +40,7 @@ class BankAvgSoHSerializer(serializers.Serializer):
     time = serializers.DateTimeField()
     avg_bank_soh = serializers.FloatField()
 
-    
+
 class RackAvgSoHSerializer(serializers.Serializer):
     time = serializers.DateTimeField()
     avg_rack_soh = serializers.FloatField()
@@ -49,3 +49,18 @@ class RackAvgSoHSerializer(serializers.Serializer):
 class AvgBankPowerSerializer(serializers.Serializer):
     time = serializers.DateTimeField()
     avg_bank_power = serializers.FloatField()
+
+
+class EssMonitoringLogDocumentSerializer(serializers.Serializer):
+    time = serializers.DateTimeField(source="@timestamp", read_only=True)
+    operation_site = serializers.CharField(source="log.logger", read_only=True)
+    log_level = serializers.CharField(source="log.level", read_only=True)
+    message = serializers.CharField(read_only=True)
+
+    class Meta:
+        fields = (
+            "time",
+            "operation_site",
+            "log_level",
+            "message",
+        )

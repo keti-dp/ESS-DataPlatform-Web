@@ -1,10 +1,28 @@
 from datetime import datetime
 from datetime import timedelta
 from django.db import connections, DataError
+from django_elasticsearch_dsl_drf.constants import (
+    LOOKUP_FILTER_RANGE,
+    LOOKUP_QUERY_IN,
+    LOOKUP_QUERY_GT,
+    LOOKUP_QUERY_GTE,
+    LOOKUP_QUERY_LT,
+    LOOKUP_QUERY_LTE,
+)
+from django_elasticsearch_dsl_drf.filter_backends import (
+    FilteringFilterBackend,
+    IdsFilterBackend,
+    OrderingFilterBackend,
+    DefaultOrderingFilterBackend,
+    SearchFilterBackend,
+)
+from django_elasticsearch_dsl_drf.viewsets import BaseDocumentViewSet
+from django_elasticsearch_dsl_drf.pagination import PageNumberPagination
 from rest_framework import status
 from rest_framework.views import Response
 from rest_framework.generics import ListAPIView
 from .models import Bank, Etc, Pcs, Rack
+from .documents import EssMonitoringLogDocument
 from .paginations import LargeResultsSetPagination
 from .serializer import (
     BankSerializer,
@@ -16,6 +34,7 @@ from .serializer import (
     BankAvgSoHSerializer,
     RackAvgSoHSerializer,
     AvgBankPowerSerializer,
+    EssMonitoringLogDocumentSerializer,
 )
 
 
@@ -212,7 +231,7 @@ class BankAvgSoHListView(ListAPIView):
                     WHERE "BANK_ID" = %(bank_id)s AND "TIMESTAMP" BETWEEN %(start_date)s AND %(end_date)s 
                     GROUP BY "time" ORDER BY "time"
                 """
-                    
+
                 params = {
                     "time_bucket_width": time_bucket_width,
                     "bank_id": bank_id,
@@ -221,9 +240,11 @@ class BankAvgSoHListView(ListAPIView):
                 }
 
                 cursor.execute(query, params)
-                    
+
+                data = dictfetchall(cursor)
+
             serializer = BankAvgSoHSerializer(data=data, many=True)
-            
+
             if serializer.is_valid():
                 return Response(serializer.data)
 
@@ -344,3 +365,46 @@ class AvgBankPowerListView(ListAPIView):
                 },
                 status=status.HTTP_400_BAD_REQUEST,
             )
+
+
+class EssMonitoringLogDocumentView(BaseDocumentViewSet):
+    document = EssMonitoringLogDocument
+    serializer_class = EssMonitoringLogDocumentSerializer
+    pagination_class = PageNumberPagination
+    lookup_field = "time"
+    filter_backends = [
+        IdsFilterBackend,
+        FilteringFilterBackend,
+        OrderingFilterBackend,
+        DefaultOrderingFilterBackend,
+        SearchFilterBackend,
+    ]
+    search_fields = (
+        "time",
+        "operation_site",
+        "log_level",
+        "message",
+    )
+    filter_fields = {
+        "time": {
+            "field": "@timestamp",
+            "lookups": [
+                LOOKUP_FILTER_RANGE,
+                LOOKUP_QUERY_IN,
+                LOOKUP_QUERY_GT,
+                LOOKUP_QUERY_GTE,
+                LOOKUP_QUERY_LT,
+                LOOKUP_QUERY_LTE,
+            ],
+        },
+        "operation_site": "log.logger",
+        "log_level": "log.level",
+        "message": "message",
+    }
+    ordering_fields = {
+        "time": "@timestamp",
+    }
+    ordering = ("-time",)
+
+    def get_queryset(self):
+        return super().get_queryset()

@@ -1,5 +1,5 @@
-from django.urls import path
-from .views import BankListView, EtcListView, PcsListView, RackListView, BankAvgSoCListView, RackAvgSoCListView, BankAvgSoHListView, RackAvgSoHListView
+from django.urls import include, path
+from rest_framework.routers import DefaultRouter
 from .views import (
     BankListView,
     EtcListView,
@@ -8,9 +8,13 @@ from .views import (
     BankAvgSoCListView,
     RackAvgSoCListView,
     BankAvgSoHListView,
-    RackAvgSoHListView
+    RackAvgSoHListView,
     AvgBankPowerListView,
+    EssMonitoringLogDocumentView,
 )
+
+router = DefaultRouter()
+router.register(r"data-monitoring-logs", EssMonitoringLogDocumentView, basename="ess-monitoring-log-document")
 
 urlpatterns = [
     path("operation-sites/<int:operation_num>/banks/<int:bank_id>/", BankListView.as_view(), name="bank-list"),
@@ -42,4 +46,5 @@ urlpatterns = [
         AvgBankPowerListView.as_view(),
         name="avg-bank-power-list",
     ),
+    path("search/", include(router.urls)),
 ]

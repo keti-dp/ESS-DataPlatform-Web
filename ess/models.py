@@ -329,3 +329,7 @@ class Rack(models.Model):
     class Meta:
         managed = False
         db_table = "rack"
+
+
+class EssMonitoringLog(models.Model):
+    pass
