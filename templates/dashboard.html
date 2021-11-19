@@ -3,7 +3,7 @@
 
 <head>
     {% load static %}
-    <title>DashboardKit Bootstrap 5 Admin Template</title>
+    <title>Dashboard</title>
     <!-- HTML5 Shim and Respond.js IE11 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
     <!--[if lt IE 11]>
@@ -31,6 +31,10 @@
 
     <!-- vendor css -->
     <link rel="stylesheet" href="{% static 'css/style.css' %}" id="main-style-link">
+
+    <!-- bootstrap-datepicker css -->
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker3.min.css">
 
 </head>
 
@@ -238,7 +242,30 @@
             <!-- [ breadcrumb ] end -->
             <!-- [ Main Content ] start -->
             <div class="row">
-                
+                <div class="col-xl-6 col-md-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5>운영사이트1의 Bank의 기간별 배터리 시간당 평균 SoC</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="col-md-3 offset-md-9">
+                                <input type="text" id="avg-bank-soc-date-input" class="form-control"
+                                    placeholder="날짜를 선택해주세요">
+                            </div>
+                            <div id="avg-bank-soc-chart" style="width: 100%; height: 400px;"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-6 col-md-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5>운영사이트1의 Rack의 기간별 배터리 시간당 평균 SoC</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="avg-bank-soh-chart"></div>
+                        </div>
+                    </div>
+                </div>
             </div>
             <!-- [ Main Content ] end -->
         </div>
@@ -299,11 +326,123 @@
     <!-- <script src="assets/js/plugins/clipboard.min.js"></script> -->
     <!-- <script src="assets/js/uikit.min.js"></script> -->
 
-    <!-- Apex Chart -->
-    <script src="{% static 'js/plugins/apexcharts.min.js' %}"></script>
+    <script
+        src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
 
-    <!-- custom-chart js -->
-    <script src="{% static 'js/pages/dashboard-sale.js' %}"></script>
+    <script src="https://cdn.amcharts.com/lib/5/index.js"></script>
+    <script src="https://cdn.amcharts.com/lib/5/xy.js"></script>
+    <script src="https://cdn.amcharts.com/lib/5/themes/Animated.js"></script>
+
+    <script>
+        var avgBankSoCDatePicker = $('#avg-bank-soc-date-input').datepicker({
+            format: 'yyyy-mm-dd',
+            orientation: 'bottom',
+            autoclose: true
+        });
+        avgBankSoCDatePicker.on('changeDate', () => {
+            document.getElementById('avg-bank-soc-chart').innerHTML = '';
+            let date = avgBankSoCDatePicker.val();
+
+            var requestUrl = new URL(window.location.origin + '/api/ess/operation-sites/1/banks/1/stats/bank-avg-soc');
+            requestUrl.searchParams.append('date', date);
+            requestUrl.searchParams.append('time-bucket-width', '1hour');
+
+            fetch(requestUrl).then(response => {
+                return response.json();
+            }).then(responseData => {
+                // Create root and chart
+                var root = am5.Root.new("avg-bank-soc-chart");
+
+                root.setThemes([
+                    am5themes_Animated.new(root)
+                ]);
+
+                var chart = root.container.children.push(
+                    am5xy.XYChart.new(root, {
+                        panY: false,
+                        wheelY: "zoomX",
+                        layout: root.verticalLayout,
+                        maxTooltipDistance: 0
+                    })
+                );
+
+                var data = [];
+
+                responseData.forEach(element => {
+                    let date = new Date(element.time).getTime()
+                    let value = element.avg_bank_soc
+
+                    data.push({ date: date, value: value });
+                });
+
+                // Create Y-axis
+                var yAxis = chart.yAxes.push(
+                    am5xy.ValueAxis.new(root, {
+                        extraTooltipPrecision: 1,
+                        max: 100,
+                        renderer: am5xy.AxisRendererY.new(root, {})
+                    })
+                );
+
+                // Create X-Axis
+                let xAxis = chart.xAxes.push(
+                    am5xy.DateAxis.new(root, {
+                        baseInterval: { timeUnit: "hour", count: 1 },
+                        renderer: am5xy.AxisRendererX.new(root, {})
+                    })
+                );
+
+                xAxis.get("dateFormats")["hour"] = "HH:mm";
+                xAxis.get("periodChangeDateFormats")["hour"] = "yyyy-MM-dd HH:mm";
+
+                // Create series
+                function createSeries(name, field) {
+                    var series = chart.series.push(
+                        am5xy.LineSeries.new(root, {
+                            name: name,
+                            xAxis: xAxis,
+                            yAxis: yAxis,
+                            valueYField: field,
+                            valueXField: "date",
+                            tooltip: am5.Tooltip.new(root, {})
+                        })
+                    );
+
+                    series.bullets.push(function () {
+                        return am5.Bullet.new(root, {
+                            sprite: am5.Circle.new(root, {
+                                radius: 5,
+                                fill: series.get("fill")
+                            })
+                        });
+                    });
+
+                    series.strokes.template.set("strokeWidth", 2);
+
+                    series.get("tooltip").label.set("text", "[bold]{name}[/]\n{valueX.formatDate('yyyy-MM-dd HH:mm')}: {valueY.formatNumber('#.000')}")
+                    series.data.setAll(data);
+                }
+
+                createSeries("Series", "value");
+
+                // Add cursor
+                chart.set("cursor", am5xy.XYCursor.new(root, {
+                    behavior: "zoomXY",
+                    xAxis: xAxis
+                }));
+
+                xAxis.set("tooltip", am5.Tooltip.new(root, {
+                    themeTags: ["axis"]
+                }));
+
+                yAxis.set("tooltip", am5.Tooltip.new(root, {
+                    themeTags: ["axis"]
+                }));
+            }).catch(error => {
+                console.log(error);
+            });
+        });
+    </script>
 </body>
 
 </html>
