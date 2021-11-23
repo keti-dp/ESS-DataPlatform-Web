@@ -54,7 +54,7 @@ class AvgBankPowerSerializer(serializers.Serializer):
 class EssMonitoringLogDocumentSerializer(serializers.Serializer):
     time = serializers.DateTimeField(source="@timestamp", read_only=True)
     operation_site = serializers.CharField(source="log.logger", read_only=True)
-    log_level = serializers.CharField(source="log.level", read_only=True)
+    log_level = serializers.CharField(read_only=True)
     message = serializers.CharField(read_only=True)
 
     class Meta:
