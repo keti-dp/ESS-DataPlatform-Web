@@ -1,5 +1,5 @@
 
-function createLineChart(elementId, data, option = {}) {
+function getLineChart(elementId, data, option = {}) {
     let root = am5.Root.new(elementId);
 
     root.setThemes([
@@ -36,35 +36,30 @@ function createLineChart(elementId, data, option = {}) {
     xAxis.get("dateFormats")["hour"] = "HH:mm";
     xAxis.get("periodChangeDateFormats")["hour"] = "yyyy-MM-dd HH:mm";
 
-    // Create series
-    function createSeries(name, field) {
-        let series = chart.series.push(
-            am5xy.LineSeries.new(root, {
-                name: name,
-                xAxis: xAxis,
-                yAxis: yAxis,
-                valueYField: field,
-                valueXField: "date",
-                tooltip: am5.Tooltip.new(root, {})
+    let series = chart.series.push(
+        am5xy.LineSeries.new(root, {
+            name: "Series",
+            xAxis: xAxis,
+            yAxis: yAxis,
+            valueYField: "value",
+            valueXField: "date",
+            tooltip: am5.Tooltip.new(root, {})
+        })
+    );
+
+    series.bullets.push(function () {
+        return am5.Bullet.new(root, {
+            sprite: am5.Circle.new(root, {
+                radius: 5,
+                fill: series.get("fill")
             })
-        );
-
-        series.bullets.push(function () {
-            return am5.Bullet.new(root, {
-                sprite: am5.Circle.new(root, {
-                    radius: 5,
-                    fill: series.get("fill")
-                })
-            });
         });
+    });
 
-        series.strokes.template.set("strokeWidth", 2);
+    series.strokes.template.set("strokeWidth", 2);
 
-        series.get("tooltip").label.set("text", "[bold]{name}[/]\n{valueX.formatDate('yyyy-MM-dd HH:mm')}: {valueY.formatNumber('#.000')}")
-        series.data.setAll(chartData);
-    }
-
-    createSeries("Series", "value");
+    series.get("tooltip").label.set("text", "[bold]{name}[/]\n{valueX.formatDate('yyyy-MM-dd HH:mm')}: {valueY.formatNumber('#.000')}")
+    series.data.setAll(chartData);
 
     // Add cursor
     chart.set("cursor", am5xy.XYCursor.new(root, {
@@ -79,6 +74,8 @@ function createLineChart(elementId, data, option = {}) {
     yAxis.set("tooltip", am5.Tooltip.new(root, {
         themeTags: ["axis"]
     }));
+
+    return series;
 }
 
 
@@ -87,10 +84,17 @@ function createLineChart(elementId, data, option = {}) {
 // Luxon alias 'DateTime'
 var DateTime = luxon.DateTime;
 
-// Avg bank soc chart
 var currentDateTime = DateTime.now();
 var currentDate = currentDateTime.toISODate();
 
+// Series variables of AMCharts
+var avgBankSoCChart;
+var avgRackSoCChart;
+var avgBankSoHChart;
+var avgRackSoHChart;
+var avgBankPowerChart;
+
+// Create initial avg bank soc chart
 var requestUrl = new URL(window.location.origin + '/api/ess/operation-sites/1/banks/1/stats/bank-avg-soc');
 requestUrl.searchParams.append('date', currentDate);
 requestUrl.searchParams.append('time-bucket-width', '1hour');
@@ -114,12 +118,12 @@ fetch(requestUrl).then(response => {
         }
     }
 
-    createLineChart('avg-bank-soc-chart', data, chartOption);
+    avgBankSoCChart = getLineChart('avg-bank-soc-chart', data, chartOption);
 }).catch(error => {
     console.log(error);
 });
 
-// Avg rank soc chart 
+// Create initial avg rank soc chart 
 var requestUrl = new URL(window.location.origin + '/api/ess/operation-sites/1/banks/1/racks/1/stats/rack-avg-soc');
 requestUrl.searchParams.append('date', currentDate);
 requestUrl.searchParams.append('time-bucket-width', '1hour');
@@ -143,12 +147,12 @@ fetch(requestUrl).then(response => {
         }
     }
 
-    createLineChart('avg-rack-soc-chart', data, chartOption);
+    avgRackSoCChart = getLineChart('avg-rack-soc-chart', data, chartOption);
 }).catch(error => {
     console.log(error);
 });
 
-// Avg bank soh chart
+// Create initial avg bank soh chart
 var requestUrl = new URL(window.location.origin + '/api/ess/operation-sites/1/banks/1/stats/bank-avg-soh');
 requestUrl.searchParams.append('date', currentDate);
 requestUrl.searchParams.append('time-bucket-width', '1hour');
@@ -172,12 +176,12 @@ fetch(requestUrl).then(response => {
         }
     }
 
-    createLineChart('avg-bank-soh-chart', data, chartOption);
+    avgBankSoHChart = getLineChart('avg-bank-soh-chart', data, chartOption);
 }).catch(error => {
     console.log(error);
 });
 
-// Avg rack soh chart
+// Create initial avg rack soh chart
 var requestUrl = new URL(window.location.origin + '/api/ess/operation-sites/1/banks/1/racks/1/stats/rack-avg-soh');
 requestUrl.searchParams.append('date', currentDate);
 requestUrl.searchParams.append('time-bucket-width', '1hour');
@@ -201,12 +205,12 @@ fetch(requestUrl).then(response => {
         }
     }
 
-    createLineChart('avg-rack-soh-chart', data, chartOption);
+    avgRackSoHChart = getLineChart('avg-rack-soh-chart', data, chartOption);
 }).catch(error => {
     console.log(error);
 });
 
-// Avg bank power chart
+// Create initial avg bank power chart
 var requestUrl = new URL(window.location.origin + '/api/ess/operation-sites/1/banks/1/stats/avg-bank-power');
 requestUrl.searchParams.append('date', currentDate);
 requestUrl.searchParams.append('time-bucket-width', '1hour');
@@ -223,24 +227,22 @@ fetch(requestUrl).then(response => {
         data.push({ date: date, value: value });
     });
 
-    createLineChart('avg-bank-power-chart', data);
+    avgBankPowerChart = getLineChart('avg-bank-power-chart', data);
 }).catch(error => {
     console.log(error);
 });
 
 
-// < !--Create chart with event-- >
+// < !--Event of chart-- >
 
-// Avg bank soc event
+// Event of avg bank soc chart
 var avgBankSoCDatePicker = $('#avg-bank-soc-date-input').datepicker({
     format: 'yyyy-mm-dd',
     orientation: 'bottom',
     autoclose: true
 });
 avgBankSoCDatePicker.on('changeDate', () => {
-    document.getElementById('avg-bank-soc-chart').innerHTML = '';
     let date = avgBankSoCDatePicker.val();
-
     let requestUrl = new URL(window.location.origin + '/api/ess/operation-sites/1/banks/1/stats/bank-avg-soc');
     requestUrl.searchParams.append('date', date);
     requestUrl.searchParams.append('time-bucket-width', '1hour');
@@ -257,20 +259,13 @@ avgBankSoCDatePicker.on('changeDate', () => {
             data.push({ date: date, value: value });
         });
 
-        let chartOption = {
-            yAxis: {
-                min: 0,
-                max: 100
-            }
-        }
-
-        createLineChart('avg-bank-soc-chart', data, chartOption);
+        avgBankSoCChart.data.setAll(data);
     }).catch(error => {
         console.log(error);
     });
 });
 
-//Avg rack soc event
+// Event of avg rack soc chart
 var avgRackSoCDatePicker = $('#avg-rack-soc-date-input').datepicker({
     format: 'yyyy-mm-dd',
     orientation: 'bottom',
@@ -282,9 +277,7 @@ avgRackSoCSelect.addEventListener('change', (event) => {
     if (!avgRackSoCDatePicker.val()) {
         avgRackSoCDatePicker.focus();
     } else {
-        document.getElementById('avg-rack-soc-chart').innerHTML = '';
         let date = avgRackSoCDatePicker.val();
-
         let requestUrl = new URL(window.location.origin + '/api/ess/operation-sites/1/banks/1/racks/' + avgRackSoCSelect.value + '/stats/rack-avg-soc');
         requestUrl.searchParams.append('date', date);
         requestUrl.searchParams.append('time-bucket-width', '1hour');
@@ -301,14 +294,7 @@ avgRackSoCSelect.addEventListener('change', (event) => {
                 data.push({ date: date, value: value });
             });
 
-            let chartOption = {
-                yAxis: {
-                    min: 0,
-                    max: 100
-                }
-            }
-
-            createLineChart('avg-rack-soc-chart', data, chartOption);
+            avgRackSoCChart.data.setAll(data);
         }).catch(error => {
             console.log(error);
         });
@@ -319,7 +305,6 @@ avgRackSoCDatePicker.on('changeDate', () => {
     if (!avgRackSoCSelect.value) {
         avgRackSoCSelect.focus();
     } else {
-        document.getElementById('avg-rack-soc-chart').innerHTML = '';
         let date = avgRackSoCDatePicker.val();
 
         let requestUrl = new URL(window.location.origin + '/api/ess/operation-sites/1/banks/1/racks/' + avgRackSoCSelect.value + '/stats/rack-avg-soc');
@@ -338,28 +323,20 @@ avgRackSoCDatePicker.on('changeDate', () => {
                 data.push({ date: date, value: value });
             });
 
-            let chartOption = {
-                yAxis: {
-                    min: 0,
-                    max: 100
-                }
-            }
-
-            createLineChart('avg-rack-soc-chart', data, chartOption);
+            avgRackSoCChart.data.setAll(data);
         }).catch(error => {
             console.log(error);
         });
     }
 });
 
-// Avg bank soh event
+// Event of avg bank soh chart
 var avgBankSoHDatePicker = $('#avg-bank-soh-date-input').datepicker({
     format: 'yyyy-mm-dd',
     orientation: 'bottom',
     autoclose: true
 });
 avgBankSoHDatePicker.on('changeDate', () => {
-    document.getElementById('avg-bank-soh-chart').innerHTML = '';
     let date = avgBankSoHDatePicker.val();
 
     let requestUrl = new URL(window.location.origin + '/api/ess/operation-sites/1/banks/1/stats/bank-avg-soh');
@@ -378,20 +355,13 @@ avgBankSoHDatePicker.on('changeDate', () => {
             data.push({ date: date, value: value });
         });
 
-        let chartOption = {
-            yAxis: {
-                min: 0,
-                max: 100
-            }
-        }
-
-        createLineChart('avg-bank-soh-chart', data, chartOption);
+        avgBankSoHChart.data.setAll(data);
     }).catch(error => {
         console.log(error);
     });
 });
 
-// Avg rack soh event
+// Event of avg rack soh chart
 var avgRackSoHDatePicker = $('#avg-rack-soh-date-input').datepicker({
     format: 'yyyy-mm-dd',
     orientation: 'bottom',
@@ -403,7 +373,6 @@ avgRackSoHSelect.addEventListener('change', (event) => {
     if (!avgRackSoHDatePicker.val()) {
         avgRackSoHDatePicker.focus();
     } else {
-        document.getElementById('avg-rack-soh-chart').innerHTML = '';
         let date = avgRackSoHDatePicker.val();
 
         let requestUrl = new URL(window.location.origin + '/api/ess/operation-sites/1/banks/1/racks/' + avgRackSoHSelect.value + '/stats/rack-avg-soh');
@@ -422,14 +391,7 @@ avgRackSoHSelect.addEventListener('change', (event) => {
                 data.push({ date: date, value: value });
             });
 
-            let chartOption = {
-                yAxis: {
-                    min: 0,
-                    max: 100
-                }
-            }
-
-            createLineChart('avg-rack-soh-chart', data, chartOption);
+            avgRackSoHChart.data.setAll(data);
         }).catch(error => {
             console.log(error);
         });
@@ -440,7 +402,6 @@ avgRackSoHDatePicker.on('changeDate', () => {
     if (!avgRackSoHSelect.value) {
         avgRackSoHSelect.focus();
     } else {
-        document.getElementById('avg-rack-soh-chart').innerHTML = '';
         let date = avgRackSoHDatePicker.val();
 
         let requestUrl = new URL(window.location.origin + '/api/ess/operation-sites/1/banks/1/racks/' + avgRackSoHSelect.value + '/stats/rack-avg-soh');
@@ -459,28 +420,20 @@ avgRackSoHDatePicker.on('changeDate', () => {
                 data.push({ date: date, value: value });
             });
 
-            let chartOption = {
-                yAxis: {
-                    min: 0,
-                    max: 100
-                }
-            }
-
-            createLineChart('avg-rack-soh-chart', data, chartOption);
+            avgRackSoHChart.data.setAll(data);
         }).catch(error => {
             console.log(error);
         });
     }
 });
 
-// Avg bank power event
+// Event of avg bank power chart
 var avgBankPowerDatePicker = $('#avg-bank-power-date-input').datepicker({
     format: 'yyyy-mm-dd',
     orientation: 'bottom',
     autoclose: true
 });
 avgBankPowerDatePicker.on('changeDate', () => {
-    document.getElementById('avg-bank-power-chart').innerHTML = '';
     let date = avgBankPowerDatePicker.val();
 
     let requestUrl = new URL(window.location.origin + '/api/ess/operation-sites/1/banks/1/stats/avg-bank-power');
@@ -499,7 +452,7 @@ avgBankPowerDatePicker.on('changeDate', () => {
             data.push({ date: date, value: value });
         });
 
-        createLineChart('avg-bank-power-chart', data);
+        avgBankPowerChart.data.setAll(data);
     }).catch(error => {
         console.log(error);
     });
