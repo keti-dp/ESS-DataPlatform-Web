@@ -13,6 +13,7 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+from django.conf import settings
 from django.contrib import admin
 from django.urls import include, path
 from .views import DashboardView, DataMonitoringView, IndexView
@@ -24,3 +25,10 @@ urlpatterns = [
     path("api/ess/", include("ess.urls"), name="ess"),
     path("data-monitoring/", DataMonitoringView.as_view(), name="data-monitoring"),
 ]
+
+if settings.DEBUG:
+    import debug_toolbar
+
+    urlpatterns += [
+        path("__debug__/", include(debug_toolbar.urls)),
+    ]
