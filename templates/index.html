@@ -32,6 +32,8 @@
     <!-- vendor css -->
     <link rel="stylesheet" href="{% static 'css/style.css' %}" id="main-style-link">
 
+    <link href="https://fonts.googleapis.com/css2?family=Material+Icons+Two+Tone" rel="stylesheet">
+
 </head>
 
 <body class="">
@@ -90,14 +92,17 @@
                         <span>Redymade Pages</span>
                     </li>
                     <li class="pc-item pc-hasmenu">
-                        <a href="#!" class="pc-link"><span class="pc-micon"><i
-                                    class="material-icons-two-tone">https</i></span><span
-                                class="pc-mtext">Authentication</span><span class="pc-arrow"><i
-                                    data-feather="chevron-right"></i></span></a>
+                        <a href="#!" class="pc-link">
+                            <span class="pc-micon">
+                                <i class="material-icons-two-tone">monitor_heart</i>
+                            </span>
+                            <span class="pc-mtext">모니터링</span>
+                            <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
+                        </a>
                         <ul class="pc-submenu">
-                            <li class="pc-item"><a class="pc-link" href="auth-signup.html" target="_blank">Sign up</a>
+                            <li class="pc-item"><a class="pc-link" href="{% url 'data-monitoring' %}" target="_blank">데이터 모니터링</a>
                             </li>
-                            <li class="pc-item"><a class="pc-link" href="auth-signin.html" target="_blank">Sign in</a>
+                            <li class="pc-item"><a class="pc-link" href="auth-signin.html" target="_blank">시스템 모니터링</a>
                             </li>
                         </ul>
                     </li>
