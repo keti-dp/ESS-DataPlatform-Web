@@ -11,6 +11,10 @@ from .views import (
     RackAvgSoHListView,
     AvgBankPowerListView,
     EssMonitoringLogDocumentView,
+    LatestBankView,
+    LatestRackView,
+    LatestPcsView,
+    LatestEtcView,
 )
 
 router = DefaultRouter()
@@ -47,4 +51,12 @@ urlpatterns = [
         name="avg-bank-power-list",
     ),
     path("search/", include(router.urls)),
+    # Get latest operation data
+    path("operation-sites/<int:operation_site_num>/banks/<int:bank_id>/latest/", LatestBankView.as_view()),
+    path(
+        "operation-sites/<int:operation_site_num>/banks/<int:bank_id>/racks/<int:rack_id>/latest/",
+        LatestRackView.as_view(),
+    ),
+    path("operation-sites/<int:operation_site_num>/banks/<int:bank_id>/pcs/latest/", LatestPcsView.as_view()),
+    path("operation-sites/<int:operation_site_num>/banks/<int:bank_id>/etc/latest/", LatestEtcView.as_view()),
 ]
