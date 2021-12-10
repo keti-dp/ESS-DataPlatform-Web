@@ -1,4 +1,5 @@
 import os
+import json
 from django.views.generic import TemplateView
 from django.shortcuts import redirect
 from rest_framework import status
@@ -79,4 +80,7 @@ class DataMonitoringView(APIView):
         return self.custom_exception_handler
 
     def get(self, request):
-        return Response({"view": "dashboard"})
+        with open("ess_protection_map.json", encoding="utf-8") as f:
+            ess_protection_map = json.load(f)
+
+        return Response({"view": "dashboard", "ess_protection_map": ess_protection_map})
