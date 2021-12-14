@@ -1,6 +1,6 @@
 {
     "dataType": {
-        "operation1": {
+        "operationSite1": {
             "bank": {
                 "BANK_SOC": {
                     "type": "number",
