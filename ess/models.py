@@ -266,23 +266,23 @@ class Rack(models.Model):
     rack_status_for_run = models.IntegerField(db_column="RACK_STATUS_FOR_RUN", blank=True, null=True)
     rack_status_for_fault = models.IntegerField(db_column="RACK_STATUS_FOR_FAULT", blank=True, null=True)
     rack_status_for_warning = models.IntegerField(db_column="RACK_STATUS_FOR_WARNING", blank=True, null=True)
-    rack_rack_temperature_imbalance_warning = models.IntegerField(
-        db_column="RACK_RACK_TEMPERATURE_IMBALANCE_WARNING", blank=True, null=True
+    rack_temperature_imbalance_warning = models.IntegerField(
+        db_column="RACK_TEMPERATURE_IMBALANCE_WARNING", blank=True, null=True
     )
-    rack_rack_under_temperature_warning = models.IntegerField(
-        db_column="RACK_RACK_UNDER_TEMPERATURE_WARNING", blank=True, null=True
+    rack_under_temperature_warning = models.IntegerField(
+        db_column="RACK_UNDER_TEMPERATURE_WARNING", blank=True, null=True
     )
-    rack_rack_over_temperature_warning = models.IntegerField(
-        db_column="RACK_RACK_OVER_TEMPERATURE_WARNING", blank=True, null=True
+    rack_over_temperature_warning = models.IntegerField(
+        db_column="RACK_OVER_TEMPERATURE_WARNING", blank=True, null=True
     )
-    rack_rack_voltage_imbalance_warning = models.IntegerField(
-        db_column="RACK_RACK_VOLTAGE_IMBALANCE_WARNING", blank=True, null=True
+    rack_voltage_imbalance_warning = models.IntegerField(
+        db_column="RACK_VOLTAGE_IMBALANCE_WARNING", blank=True, null=True
     )
-    rack_rack_under_voltage_protection_warning = models.IntegerField(
-        db_column="RACK_RACK_UNDER_VOLTAGE_PROTECTION_WARNING", blank=True, null=True
+    rack_under_voltage_protection_warning = models.IntegerField(
+        db_column="RACK_UNDER_VOLTAGE_PROTECTION_WARNING", blank=True, null=True
     )
-    rack_rack_over_voltage_protection_warning = models.IntegerField(
-        db_column="RACK_RACK_OVER_VOLTAGE_PROTECTION_WARNING", blank=True, null=True
+    rack_over_voltage_protection_warning = models.IntegerField(
+        db_column="RACK_OVER_VOLTAGE_PROTECTION_WARNING", blank=True, null=True
     )
     rack_over_current_charge_warning = models.IntegerField(
         db_column="RACK_OVER_CURRENT_CHARGE_WARNING", blank=True, null=True
@@ -290,23 +290,17 @@ class Rack(models.Model):
     rack_over_current_discharge_warning = models.IntegerField(
         db_column="RACK_OVER_CURRENT_DISCHARGE_WARNING", blank=True, null=True
     )
-    rack_rack_temperature_imbalance_fault = models.IntegerField(
-        db_column="RACK_RACK_TEMPERATURE_IMBALANCE_FAULT", blank=True, null=True
+    rack_temperature_imbalance_fault = models.IntegerField(
+        db_column="RACK_TEMPERATURE_IMBALANCE_FAULT", blank=True, null=True
     )
-    rack_rack_under_temperature_fault = models.IntegerField(
-        db_column="RACK_RACK_UNDER_TEMPERATURE_FAULT", blank=True, null=True
+    rack_under_temperature_fault = models.IntegerField(db_column="RACK_UNDER_TEMPERATURE_FAULT", blank=True, null=True)
+    rack_over_temperature_fault = models.IntegerField(db_column="RACK_OVER_TEMPERATURE_FAULT", blank=True, null=True)
+    rack_voltage_imbalance_fault = models.IntegerField(db_column="RACK_VOLTAGE_IMBALANCE_FAULT", blank=True, null=True)
+    rack_under_voltage_protection_fault = models.IntegerField(
+        db_column="RACK_UNDER_VOLTAGE_PROTECTION_FAULT", blank=True, null=True
     )
-    rack_rack_over_temperature_fault = models.IntegerField(
-        db_column="RACK_RACK_OVER_TEMPERATURE_FAULT", blank=True, null=True
-    )
-    rack_rack_voltage_imbalance_fault = models.IntegerField(
-        db_column="RACK_RACK_VOLTAGE_IMBALANCE_FAULT", blank=True, null=True
-    )
-    rack_rack_under_voltage_protection_fault = models.IntegerField(
-        db_column="RACK_RACK_UNDER_VOLTAGE_PROTECTION_FAULT", blank=True, null=True
-    )
-    rack_rack_over_voltage_protection_fault = models.IntegerField(
-        db_column="RACK_RACK_OVER_VOLTAGE_PROTECTION_FAULT", blank=True, null=True
+    rack_over_voltage_protection_fault = models.IntegerField(
+        db_column="RACK_OVER_VOLTAGE_PROTECTION_FAULT", blank=True, null=True
     )
     rack_over_current_charge_fault = models.IntegerField(
         db_column="RACK_OVER_CURRENT_CHARGE_FAULT", blank=True, null=True
@@ -332,4 +326,9 @@ class Rack(models.Model):
 
 
 class EssMonitoringLog(models.Model):
-    pass
+    # pass
+
+    # For only unit test
+    class Meta:
+        managed = False
+        db_table = "ess_monitoring_log"
