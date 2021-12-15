@@ -1,6 +1,14 @@
-
-
 const essProtectionMap = JSON.parse(document.getElementById('ess-protection-map').textContent);
+
+async function loadData(requestUrl) {
+    let response = await fetch(requestUrl);
+
+    if (response.ok) {
+        return await response.json();
+    }
+
+    throw new Error(response.status);
+}
 
 function getOperationSiteInfoRows(operationSiteInfoTypeObject) {
     let rows = [];
@@ -87,7 +95,8 @@ function drawMonitoringListAndGetOperationSiteInfoWarningFlag(operationSiteId, o
         return;
     }
 
-    var operationSiteInfo = '';
+    let isWarningOfOperationSiteInfo = false;
+    let operationSiteInfo = '';
 
     if (operationSiteInfoIds.length == 1) {
         operationSiteInfo = [operationSiteId, 'bank' + operationSiteInfoIds[0], 'info'].join('-');
@@ -95,7 +104,7 @@ function drawMonitoringListAndGetOperationSiteInfoWarningFlag(operationSiteId, o
         operationSiteInfo = [operationSiteId, 'bank' + operationSiteInfoIds[0], 'rack' + operationSiteInfoIds[1], 'info'].join('-');
     }
 
-    let isWarningOfOperationSiteInfo = false;
+
     let operationSiteInfoMonitoringList = document.getElementById([operationSiteInfo, 'monitoring', 'list'].join('-'));
     let operationSiteInfoMonitoringListIcon = operationSiteInfoMonitoringList.querySelector('i');
     let operationSiteInfoTypeObject = essProtectionMap['dataType'][operationSiteId][operationSiteInfoType];
@@ -103,16 +112,15 @@ function drawMonitoringListAndGetOperationSiteInfoWarningFlag(operationSiteId, o
     for (const column of Object.keys(operationSiteInfoTypeObject)) {
         let lowerCaseColumn = column.toLowerCase();
         let operationSiteInfoColumn = document.getElementById([operationSiteInfo, column, 'column'].join('-'));
-        var operationSiteInfoColumnIcon = operationSiteInfoColumn.querySelector('i');
+        let operationSiteInfoColumnIcon = operationSiteInfoColumn.querySelector('i');
 
         switch (operationSiteInfoTypeObject[column]['type']) {
             case 'number':
-                var splitedOperationSiteInfoTypeObjectColumnValue = operationSiteInfoTypeObject[column]['value'].split('~');
+                let splitedOperationSiteInfoTypeObjectColumnValue = operationSiteInfoTypeObject[column]['value'].split('~');
 
                 if (splitedOperationSiteInfoTypeObjectColumnValue.length == 1 && splitedOperationSiteInfoTypeObjectColumnValue[0] != '-') {
                     if (data[lowerCaseColumn] >= Number(splitedOperationSiteInfoTypeObjectColumnValue[0])) {
                         isWarningOfOperationSiteInfo = true;
-                        console.log('a', column, operationSiteInfoType);
                         operationSiteInfoColumnIcon.classList.remove('text-primary', 'text-secondary');
                         operationSiteInfoColumnIcon.classList.add('text-danger');
                     } else {
@@ -122,7 +130,6 @@ function drawMonitoringListAndGetOperationSiteInfoWarningFlag(operationSiteId, o
                 } else if (splitedOperationSiteInfoTypeObjectColumnValue.length == 2) {
                     if ((data[lowerCaseColumn] <= Number(splitedOperationSiteInfoTypeObjectColumnValue[0])) || (data[lowerCaseColumn] >= Number(splitedOperationSiteInfoTypeObjectColumnValue[1]))) {
                         isWarningOfOperationSiteInfo = true;
-                        console.log('b', column, operationSiteInfoType);
                         operationSiteInfoColumnIcon.classList.remove('text-primary', 'text-secondary');
                         operationSiteInfoColumnIcon.classList.add('text-danger');
                     } else {
@@ -135,7 +142,6 @@ function drawMonitoringListAndGetOperationSiteInfoWarningFlag(operationSiteId, o
             case 'boolean':
                 if (data[lowerCaseColumn] == 1) {
                     isWarningOfOperationSiteInfo = true;
-                    console.log('c', column, operationSiteInfoType);
                     operationSiteInfoColumnIcon.classList.remove('text-primary', 'text-secondary');
                     operationSiteInfoColumnIcon.classList.add('text-danger');
                 } else {
@@ -161,9 +167,51 @@ function drawMonitoringListAndGetOperationSiteInfoWarningFlag(operationSiteId, o
     return isWarningOfOperationSiteInfo;
 }
 
+// Initial task
+
 var opertaionSiteMonitoringListColumn = document.getElementById('operationSite1-monitoring-list-column');
 opertaionSiteMonitoringListColumn.appendChild(getOperationSiteInfoMonitoringList('operationSite1', 'bank', [1]));
 
 for (i = 1; i <= 8; i++) {
     opertaionSiteMonitoringListColumn.appendChild(getOperationSiteInfoMonitoringList('operationSite1', 'rack', [1, i]));
 }
+
+setInterval(async () => {
+    let operationSiteWarningFlagList = [];
+
+    // Bank info draw monitoring list
+    let readLatestBankRequestUrl = new URL(window.location.origin + '/api/ess/operation-sites/1/banks/1/latest/');
+
+    await loadData(readLatestBankRequestUrl)
+        .then(data => {
+            let operationSiteWarningFlag = drawMonitoringListAndGetOperationSiteInfoWarningFlag('operationSite1', 'bank', [1], data);
+            operationSiteWarningFlagList.push(operationSiteWarningFlag);
+        }).catch(error => {
+            console.log(error);
+        });
+
+    // Rack info draw monitoring list
+    for (let i = 1; i <= 8; i++) {
+        var readLatestRackRequestUrl = new URL(window.location.origin + '/api/ess/operation-sites/1/banks/1/racks/' + i + '/latest/');
+
+        await loadData(readLatestRackRequestUrl)
+            .then(data => {
+                let operationSiteWarningFlag = drawMonitoringListAndGetOperationSiteInfoWarningFlag('operationSite1', 'rack', [1, i], data);
+                operationSiteWarningFlagList.push(operationSiteWarningFlag);
+            }).catch(error => {
+                console.log(error);
+            });
+    }
+
+    // Bank draw monitoring list
+    var isWarningOfOperationSite = operationSiteWarningFlagList.some(element => element);
+    var operationSiteMonitoringListBankIcon = document.getElementById('operationSite1-bank1-info-monitoring-list').previousElementSibling.querySelector('i');
+
+    if (isWarningOfOperationSite) {
+        operationSiteMonitoringListBankIcon.classList.remove('text-primary', 'text-secondary');
+        operationSiteMonitoringListBankIcon.classList.add('text-danger');
+    } else {
+        operationSiteMonitoringListBankIcon.classList.remove('text-primary', 'text-danger');
+        operationSiteMonitoringListBankIcon.classList.add('text-secondary');
+    }
+}, 1000);
