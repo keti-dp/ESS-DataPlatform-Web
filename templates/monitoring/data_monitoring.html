@@ -17,6 +17,15 @@
             height: 370px;
         }
     }
+
+    .dropdown-toggle {
+        padding: 0;
+        border: 0;
+    }
+
+    .dropdown-toggle::after {
+        display: none;
+    }
 </style>
 {% endblock %}
 
@@ -59,7 +68,34 @@
             <div class="col-xl-4 col-md-12">
                 <div id="operationSite1-card" class="card">
                     <div class="card-header">
-                        <h5>시온유 태양광</h5>
+                        <div class="row">
+                            <div class="col">
+                                <h5>시온유 태양광</h5>
+                            </div>
+                            <div class="col">
+                                <div class="row">
+                                    <div class="col-10 text-right">
+                                        <i class="bi bi-circle-fill text-secondary"></i> 정상
+                                        <i class="bi bi-circle-fill text-danger"></i> 이상
+                                    </div>
+                                    <div class="col-2 text-right">
+                                        <div class="dropdown">
+                                            <button class="btn dropdown-toggle" type="button" id="dropdownMenuButton1"
+                                                data-bs-toggle="dropdown" aria-expanded="false">
+                                                <span class="material-icons-two-tone">
+                                                    more_vert
+                                                </span>
+                                            </button>
+                                            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+                                                <li><a class="dropdown-item" href="#">ESS 정보 보기</a></li>
+                                                <li><a class="dropdown-item" href="#">지난 로그 보기</a></li>
+                                                <li><a class="dropdown-item" href="#">운영 데이터 다운로드</a></li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <div class="card-body">
                         <div class="row">
@@ -86,7 +122,34 @@
             <div class="col-xl-4 col-md-12">
                 <div class="card">
                     <div class="card-header">
-                        <h5>백마 태양광</h5>
+                        <div class="row">
+                            <div class="col">
+                                <h5>백마 태양광</h5>
+                            </div>
+                            <div class="col">
+                                <div class="row">
+                                    <div class="col-10 text-right">
+                                        <i class="bi bi-circle-fill text-secondary"></i> 정상
+                                        <i class="bi bi-circle-fill text-danger"></i> 이상
+                                    </div>
+                                    <div class="col-2 text-right">
+                                        <div class="dropdown">
+                                            <button class="btn dropdown-toggle" type="button" id="dropdownMenuButton1"
+                                                data-bs-toggle="dropdown" aria-expanded="false">
+                                                <span class="material-icons-two-tone">
+                                                    more_vert
+                                                </span>
+                                            </button>
+                                            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+                                                <li><a class="dropdown-item" href="#">ESS 정보 보기</a></li>
+                                                <li><a class="dropdown-item" href="#">지난 로그 보기</a></li>
+                                                <li><a class="dropdown-item" href="#">운영 데이터 다운로드</a></li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <div class="card-body">
                         <div class="row">
@@ -102,7 +165,34 @@
             <div class="col-xl-4 col-md-12">
                 <div class="card">
                     <div class="card-header">
-                        <h5>황금6호 태양광</h5>
+                        <div class="row">
+                            <div class="col">
+                                <h5>황금6호 태양광</h5>
+                            </div>
+                            <div class="col">
+                                <div class="row">
+                                    <div class="col-10 text-right">
+                                        <i class="bi bi-circle-fill text-secondary"></i> 정상
+                                        <i class="bi bi-circle-fill text-danger"></i> 이상
+                                    </div>
+                                    <div class="col-2 text-right">
+                                        <div class="dropdown">
+                                            <button class="btn dropdown-toggle" type="button" id="dropdownMenuButton1"
+                                                data-bs-toggle="dropdown" aria-expanded="false">
+                                                <span class="material-icons-two-tone">
+                                                    more_vert
+                                                </span>
+                                            </button>
+                                            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+                                                <li><a class="dropdown-item" href="#">ESS 정보 보기</a></li>
+                                                <li><a class="dropdown-item" href="#">지난 로그 보기</a></li>
+                                                <li><a class="dropdown-item" href="#">운영 데이터 다운로드</a></li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <div class="card-body">
                         <div class="row">
@@ -116,7 +206,34 @@
             <div class="col-xl-4 col-md-12">
                 <div class="card">
                     <div class="card-header">
-                        <h5>판리2호 태양광</h5>
+                        <div class="row">
+                            <div class="col">
+                                <h5>판리2호 태양광</h5>
+                            </div>
+                            <div class="col">
+                                <div class="row">
+                                    <div class="col-10 text-right">
+                                        <i class="bi bi-circle-fill text-secondary"></i> 정상
+                                        <i class="bi bi-circle-fill text-danger"></i> 이상
+                                    </div>
+                                    <div class="col-2 text-right">
+                                        <div class="dropdown">
+                                            <button class="btn dropdown-toggle" type="button" id="dropdownMenuButton1"
+                                                data-bs-toggle="dropdown" aria-expanded="false">
+                                                <span class="material-icons-two-tone">
+                                                    more_vert
+                                                </span>
+                                            </button>
+                                            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+                                                <li><a class="dropdown-item" href="#">ESS 정보 보기</a></li>
+                                                <li><a class="dropdown-item" href="#">지난 로그 보기</a></li>
+                                                <li><a class="dropdown-item" href="#">운영 데이터 다운로드</a></li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <div class="card-body">
                         <div class="row">
@@ -130,7 +247,34 @@
             <div class="col-xl-4 col-md-12">
                 <div class="card">
                     <div class="card-header">
-                        <h5>성덕 태양광</h5>
+                        <div class="row">
+                            <div class="col">
+                                <h5>성덕 태양광</h5>
+                            </div>
+                            <div class="col">
+                                <div class="row">
+                                    <div class="col-10 text-right">
+                                        <i class="bi bi-circle-fill text-secondary"></i> 정상
+                                        <i class="bi bi-circle-fill text-danger"></i> 이상
+                                    </div>
+                                    <div class="col-2 text-right">
+                                        <div class="dropdown">
+                                            <button class="btn dropdown-toggle" type="button" id="dropdownMenuButton1"
+                                                data-bs-toggle="dropdown" aria-expanded="false">
+                                                <span class="material-icons-two-tone">
+                                                    more_vert
+                                                </span>
+                                            </button>
+                                            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+                                                <li><a class="dropdown-item" href="#">ESS 정보 보기</a></li>
+                                                <li><a class="dropdown-item" href="#">지난 로그 보기</a></li>
+                                                <li><a class="dropdown-item" href="#">운영 데이터 다운로드</a></li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <div class="card-body">
                         <div class="row">
@@ -148,12 +292,13 @@
 {% endblock %}
 
 {% block js %}
+
 {{ ess_protection_map|json_script:"ess-protection-map" }}
 <script src="{% static 'js/custom/data_monitoring.js' %}"></script>
 <script>
     var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
     var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl)
+        return new bootstrap.Tooltip(tooltipTriggerEl);
     });
 </script>
 {% endblock %}
