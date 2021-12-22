@@ -12,6 +12,7 @@ django-nine==0.2.5
 django-storages==1.12.3
 djangorestframework==3.12.4
 djangorestframework-simplejwt==5.0.0
+drf-flex-fields==0.9.6
 elasticsearch==7.15.1
 elasticsearch-dsl==7.4.0
 google-api-core==2.3.0

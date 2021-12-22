@@ -1,26 +1,27 @@
+from rest_flex_fields import FlexFieldsModelSerializer
 from rest_framework import serializers
 from .models import Bank, Etc, Pcs, Rack
 
 
-class BankSerializer(serializers.ModelSerializer):
+class BankSerializer(FlexFieldsModelSerializer):
     class Meta:
         model = Bank
         fields = "__all__"
 
 
-class EtcSerializer(serializers.ModelSerializer):
+class EtcSerializer(FlexFieldsModelSerializer):
     class Meta:
         model = Etc
         fields = "__all__"
 
 
-class PcsSerializer(serializers.ModelSerializer):
+class PcsSerializer(FlexFieldsModelSerializer):
     class Meta:
         model = Pcs
         fields = "__all__"
 
 
-class RackSerializer(serializers.ModelSerializer):
+class RackSerializer(FlexFieldsModelSerializer):
     class Meta:
         model = Rack
         fields = "__all__"
