@@ -116,6 +116,25 @@ class RackListView(ListAPIView):
         return queryset
 
 
+class RackDetailListView(ListAPIView):
+    serializer_class = RackSerializer
+    pagination_class = LargeResultsSetPagination
+
+    def get_queryset(self):
+        operation_site_num = self.kwargs["operation_site_num"]
+        bank_id = self.kwargs["bank_id"]
+        rack_id = self.kwargs["rack_id"]
+        date = self.request.query_params.get("date")
+
+        queryset = Rack.objects.filter(bank_id=bank_id, rack_id=rack_id).order_by("timestamp")
+
+        if date is not None:
+            end_date = datetime.strptime(date, "%Y-%m-%d") + timedelta(days=1)
+            queryset = queryset.filter(bank_id=bank_id, rack_id=rack_id, timestamp__gte=date, timestamp__lt=end_date)
+
+        return queryset
+
+
 class BankAvgSoCListView(ListAPIView):
     def get(self, request, *args, **kwargs):
         try:
