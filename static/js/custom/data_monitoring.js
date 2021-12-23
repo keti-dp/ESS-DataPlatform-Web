@@ -46,11 +46,12 @@ function getOperationSiteInfoMonitoringList(operationSiteId, operationSiteInfoTy
 
     var operationSiteInfo = '';
 
+    // 'operationSiteInfoType' is 'bank'
     if (operationSiteInfoIds.length == 1) {
         operationSiteInfo = [operationSiteId, 'bank' + operationSiteInfoIds[0], 'info'].join('-');
         operationSiteInfoMonitoringList.innerHTML = '<div class="col-auto offset-1 p-r-0"><i class="bi bi-circle-fill text-primary"></i></div>' +
             '<div class="col"><p>Bank ' + operationSiteInfoIds[0] + ' Info</p></div><hr>';
-    } else if (operationSiteInfoIds.length == 2) {
+    } else if (operationSiteInfoIds.length == 2) { // 'operationSiteInfoType' is 'rack'
         operationSiteInfo = [operationSiteId, 'bank' + operationSiteInfoIds[0], 'rack' + operationSiteInfoIds[1], 'info'].join('-');
         operationSiteInfoMonitoringList.innerHTML = '<div class="col-auto offset-1 p-r-0"><i class="bi bi-circle-fill text-primary"></i></div>' +
             '<div class="col"><p>Rack ' + operationSiteInfoIds[1] + ' Info</p></div><hr>';
@@ -72,8 +73,21 @@ function getOperationSiteInfoMonitoringList(operationSiteId, operationSiteInfoTy
             column.setAttribute('data-bs-toggle', 'tooltip');
             column.setAttribute('data-bs-placement', 'top');
             column.setAttribute('title', operationSiteInfoColumn);
-            column.innerHTML = '<div class="row"><div class="col-auto p-r-0"><i class="bi bi-circle-fill text-primary"></i></div>' +
-                '<div class="col text-truncate"><p><small>' + operationSiteInfoColumn + '</small></p></div></div>'
+
+            let operationSiteIdNum = operationSiteId.replace('operationSite', '');
+
+            // 'operationSiteInfoType' is 'bank'
+            if (operationSiteInfoIds.length == 1) {
+                column.innerHTML = '<div class="row"><div class="col-auto p-r-0"><i class="bi bi-circle-fill text-primary"></i></div>' +
+                    '<div class="col text-truncate" data-bs-toggle="modal" data-bs-target="#monitoringListItemModal" data-operation-site-info-type="' + operationSiteInfoType +
+                    '" data-operation-site-id="' + operationSiteIdNum + '" data-operation-site-bank-id="' + operationSiteInfoIds[0] + '" data-operation-site-info-column="' + operationSiteInfoColumn.toLowerCase() +
+                    '"><p><small>' + operationSiteInfoColumn + '</small></p></div></div>'
+            } else if (operationSiteInfoIds.length == 2) { // 'operationSiteInfoType' is 'rack'
+                column.innerHTML = '<div class="row"><div class="col-auto p-r-0"><i class="bi bi-circle-fill text-primary"></i></div>' +
+                    '<div class="col text-truncate" data-bs-toggle="modal" data-bs-target="#monitoringListItemModal" data-operation-site-info-type="' + operationSiteInfoType +
+                    '" data-operation-site-id="' + operationSiteIdNum + '" data-operation-site-bank-id="' + operationSiteInfoIds[0] + '" data-operation-site-info-column="' + operationSiteInfoColumn.toLowerCase() +
+                    '" data-operation-site-rack-id="' + operationSiteInfoIds[1] + '"><p><small>' + operationSiteInfoColumn + '</small></p></div></div>'
+            }
 
             row.appendChild(column);
         }
@@ -167,8 +181,78 @@ function drawMonitoringListAndGetOperationSiteInfoWarningFlag(operationSiteId, o
     return isWarningOfOperationSiteInfo;
 }
 
-// Initial task
+function getLineChart(elementId, data, option = {}) {
+    let root = am5.Root.new(elementId);
 
+    root.setThemes([
+        am5themes_Animated.new(root)
+    ]);
+
+    let chart = root.container.children.push(
+        am5xy.XYChart.new(root, {
+            panY: false,
+            wheelY: "zoomX",
+            layout: root.verticalLayout,
+            maxTooltipDistance: 0
+        })
+    );
+
+    let chartData = data;
+
+    // Create Y-axis
+    let yAxis = chart.yAxes.push(
+        am5xy.ValueAxis.new(root, Object.assign({
+            extraTooltipPrecision: 1,
+            renderer: am5xy.AxisRendererY.new(root, {})
+        }, option['yAxis']))
+    );
+
+    // Create X-Axis
+    let xAxis = chart.xAxes.push(
+        am5xy.DateAxis.new(root, Object.assign({
+            baseInterval: { timeUnit: "second", count: 1 },
+            renderer: am5xy.AxisRendererX.new(root, {})
+        }, option['xAxis']))
+    );
+
+    xAxis.get("dateFormats")["hour"] = "HH";
+    xAxis.get("periodChangeDateFormats")["hour"] = "yyyy-MM-dd HH";
+
+    let series = chart.series.push(
+        am5xy.LineSeries.new(root, {
+            name: "Series",
+            xAxis: xAxis,
+            yAxis: yAxis,
+            valueYField: "value",
+            valueXField: "date",
+            tooltip: am5.Tooltip.new(root, {})
+        })
+    );
+
+    series.strokes.template.set("strokeWidth", 3);
+
+    series.get("tooltip").label.set("text", "[bold]{name}[/]\n{valueX.formatDate('yyyy-MM-dd HH:mm:ss')}: {valueY.formatNumber('#.000')}")
+    series.data.setAll(chartData);
+
+    // Add cursor
+    chart.set("cursor", am5xy.XYCursor.new(root, {
+        behavior: "zoomXY",
+        xAxis: xAxis
+    }));
+
+    xAxis.set("tooltip", am5.Tooltip.new(root, {
+        themeTags: ["axis"]
+    }));
+
+    yAxis.set("tooltip", am5.Tooltip.new(root, {
+        themeTags: ["axis"]
+    }));
+
+    return series;
+}
+
+// Initial task
+// - Create monitoring list
 var opertaionSiteMonitoringListColumn = document.getElementById('operationSite1-monitoring-list-column');
 opertaionSiteMonitoringListColumn.appendChild(getOperationSiteInfoMonitoringList('operationSite1', 'bank', [1]));
 
@@ -215,3 +299,73 @@ setInterval(async () => {
         operationSiteMonitoringListBankIcon.classList.add('text-secondary');
     }
 }, 1000);
+
+// - Create monitoring list item chart
+
+var monitoringListItemChart;
+
+var monitoringListItemModalTriggerList = [].slice.call(document.querySelectorAll('[data-bs-target="#monitoringListItemModal"]'));
+monitoringListItemModalTriggerList.forEach(element => {
+    element.addEventListener('click', event => {
+        let chart = document.getElementById('monitoringListItemChart');
+        let loader = chart.previousElementSibling.firstElementChild;
+
+        chart.classList.add('d-none');
+        loader.classList.remove('d-none');
+
+        let operationSiteInfoType = element.dataset.operationSiteInfoType;
+        let operationSiteId = element.dataset.operationSiteId;
+        let operationSiteBankId = element.dataset.operationSiteBankId;
+        let operationSiteInfoColumn = element.dataset.operationSiteInfoColumn;
+        let requestUrl;
+
+        switch (operationSiteInfoType) {
+            case 'bank':
+                requestUrl = new URL(window.location.origin + '/api/ess/operation-sites/' + operationSiteId + '/banks/' + operationSiteBankId + '/');
+                break;
+            case 'rack':
+                let operationSiteRackId = element.dataset.operationSiteRackId;
+                requestUrl = new URL(window.location.origin + '/api/ess/operation-sites/' + operationSiteId + '/banks/' + operationSiteBankId + '/racks/' + operationSiteRackId + '/');
+                break;
+            default:
+                break;
+        }
+
+        // Luxon alias 'DateTime'
+        var DateTime = luxon.DateTime;
+
+        var currentDateTime = DateTime.now();
+        var currentDate = currentDateTime.toISODate();
+
+        let monitoringListItemModalTitleEl = document.getElementById('monitoringListItemModalLabel');
+        monitoringListItemModalTitleEl.innerHTML = operationSiteInfoColumn + ' 시간별 모니터링 차트 <span class="material-icons-two-tone">watch_later</span> ' + currentDate;
+
+        requestUrl.searchParams.append('date', currentDate);
+        requestUrl.searchParams.append('fields', ['timestamp', operationSiteInfoColumn].join(','));
+        requestUrl.searchParams.append('no_page', '');
+
+        fetch(requestUrl).then(response => {
+            return response.json();
+        }).then(responseData => {
+            let data = [];
+
+            responseData.forEach(element => {
+                let date = new Date(element['timestamp']).getTime();
+                let value = element[operationSiteInfoColumn];
+
+                data.push({ date: date, value: value });
+            });
+
+            if (monitoringListItemChart && 'data' in monitoringListItemChart) {
+                monitoringListItemChart.data.setAll(data);
+            } else {
+                monitoringListItemChart = getLineChart('monitoringListItemChart', data);
+            }
+
+            loader.classList.add('d-none');
+            chart.classList.remove('d-none');
+        }).catch(error => {
+            console.log(error);
+        });
+    });
+});
