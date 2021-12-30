@@ -20,7 +20,7 @@ from django_elasticsearch_dsl_drf.viewsets import BaseDocumentViewSet
 from django_elasticsearch_dsl_drf.pagination import PageNumberPagination
 from rest_framework import status
 from rest_framework.views import Response
-from rest_framework.generics import ListAPIView
+from rest_framework.generics import ListAPIView, RetrieveAPIView
 from .models import Bank, Etc, Pcs, Rack
 from .documents import EssMonitoringLogDocument
 from .paginations import LargeResultsSetPagination
@@ -112,6 +112,25 @@ class RackListView(ListAPIView):
         if date is not None:
             new_date = datetime.strptime(date, "%Y-%m-%d") + timedelta(days=1)
             queryset = queryset.filter(bank_id=bank_id, timestamp__gte=date, timestamp__lt=new_date)
+
+        return queryset
+
+
+class RackDetailListView(ListAPIView):
+    serializer_class = RackSerializer
+    pagination_class = LargeResultsSetPagination
+
+    def get_queryset(self):
+        operation_site_num = self.kwargs["operation_site_num"]
+        bank_id = self.kwargs["bank_id"]
+        rack_id = self.kwargs["rack_id"]
+        date = self.request.query_params.get("date")
+
+        queryset = Rack.objects.filter(bank_id=bank_id, rack_id=rack_id).order_by("timestamp")
+
+        if date is not None:
+            end_date = datetime.strptime(date, "%Y-%m-%d") + timedelta(days=1)
+            queryset = queryset.filter(bank_id=bank_id, rack_id=rack_id, timestamp__gte=date, timestamp__lt=end_date)
 
         return queryset
 
@@ -408,3 +427,51 @@ class EssMonitoringLogDocumentView(BaseDocumentViewSet):
 
     def get_queryset(self):
         return super().get_queryset()
+
+
+# Get latest operation data
+
+
+class LatestBankView(RetrieveAPIView):
+    def get(self, request, *args, **kwargs):
+        operation_site_num = self.kwargs["operation_site_num"]
+        bank_id = self.kwargs["bank_id"]
+
+        queryset = Bank.objects.filter(bank_id=bank_id).latest("timestamp")
+        serializer = BankSerializer(queryset)
+
+        return Response(serializer.data)
+
+
+class LatestRackView(RetrieveAPIView):
+    def get(self, request, *args, **kwargs):
+        operation_site_num = self.kwargs["operation_site_num"]
+        bank_id = self.kwargs["bank_id"]
+        rack_id = self.kwargs["rack_id"]
+
+        queryset = Rack.objects.filter(bank_id=bank_id, rack_id=rack_id).latest("timestamp")
+        serializer = RackSerializer(queryset)
+
+        return Response(serializer.data)
+
+
+class LatestPcsView(RetrieveAPIView):
+    def get(self, request, *args, **kwargs):
+        operation_site_num = self.kwargs["operation_site_num"]
+        bank_id = self.kwargs["bank_id"]
+
+        queryset = Pcs.objects.filter(bank_id=bank_id).latest("timestamp")
+        serializer = PcsSerializer(queryset)
+
+        return Response(serializer.data)
+
+
+class LatestEtcView(RetrieveAPIView):
+    def get(self, request, *args, **kwargs):
+        operation_site_num = self.kwargs["operation_site_num"]
+        bank_id = self.kwargs["bank_id"]
+
+        queryset = Etc.objects.filter(bank_id=bank_id).latest("timestamp")
+        serializer = EtcSerializer(queryset)
+
+        return Response(serializer.data)

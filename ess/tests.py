@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 from django.db import connections
 from django.test import TestCase
 from .models import Bank, Etc, Pcs, Rack
+from .serializer import BankSerializer, RackSerializer, PcsSerializer, EtcSerializer
 
 
 class BankTestCase(TestCase):
@@ -11,6 +12,13 @@ class BankTestCase(TestCase):
         limit10_bank = Bank.objects.all()[:10]
 
         self.assertEqual(len(limit10_bank), 10)
+
+    def test_field_include_with_serializer(self):
+        bank = Bank.objects.all()[:1]
+        fields = ["timestamp", "bank_id", "bank_soc"]
+        serializer = BankSerializer(bank, fields=fields, many=True)
+
+        self.assertEqual(len(serializer.data[0]), len(fields))
 
     def test_avg_bank_soc_per_hour_by_date(self):
         with connections["ess"].cursor() as cursor:
@@ -57,6 +65,13 @@ class RackTestCase(TestCase):
 
         self.assertEqual(len(limit10_rack), 10)
 
+    def test_field_include_with_serializer(self):
+        rack = Rack.objects.all()[:1]
+        fields = ["timestamp", "bank_id", "rack_id", "rack_soc"]
+        serializer = RackSerializer(rack, fields=fields, many=True)
+
+        self.assertEqual(len(serializer.data[0]), len(fields))
+
     def test_avg_rack_soc_per_hour_by_date(self):
         with connections["ess"].cursor() as cursor:
             query = """
@@ -82,6 +97,13 @@ class PcsTestCase(TestCase):
 
         self.assertEqual(len(limit10_pcs), 10)
 
+    def test_field_include_with_serializer(self):
+        pcs = Pcs.objects.all()[:1]
+        fields = ["timestamp", "bank_id", "dc_power"]
+        serializer = PcsSerializer(pcs, fields=fields, many=True)
+
+        self.assertEqual(len(serializer.data[0]), len(fields))
+
 
 class EtcTestCase(TestCase):
     databases = {"ess"}
@@ -90,3 +112,10 @@ class EtcTestCase(TestCase):
         limit10_etc = Etc.objects.all()[:10]
 
         self.assertEqual(len(limit10_etc), 10)
+
+    def test_field_include_with_serializer(self):
+        etc = Etc.objects.all()[:1]
+        fields = ["timestamp", "bank_id", "sensor1_temperature"]
+        serializer = EtcSerializer(etc, fields=fields, many=True)
+
+        self.assertEqual(len(serializer.data[0]), len(fields))

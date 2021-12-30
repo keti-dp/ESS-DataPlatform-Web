@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "debug_toolbar",
     "django_elasticsearch_dsl",
     "django_elasticsearch_dsl_drf",
     "rest_framework",
@@ -49,6 +50,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "debug_toolbar.middleware.DebugToolbarMiddleware",
 ]
 
 ROOT_URLCONF = "config.urls"
@@ -135,13 +137,13 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = "en-us"
 
-TIME_ZONE = "UTC"
+TIME_ZONE = "Asia/Seoul"
 
 USE_I18N = True
 
 USE_L10N = True
 
-USE_TZ = True
+USE_TZ = False
 
 
 # Static files (CSS, JavaScript, Images)
@@ -167,3 +169,8 @@ SIMPLE_JWT = {
     "SIGNING_KEY": os.getenv("JWT_SECRET_KEY"),
     "VERIFYING_KEY": os.getenv("JWT_SECRET_KEY"),
 }
+
+# Django debug toolbar settings
+INTERNAL_IPS = [
+    "127.0.0.1",
+]

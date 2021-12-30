@@ -5,12 +5,17 @@ from .views import (
     EtcListView,
     PcsListView,
     RackListView,
+    RackDetailListView,
     BankAvgSoCListView,
     RackAvgSoCListView,
     BankAvgSoHListView,
     RackAvgSoHListView,
     AvgBankPowerListView,
     EssMonitoringLogDocumentView,
+    LatestBankView,
+    LatestRackView,
+    LatestPcsView,
+    LatestEtcView,
 )
 
 router = DefaultRouter()
@@ -21,6 +26,11 @@ urlpatterns = [
     path("operation-sites/<int:operation_num>/banks/<int:bank_id>/etc/", EtcListView.as_view(), name="etc-list"),
     path("operation-sites/<int:operation_num>/banks/<int:bank_id>/pcs/", PcsListView.as_view(), name="pcs-list"),
     path("operation-sites/<int:operation_num>/banks/<int:bank_id>/racks/", RackListView.as_view(), name="rack-list"),
+    path(
+        "operation-sites/<int:operation_site_num>/banks/<int:bank_id>/racks/<rack_id>/",
+        RackDetailListView.as_view(),
+        name="rack-detail-list",
+    ),
     path(
         "operation-sites/<int:operation_site_num>/banks/<int:bank_id>/stats/bank-avg-soc/",
         BankAvgSoCListView.as_view(),
@@ -47,4 +57,12 @@ urlpatterns = [
         name="avg-bank-power-list",
     ),
     path("search/", include(router.urls)),
+    # Get latest operation data
+    path("operation-sites/<int:operation_site_num>/banks/<int:bank_id>/latest/", LatestBankView.as_view()),
+    path(
+        "operation-sites/<int:operation_site_num>/banks/<int:bank_id>/racks/<int:rack_id>/latest/",
+        LatestRackView.as_view(),
+    ),
+    path("operation-sites/<int:operation_site_num>/banks/<int:bank_id>/pcs/latest/", LatestPcsView.as_view()),
+    path("operation-sites/<int:operation_site_num>/banks/<int:bank_id>/etc/latest/", LatestEtcView.as_view()),
 ]
