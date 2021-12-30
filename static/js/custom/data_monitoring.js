@@ -1,3 +1,6 @@
+// Luxon alias 'DateTime'
+var DateTime = luxon.DateTime;
+
 const essProtectionMap = JSON.parse(document.getElementById('ess-protection-map').textContent);
 
 async function loadData(requestUrl) {
@@ -331,9 +334,6 @@ monitoringListItemModalTriggerList.forEach(element => {
                 break;
         }
 
-        // Luxon alias 'DateTime'
-        var DateTime = luxon.DateTime;
-
         var currentDateTime = DateTime.now();
         var currentDate = currentDateTime.toISODate();
 
@@ -369,3 +369,72 @@ monitoringListItemModalTriggerList.forEach(element => {
         });
     });
 });
+
+// - Create monitoring log
+
+let operationSite1MonitoringLogColumn = document.getElementById('operationSite1-monitoring-log-column');
+var reqeustUrl = new URL(window.location.origin + '/api/ess/search/data-monitoring-logs/?operation_site=operation1_local&time__gte=' +
+    DateTime.utc().toFormat('yyyy-MM-dd').toString() + '&time__lte=' + DateTime.utc().plus({ days: 1 }).toFormat('yyyy-MM-dd').toString());
+
+function getMonitoringLogAlertEl(data) {
+    let monitoringLogAlertEl = document.createElement('div');
+    let alertClass;
+
+    switch (data['log_level']) {
+        case 'info':
+            alertClass = 'alert-info';
+            break;
+        case 'warning':
+            alertClass = 'alert-warning'
+            break;
+        case 'critical':
+            alertClass = 'alert-danger'
+            break;
+        case 'error':
+            alertClass = 'alert-primary'
+            break;
+        default:
+            alertClass = 'alert-primary'
+            console.log('', data['log_level']);
+            break;
+    }
+
+    monitoringLogAlertEl.setAttribute('class', 'alert ' + alertClass + ' m-b-5 p-l-10 p-t-0 p-b-0');
+    monitoringLogAlertEl.setAttribute('role', 'alert');
+    monitoringLogAlertEl.innerHTML = '<p class="text-truncate m-t-0 m-b-0"><small>' + data['message'] + '</small></p>' +
+        '<p class="text-truncate m-t-0 m-b-0"><small>' + DateTime.fromISO(data['time']).toFormat('HH:mm:ss') + '</small></p>';
+
+    return monitoringLogAlertEl;
+}
+
+fetch(reqeustUrl).then(response => {
+    return response.json();
+}).then(responseData => {
+    for (const data of responseData['results']) {
+        var alertEl = getMonitoringLogAlertEl(data);
+
+        operationSite1MonitoringLogColumn.appendChild(alertEl);
+    }
+}).catch(error => {
+    console.log(error);
+});
+
+setInterval(() => {
+    // After wait for save time of monitoring log data, lazy request
+    var time = DateTime.utc().minus({ seconds: 2 }).toFormat('yyyy-MM-dd HH:mm:ss').toString().replace(' ', 'T');
+    var reqeustUrl = new URL(window.location.origin + '/api/ess/search/data-monitoring-logs/?operation_site=operation1_local&time=' + time);
+
+    fetch(reqeustUrl).then(response => {
+        return response.json();
+    }).then(responseData => {
+        let data = responseData['results'];
+
+        data.forEach(element => {
+            let alertEl = getMonitoringLogAlertEl(element);
+
+            operationSite1MonitoringLogColumn.querySelector('input').after(alertEl);
+        });
+    }).catch(error => {
+        console.log(error);
+    });
+}, 1000);
