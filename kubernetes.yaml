@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ess-dataplatform-web
+  labels:
+    app: ess-dataplatform-web
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ess-dataplatform-web
+  template:
+    metadata:
+      labels:
+        app: ess-dataplatform-web
+    spec:
+      volumes:
+      - name: service-account-key
+        secret:
+          secretName: cloud-service-account-key
+      containers:
+      - name: ess-dataplatform-web
+        image: asia-northeast3-docker.pkg.dev/${PROJECT_ID}/ess-dataplatform-web-repository/ess-dataplatform-web:${COMMIT_SHA}
+        ports:
+        - containerPort: 8002
+        volumeMounts:
+        - name: service-account-key
+          mountPath: /var/secrets/google
+        env:
+        - name: GOOGLE_APPLICATION_CREDENTIALS
+          value: /var/secrets/google/key.json
+        envFrom:
+          - configMapRef:
+              name: ess-configmap
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: ess-dataplatform-web
+spec:
+  selector:
+    app: ess-dataplatform-web
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 8002
+  type: LoadBalancer
