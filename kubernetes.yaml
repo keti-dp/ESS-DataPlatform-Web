@@ -20,7 +20,7 @@ spec:
           secretName: cloud-service-account-key
       containers:
       - name: ess-dataplatform-web
-        image: asia-northeast3-docker.pkg.dev/${PROJECT_ID}/ess-dataplatform-web-repository/ess-dataplatform-web:${COMMIT_SHA}
+        image: asia-northeast3-docker.pkg.dev/GOOGLE_CLOUD_PROJECT/ess-dataplatform-web-repository/ess-dataplatform-web:COMMIT_SHA
         ports:
         - containerPort: 8002
         volumeMounts:
