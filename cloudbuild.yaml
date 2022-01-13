@@ -1,4 +1,5 @@
 steps:
+# [START cloudbuild-trigger-ci]
 # Install dependencies And Run tests
 - name: 'python:3.8-slim'
   id: Test
@@ -33,3 +34,43 @@ steps:
 - name: 'gcr.io/cloud-builders/docker'
   id: Push
   args: ['push', 'asia-northeast3-docker.pkg.dev/${PROJECT_ID}/ess-dataplatform-web-repository/ess-dataplatform-web:${SHORT_SHA}']
+# [END cloudbuild-trigger-ci]
+
+# [START cloudbuild-trigger-cd]
+# This step clones the ess-dataplatform-web-env repository
+- name: 'gcr.io/cloud-builders/gcloud'
+  id: Clone env repository
+  entrypoint: /bin/sh
+  args:
+  - '-c'
+  - |
+    gcloud source repos clone ess-dataplatform-web-env && \
+    cd ess-dataplatform-web-env && \
+    git checkout candidate && \
+    git config user.email $(gcloud auth list --filter=status:ACTIVE --format='value(account)')
+
+# This step generates the new manifest
+- name: 'gcr.io/cloud-builders/gcloud'
+  id: Generate manifest
+  entrypoint: /bin/sh
+  args:
+  - '-c'
+  - |
+     sed "s/GOOGLE_CLOUD_PROJECT/${PROJECT_ID}/g" kubernetes.yaml | \
+     sed "s/COMMIT_SHA/${SHORT_SHA}/g" > ess-dataplatform-web-env/kubernetes.yaml
+
+# This step pushes the manifest back to ess-dataplatform-web-env
+- name: 'gcr.io/cloud-builders/gcloud'
+  id: Push manifest
+  entrypoint: /bin/sh
+  args:
+  - '-c'
+  - |
+    set -x && \
+    cd  ess-dataplatform-web-env && \
+    git add kubernetes.yaml && \
+    git commit -m "Deploying image asia-northeast3-docker.pkg.dev/${PROJECT_ID}/ess-dataplatform-web-repository/ess-dataplatform-web:${SHORT_SHA}
+    Built from commit ${COMMIT_SHA} of repository ess-dataplatform-web application
+    Author: $(git log --format='%an <%ae>' -n 1 HEAD)" && \
+    git push origin candidate
+# [END cloudbuild-trigger-cd]
