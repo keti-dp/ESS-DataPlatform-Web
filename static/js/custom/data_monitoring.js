@@ -304,7 +304,6 @@ setInterval(async () => {
 }, 1000);
 
 // - Create monitoring list item chart
-
 var monitoringListItemChart;
 
 var monitoringListItemModalTriggerList = [].slice.call(document.querySelectorAll('[data-bs-target="#monitoringListItemModal"]'));
@@ -371,9 +370,8 @@ monitoringListItemModalTriggerList.forEach(element => {
 });
 
 // - Create monitoring log
-
 let operationSite1MonitoringLogColumn = document.getElementById('operationSite1-monitoring-log-column');
-var reqeustUrl = new URL(window.location.origin + '/api/ess/search/data-monitoring-logs/?operation_site=operation1_local&time__gte=' +
+var requestUrl = new URL(window.location.origin + '/api/ess/search/data-monitoring-logs/?operation_site=operation1_local&time__gte=' +
     DateTime.utc().toFormat('yyyy-MM-dd').toString() + '&time__lte=' + DateTime.utc().plus({ days: 1 }).toFormat('yyyy-MM-dd').toString());
 
 function getMonitoringLogAlertEl(data) {
@@ -407,7 +405,7 @@ function getMonitoringLogAlertEl(data) {
     return monitoringLogAlertEl;
 }
 
-fetch(reqeustUrl).then(response => {
+fetch(requestUrl).then(response => {
     return response.json();
 }).then(responseData => {
     for (const data of responseData['results']) {
@@ -422,9 +420,9 @@ fetch(reqeustUrl).then(response => {
 setInterval(() => {
     // After wait for save time of monitoring log data, lazy request
     var time = DateTime.utc().minus({ seconds: 2 }).toFormat('yyyy-MM-dd HH:mm:ss').toString().replace(' ', 'T');
-    var reqeustUrl = new URL(window.location.origin + '/api/ess/search/data-monitoring-logs/?operation_site=operation1_local&time=' + time);
+    var requestUrl = new URL(window.location.origin + '/api/ess/search/data-monitoring-logs/?operation_site=operation1_local&time=' + time);
 
-    fetch(reqeustUrl).then(response => {
+    fetch(requestUrl).then(response => {
         return response.json();
     }).then(responseData => {
         let data = responseData['results'];
@@ -434,6 +432,30 @@ setInterval(() => {
 
             operationSite1MonitoringLogColumn.querySelector('input').after(alertEl);
         });
+    }).catch(error => {
+        console.log(error);
+    });
+}, 1000);
+
+// - Create room sensor of bank header in monitoring list
+setInterval(() => {
+    let requestUrl = new URL(window.location.origin + '/api/ess/operation-sites/1/banks/1/etc/latest/');
+
+    fetch(requestUrl).then(response => {
+        return response.json();
+    }).then(data => {
+        let header = document.querySelector('#operationSite1-monitoring-list-column > div:nth-child(1) > div.col > h6');
+        let oldSmall = header.querySelector('small');
+
+        if (oldSmall) {
+            header.removeChild(oldSmall);
+        }
+
+        let newSmall = document.createElement('small');
+        // Degree Celsius HTML Code '&#8451;'
+        newSmall.innerHTML = ' <span class="material-icons-two-tone">thermostat</span>' + data['sensor1_temperature'] + '&#8451;' + ' <span class="material-icons-two-tone">water_drop</span>' + data['sensor1_humidity'] + '%';
+
+        header.appendChild(newSmall);
     }).catch(error => {
         console.log(error);
     });
