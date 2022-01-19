@@ -16,6 +16,7 @@ from .views import (
     LatestRackView,
     LatestPcsView,
     LatestEtcView,
+    OperationDataDownloadView,
 )
 
 router = DefaultRouter()
@@ -65,4 +66,5 @@ urlpatterns = [
     ),
     path("operation-sites/<int:operation_site_num>/banks/<int:bank_id>/pcs/latest/", LatestPcsView.as_view()),
     path("operation-sites/<int:operation_site_num>/banks/<int:bank_id>/etc/latest/", LatestEtcView.as_view()),
+    path("download/operation-sites/<int:operation_site_num>/<data_type>/", OperationDataDownloadView.as_view()),
 ]
