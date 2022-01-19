@@ -460,3 +460,55 @@ setInterval(() => {
         console.log(error);
     });
 }, 1000);
+
+// - Download operation data
+// Trigger the contents of the modal depending on which button was clicked
+var operationDataDownloadModal = document.getElementById('operationDataDownloadModal');
+operationDataDownloadModal.addEventListener('show.bs.modal', function (event) {
+    let button = event.relatedTarget;
+    let operationSiteId = button.getAttribute('data-operation-site-id');
+    let downloadButton = operationDataDownloadModal.querySelector('.btn-primary');
+    downloadButton.setAttribute('data-operation-site-id', operationSiteId);
+});
+
+var operationDataDownloadModalDatePicker = $('#operationDataDownloadModalDateInput').datepicker({
+    format: 'yyyy-mm-dd',
+    orientation: 'bottom',
+    autoclose: true
+});
+
+// Validate operation data download modal form
+const operationDataDownloadModalFormValidation = new JustValidate('#operationDataDownloadModalForm', {
+    errorFieldCssClass: 'is-invalid',
+});
+operationDataDownloadModalFormValidation.addField('#operationDataDownloadModalDateInput', [
+    {
+        plugin: JustValidatePluginDate(fields => ({
+            required: true,
+            format: 'yyyy-MM-dd',
+        })),
+        errorMessage: '날짜를 선택하세요.'
+    },
+]).addRequiredGroup(
+    '#operationDataDownloadModalDataTypeCheckboxGroup',
+    '1가지 이상의 데이터 타입을 선택하세요.'
+).onSuccess(event => {
+    let checkedBoxElements = document.querySelectorAll('#operationDataDownloadModalDataTypeCheckboxGroup input:checked');
+    checkedBoxElements.forEach(element => {
+        let operationSiteId = document.querySelector('#operationDataDownloadModalForm button[type=submit]').getAttribute('data-operation-site-id');
+        let dataType = element.value;
+        let date = document.getElementById('operationDataDownloadModalDateInput').value;
+        let requestUrl = new URL(window.location.origin + '/api/ess/download/operation-sites/' + operationSiteId + '/' + dataType + '/?date=' + date);
+
+        fetch(requestUrl).then(response => {
+            return response.blob();
+        }).then(data => {
+            let tempAnchorElement = document.createElement('a');
+            tempAnchorElement.href = window.URL.createObjectURL(data);
+            tempAnchorElement.setAttribute('download', dataType);
+            tempAnchorElement.click();
+        }).catch(error => {
+            console.log(error);
+        });
+    });
+});

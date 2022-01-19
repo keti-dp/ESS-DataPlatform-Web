@@ -135,7 +135,10 @@
                                             <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
                                                 <li><a class="dropdown-item" href="#">ESS 정보 보기</a></li>
                                                 <li><a class="dropdown-item" href="#">지난 로그 보기</a></li>
-                                                <li><a class="dropdown-item" href="#">운영 데이터 다운로드</a></li>
+                                                <li><a class="dropdown-item" href="#" data-bs-toggle="modal"
+                                                        data-bs-target="#operationDataDownloadModal"
+                                                        data-operation-site-id="1">운영 데이터 다운로드</a>
+                                                </li>
                                             </ul>
                                         </div>
                                     </div>
@@ -194,7 +197,9 @@
                                             <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
                                                 <li><a class="dropdown-item" href="#">ESS 정보 보기</a></li>
                                                 <li><a class="dropdown-item" href="#">지난 로그 보기</a></li>
-                                                <li><a class="dropdown-item" href="#">운영 데이터 다운로드</a></li>
+                                                <li><a class="dropdown-item" href="#" data-bs-toggle="modal"
+                                                        data-bs-target="#operationDataDownloadModal"
+                                                        data-operation-site-id="2">운영 데이터 다운로드</a></li>
                                             </ul>
                                         </div>
                                     </div>
@@ -237,7 +242,9 @@
                                             <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
                                                 <li><a class="dropdown-item" href="#">ESS 정보 보기</a></li>
                                                 <li><a class="dropdown-item" href="#">지난 로그 보기</a></li>
-                                                <li><a class="dropdown-item" href="#">운영 데이터 다운로드</a></li>
+                                                <li><a class="dropdown-item" href="#" data-bs-toggle="modal"
+                                                        data-bs-target="#operationDataDownloadModal"
+                                                        data-operation-site-id="3">운영 데이터 다운로드</a></li>
                                             </ul>
                                         </div>
                                     </div>
@@ -278,7 +285,9 @@
                                             <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
                                                 <li><a class="dropdown-item" href="#">ESS 정보 보기</a></li>
                                                 <li><a class="dropdown-item" href="#">지난 로그 보기</a></li>
-                                                <li><a class="dropdown-item" href="#">운영 데이터 다운로드</a></li>
+                                                <li><a class="dropdown-item" href="#" data-bs-toggle="modal"
+                                                        data-bs-target="#operationDataDownloadModal"
+                                                        data-operation-site-id="4">운영 데이터 다운로드</a></li>
                                             </ul>
                                         </div>
                                     </div>
@@ -319,7 +328,9 @@
                                             <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
                                                 <li><a class="dropdown-item" href="#">ESS 정보 보기</a></li>
                                                 <li><a class="dropdown-item" href="#">지난 로그 보기</a></li>
-                                                <li><a class="dropdown-item" href="#">운영 데이터 다운로드</a></li>
+                                                <li><a class="dropdown-item" href="#" data-bs-toggle="modal"
+                                                        data-bs-target="#operationDataDownloadModal"
+                                                        data-operation-site-id="5">운영 데이터 다운로드</a></li>
                                             </ul>
                                         </div>
                                     </div>
@@ -338,6 +349,7 @@
             </div>
         </div>
 
+        <!-- [ Modal ] start -->
         <!-- Monitoring list item modal -->
         <div class="modal fade" id="monitoringListItemModal" tabindex="-1"
             aria-labelledby="monitoringListItemModalLabel" aria-hidden="true">
@@ -361,6 +373,59 @@
                 </div>
             </div>
         </div>
+
+        <!-- Download operation data modal -->
+        <div class="modal fade" id="operationDataDownloadModal" tabindex="-1"
+            aria-labelledby="operationDataDownloadModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="operationDataDownloadModalLabel">운영 데이터 다운로드</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="operationDataDownloadModalForm">
+                            <div class="form-group">
+                                <label class="form-label">날짜:</label>
+                                <input type="text" class="form-control" id="operationDataDownloadModalDateInput"
+                                    placeholder="날짜를 선택해 주세요" required>
+                            </div>
+                            <div class="form-group" id="operationDataDownloadModalDataTypeCheckboxGroup">
+                                <label class="form-label">데이터 타입:</label>
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input input-primary"
+                                        id="operationDataDownloadModalDataTypeCheckboxGroup1" value="bank">
+                                    <label class="form-check-label" for="data-type-checkbox-group-1">Bank</label>
+                                </div>
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input input-primary"
+                                        id="operationDataDownloadModalDataTypeCheckboxGroup2" value="rack">
+                                    <label class="form-check-label" for="data-type-checkbox-group-2">Rack</label>
+                                </div>
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input input-primary"
+                                        id="operationDataDownloadModalDataTypeCheckboxGroup3" value="pcs">
+                                    <label class="form-check-label" for="data-type-checkbox-group-3">Pcs</label>
+                                </div>
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input input-primary"
+                                        id="operationDataDownloadModalDataTypeCheckboxGroup4" value="etc">
+                                    <label class="form-check-label" for="data-type-checkbox-group-4">Etc</label>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <button type="submit" class="btn btn-primary">다운로드</button>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- [ Modal ] end -->
+
     </div>
     <!-- [ Main Content ] end -->
 </div>
@@ -372,6 +437,11 @@
 <script src="https://cdn.amcharts.com/lib/5/index.js"></script>
 <script src="https://cdn.amcharts.com/lib/5/xy.js"></script>
 <script src="https://cdn.amcharts.com/lib/5/themes/Animated.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
+<script src="https://unpkg.com/just-validate@3.3.1/dist/just-validate.production.min.js"></script>
+<script
+    src="https://cdn.jsdelivr.net/npm/just-validate-plugin-date@1.1.0/dist/just-validate-plugin-date.production.min.js"></script>
+
 <script src="{% static 'js/custom/data_monitoring.js' %}"></script>
 <script>
     var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
