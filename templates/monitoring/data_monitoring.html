@@ -6,6 +6,9 @@
 
 {% block html_head %}
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
+<script src="https://unpkg.com/@yaireo/tagify@4.9.4/dist/tagify.min.js"></script>
+<script src="https://unpkg.com/@yaireo/tagify@4.9.4/dist/tagify.polyfills.min.js"></script>
+<link href="https://unpkg.com/@yaireo/tagify@4.9.4/dist/tagify.css" rel="stylesheet" type="text/css" />
 
 <style>
     .card>.card-body>.row>div {
@@ -163,11 +166,14 @@
                             <!-- Monitoring log area  -->
                             <div id="operationSite1-monitoring-log-column" class="col-xl-4 col-md-12 overflow-auto">
                                 <select class="form-select form-select-sm mb-1">
-                                    <option>All</option>
-                                    <option>Warning</option>
-                                    <option>Danger</option>
+                                    <option value="all">All</option>
+                                    <option value="critical">Critical</option>
+                                    <option value="error">Error</option>
+                                    <option value="info">Info</option>
+                                    <option value="warning">Warning</option>
                                 </select>
                                 <input class="form-control form-control-sm mb-1" type="text" placeholder="검색어를 입력하세요.">
+                                <div></div>
                             </div>
                         </div>
                     </div>
