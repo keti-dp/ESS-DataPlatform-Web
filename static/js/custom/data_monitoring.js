@@ -254,7 +254,7 @@ function getLineChart(elementId, data, option = {}) {
     return series;
 }
 
-// Initial task
+/* Initial task */
 // - Create monitoring list
 var opertaionSiteMonitoringListColumn = document.getElementById('operationSite1-monitoring-list-column');
 opertaionSiteMonitoringListColumn.appendChild(getOperationSiteInfoMonitoringList('operationSite1', 'bank', [1]));
@@ -369,10 +369,37 @@ monitoringListItemModalTriggerList.forEach(element => {
     });
 });
 
+// - Create room sensor of bank header in monitoring list
+setInterval(() => {
+    let requestUrl = new URL(window.location.origin + '/api/ess/operation-sites/1/banks/1/etc/latest/');
+
+    fetch(requestUrl).then(response => {
+        return response.json();
+    }).then(data => {
+        let header = document.querySelector('#operationSite1-monitoring-list-column > div:nth-child(1) > div.col > h6');
+        let oldSmall = header.querySelector('small');
+
+        if (oldSmall) {
+            header.removeChild(oldSmall);
+        }
+
+        let newSmall = document.createElement('small');
+        // Degree Celsius HTML Code '&#8451;'
+        newSmall.innerHTML = ' <span class="material-icons-two-tone">thermostat</span>' + data['sensor1_temperature'] + '&#8451;' + ' <span class="material-icons-two-tone">water_drop</span>' + data['sensor1_humidity'] + '%';
+
+        header.appendChild(newSmall);
+    }).catch(error => {
+        console.log(error);
+    });
+}, 1000);
+
 // - Create monitoring log
 let operationSite1MonitoringLogColumn = document.getElementById('operationSite1-monitoring-log-column');
-var requestUrl = new URL(window.location.origin + '/api/ess/search/data-monitoring-logs/?operation_site=operation1_local&time__gte=' +
-    DateTime.utc().toFormat('yyyy-MM-dd').toString() + '&time__lte=' + DateTime.utc().plus({ days: 1 }).toFormat('yyyy-MM-dd').toString());
+var monitoringLogContainerElement = operationSite1MonitoringLogColumn.querySelector('div');
+var requestUrl = new URL(window.location.origin + '/api/ess/search/data-monitoring-logs/');
+requestUrl.searchParams.append('operation_site', 'operation1_local');
+requestUrl.searchParams.append('time_gte', DateTime.utc().toFormat('yyyy-MM-dd').toString());
+requestUrl.searchParams.append('time_lte', DateTime.utc().plus({ days: 1 }).toFormat('yyyy-MM-dd').toString());
 
 function getMonitoringLogAlertEl(data) {
     let monitoringLogAlertEl = document.createElement('div');
@@ -409,18 +436,20 @@ fetch(requestUrl).then(response => {
     return response.json();
 }).then(responseData => {
     for (const data of responseData['results']) {
-        var alertEl = getMonitoringLogAlertEl(data);
+        var alertElement = getMonitoringLogAlertEl(data);
 
-        operationSite1MonitoringLogColumn.appendChild(alertEl);
+        monitoringLogContainerElement.appendChild(alertElement);
     }
 }).catch(error => {
     console.log(error);
 });
 
-setInterval(() => {
+let initialMonitoringLogLoadInterval = setInterval(() => {
     // After wait for save time of monitoring log data, lazy request
     var time = DateTime.utc().minus({ seconds: 2 }).toFormat('yyyy-MM-dd HH:mm:ss').toString().replace(' ', 'T');
-    var requestUrl = new URL(window.location.origin + '/api/ess/search/data-monitoring-logs/?operation_site=operation1_local&time=' + time);
+    let requestUrl = new URL(window.location.origin + '/api/ess/search/data-monitoring-logs/');
+    requestUrl.searchParams.append('operation_site', 'operation1_local');
+    requestUrl.searchParams.append('time', time);
 
     fetch(requestUrl).then(response => {
         return response.json();
@@ -428,34 +457,14 @@ setInterval(() => {
         let data = responseData['results'];
 
         data.forEach(element => {
-            let alertEl = getMonitoringLogAlertEl(element);
+            let alertElement = getMonitoringLogAlertEl(element);
 
-            operationSite1MonitoringLogColumn.querySelector('input').after(alertEl);
+            if (monitoringLogContainerElement.firstElementChild) {
+                monitoringLogContainerElement.firstElementChild.before(alertElement);
+            } else {
+                monitoringLogContainerElement.appendChild(alertElement);
+            }
         });
-    }).catch(error => {
-        console.log(error);
-    });
-}, 1000);
-
-// - Create room sensor of bank header in monitoring list
-setInterval(() => {
-    let requestUrl = new URL(window.location.origin + '/api/ess/operation-sites/1/banks/1/etc/latest/');
-
-    fetch(requestUrl).then(response => {
-        return response.json();
-    }).then(data => {
-        let header = document.querySelector('#operationSite1-monitoring-list-column > div:nth-child(1) > div.col > h6');
-        let oldSmall = header.querySelector('small');
-
-        if (oldSmall) {
-            header.removeChild(oldSmall);
-        }
-
-        let newSmall = document.createElement('small');
-        // Degree Celsius HTML Code '&#8451;'
-        newSmall.innerHTML = ' <span class="material-icons-two-tone">thermostat</span>' + data['sensor1_temperature'] + '&#8451;' + ' <span class="material-icons-two-tone">water_drop</span>' + data['sensor1_humidity'] + '%';
-
-        header.appendChild(newSmall);
     }).catch(error => {
         console.log(error);
     });
@@ -511,4 +520,173 @@ operationDataDownloadModalFormValidation.addField('#operationDataDownloadModalDa
             console.log(error);
         });
     });
+});
+
+// - Tagging monitoring log message search input
+var monitoringLogColumnInput = operationSite1MonitoringLogColumn.querySelector('input');
+new Tagify(monitoringLogColumnInput, {
+    originalInputValueFormat: valuesArr => valuesArr.map(item => item.value).join(',')
+});;
+
+/* Event task */
+// - Monitoring log level select event
+var monitoringLogLoadInterval;
+var monitoringLogColumnSelectElement = document.querySelector('#operationSite1-monitoring-log-column select');
+monitoringLogColumnSelectElement.addEventListener('change', event => {
+    monitoringLogContainerElement.innerHTML = '';
+
+    // Clear initial monitoring log load interval
+    if (initialMonitoringLogLoadInterval) {
+        clearInterval(initialMonitoringLogLoadInterval);
+    }
+
+    // Clear previous monitoring log load interval
+    if (monitoringLogLoadInterval) {
+        clearInterval(monitoringLogLoadInterval);
+    }
+
+    let logLevel = event.target.value;
+    let logMessage = monitoringLogColumnInput.value;
+    let requestUrl = new URL(window.location.origin + '/api/ess/search/data-monitoring-logs/');
+    requestUrl.searchParams.append('operation_site', 'operation1_local');
+    requestUrl.searchParams.append('time_gte', DateTime.utc().toFormat('yyyy-MM-dd').toString());
+    requestUrl.searchParams.append('time_lte', DateTime.utc().plus({ days: 1 }).toFormat('yyyy-MM-dd').toString());
+
+    if (logLevel !== 'all') {
+        requestUrl.searchParams.append('log_level', logLevel);
+    }
+
+    if (logMessage) {
+        logMessage.split(',').forEach(element => {
+            requestUrl.searchParams.append('message', element);
+        });
+    }
+
+    fetch(requestUrl).then(response => {
+        return response.json();
+    }).then(responseData => {
+        for (const data of responseData['results']) {
+            var alertElement = getMonitoringLogAlertEl(data);
+
+            monitoringLogContainerElement.appendChild(alertElement);
+        }
+    }).catch(error => {
+        console.log(error);
+    });
+
+    monitoringLogLoadInterval = setInterval(() => {
+        // After wait for save time of monitoring log data, lazy request
+        let time = DateTime.utc().minus({ seconds: 2 }).toFormat('yyyy-MM-dd HH:mm:ss').toString().replace(' ', 'T');
+        let requestUrl = new URL(window.location.origin + '/api/ess/search/data-monitoring-logs/');
+        requestUrl.searchParams.append('operation_site', 'operation1_local');
+        requestUrl.searchParams.append('time', time);
+
+        if (logLevel !== 'all') {
+            requestUrl.searchParams.append('log_level', logLevel);
+        }
+
+        if (logMessage) {
+            logMessage.split(',').forEach(element => {
+                requestUrl.searchParams.append('message', element);
+            });
+        }
+
+        fetch(requestUrl).then(response => {
+            return response.json();
+        }).then(responseData => {
+            let data = responseData['results'];
+
+            data.forEach(element => {
+                let alertElement = getMonitoringLogAlertEl(element);
+
+                if (monitoringLogContainerElement.firstElementChild) {
+                    monitoringLogContainerElement.firstElementChild.before(alertElement);
+                } else {
+                    monitoringLogContainerElement.appendChild(alertElement);
+                }
+            });
+        }).catch(error => {
+            console.log(error);
+        });
+    }, 1000);
+});
+
+// - Monitoring log message search input event
+monitoringLogColumnInput.addEventListener('change', event => {
+    monitoringLogContainerElement.innerHTML = '';
+
+    // Clear initial monitoring log load interval
+    if (initialMonitoringLogLoadInterval) {
+        clearInterval(initialMonitoringLogLoadInterval);
+    }
+
+    // Clear previous monitoring log load interval
+    if (monitoringLogLoadInterval) {
+        clearInterval(monitoringLogLoadInterval);
+    }
+
+    let logLevel = operationSite1MonitoringLogColumn.querySelector('select').value;
+    let logMessage = event.target.value;
+    let requestUrl = new URL(window.location.origin + '/api/ess/search/data-monitoring-logs/');
+    requestUrl.searchParams.append('operation_site', 'operation1_local');
+    requestUrl.searchParams.append('time_gte', DateTime.utc().toFormat('yyyy-MM-dd').toString());
+    requestUrl.searchParams.append('time_lte', DateTime.utc().plus({ days: 1 }).toFormat('yyyy-MM-dd').toString());
+
+    if (logLevel !== 'all') {
+        requestUrl.searchParams.append('log_level', logLevel);
+    }
+
+    if (logMessage) {
+        logMessage.split(',').forEach(element => {
+            requestUrl.searchParams.append('message', element);
+        });
+    }
+
+    fetch(requestUrl).then(response => {
+        return response.json();
+    }).then(responseData => {
+        for (const data of responseData['results']) {
+            var alertElement = getMonitoringLogAlertEl(data);
+
+            monitoringLogContainerElement.appendChild(alertElement);
+        }
+    }).catch(error => {
+        console.log(error);
+    });
+
+    monitoringLogLoadInterval = setInterval(() => {
+        // After wait for save time of monitoring log data, lazy request
+        let time = DateTime.utc().minus({ seconds: 2 }).toFormat('yyyy-MM-dd HH:mm:ss').toString().replace(' ', 'T');
+        let requestUrl = new URL(window.location.origin + '/api/ess/search/data-monitoring-logs/');
+        requestUrl.searchParams.append('operation_site', 'operation1_local');
+        requestUrl.searchParams.append('time', time);
+
+        if (logLevel !== 'all') {
+            requestUrl.searchParams.append('log_level', logLevel);
+        }
+
+        if (logMessage) {
+            logMessage.split(',').forEach(element => {
+                requestUrl.searchParams.append('message', element);
+            });
+        }
+
+        fetch(requestUrl).then(response => {
+            return response.json();
+        }).then(responseData => {
+            let data = responseData['results'];
+
+            data.forEach(element => {
+                let alertElement = getMonitoringLogAlertEl(element);
+
+                if (monitoringLogContainerElement.firstElementChild) {
+                    monitoringLogContainerElement.firstElementChild.before(alertElement);
+                } else {
+                    monitoringLogContainerElement.appendChild(alertElement);
+                }
+            });
+        }).catch(error => {
+            console.log(error);
+        });
+    }, 1000);
 });
