@@ -501,11 +501,16 @@ class OperationDataDownloadView(RetrieveAPIView):
         try:
             data_type = kwargs["data_type"]
             data_types = {"bank": Bank, "rack": Rack, "pcs": Pcs, "etc": Etc}
-            date = request.query_params.get("date")
-            start_time = datetime.strptime(date, "%Y-%m-%d")
-            end_time = start_time + timedelta(days=1)
+            start_time_query_param = request.query_params.get("start-time")
+            start_time = datetime.strptime(start_time_query_param, "%Y-%m-%dT%H:%M:%S")
+            end_time_query_param = request.query_params.get("end-time")
+            end_time = datetime.strptime(end_time_query_param, "%Y-%m-%dT%H:%M:%S")
 
-            queryset = data_types[data_type].objects.filter(timestamp__gte=start_time, timestamp__lt=end_time)
+            queryset = (
+                data_types[data_type]
+                .objects.filter(timestamp__gte=start_time, timestamp__lte=end_time)
+                .order_by("-timestamp")
+            )
             fieldnames = list(queryset.values()[0].keys())
 
             return StreamingHttpResponse(
@@ -520,11 +525,20 @@ class OperationDataDownloadView(RetrieveAPIView):
             )
         except ValueError:
             return Response(
-                {"code": "400", "exception type": "Value Error", "message": "올바른 요청 파라미터를 입력하세요.(date)"},
+                {
+                    "code": "400",
+                    "exception type": "Value Error",
+                    "message": "올바른 요청 파라미터를 입력하세요.(time 형식은 'YYYY-MM-DDThh:mm:ss' 입니다.)",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except TypeError:
+            return Response(
+                {"code": "400", "exception type": "Type Error", "message": "필수 요청 파라미터를 입력하세요.(start-time, end-time)"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
         except IndexError:
             return Response(
-                {"code": "404", "exception type": "Index Error", "message": "해당 데이터를 찾을 수 없습니다.(date)"},
+                {"code": "404", "exception type": "Index Error", "message": "해당 데이터를 찾을 수 없습니다."},
                 status=status.HTTP_404_NOT_FOUND,
             )

@@ -480,21 +480,69 @@ operationDataDownloadModal.addEventListener('show.bs.modal', function (event) {
     downloadButton.setAttribute('data-operation-site-id', operationSiteId);
 });
 
-var operationDataDownloadModalDatePicker = $('#operationDataDownloadModalDateInput').datepicker({
-    format: 'yyyy-mm-dd',
-    orientation: 'bottom',
-    autoclose: true
+const operationDataDownloadModalStartDateTimePickerElement = document.getElementById('operationDataDownloadModalStartDateTimePicker');
+const operationDataDownloadModalStartDateTimeTempusDominus = new tempusDominus.TempusDominus(operationDataDownloadModalStartDateTimePickerElement, {
+    display: {
+        components: {
+            seconds: true
+        },
+        sideBySide: true
+    },
+    hooks: {
+        inputFormat: (context, date) => { return DateTime.fromISO(date.toISOString()).toFormat('yyyy-MM-dd HH:mm:ss') }
+    }
+});
+const operationDataDownloadModalEndDateTimeTempusDominus = new tempusDominus.TempusDominus(document.getElementById('operationDataDownloadModalEndDateTimePicker'), {
+    display: {
+        components: {
+            seconds: true
+        },
+        sideBySide: true
+    },
+    hooks: {
+        inputFormat: (context, date) => { return DateTime.fromISO(date.toISOString()).toFormat('yyyy-MM-dd HH:mm:ss') }
+    },
+    useCurrent: false
+});
+
+// Using event listeners
+operationDataDownloadModalStartDateTimePickerElement.addEventListener(tempusDominus.Namespace.events.change, (e) => {
+    operationDataDownloadModalEndDateTimeTempusDominus.updateOptions({
+        restrictions: {
+            minDate: e.detail.date
+        },
+    });
+});
+
+// Using subscribe method
+const operationDataDownloadModalEndDateTimeTempusDominusSubscription = operationDataDownloadModalEndDateTimeTempusDominus.subscribe(tempusDominus.Namespace.events.change, (e) => {
+    operationDataDownloadModalStartDateTimeTempusDominus.updateOptions({
+        restrictions: {
+            maxDate: e.date
+        }
+    });
 });
 
 // Validate operation data download modal form
 const operationDataDownloadModalFormValidation = new JustValidate('#operationDataDownloadModalForm', {
     errorFieldCssClass: 'is-invalid',
+    tootip: {
+        position: 'bottom'
+    }
 });
-operationDataDownloadModalFormValidation.addField('#operationDataDownloadModalDateInput', [
+operationDataDownloadModalFormValidation.addField('#operationDataDownloadModalStartDateTimeInput', [
     {
         plugin: JustValidatePluginDate(fields => ({
             required: true,
-            format: 'yyyy-MM-dd',
+            format: 'yyyy-MM-dd HH:mm:ss'
+        })),
+        errorMessage: '날짜를 선택하세요.'
+    },
+]).addField('#operationDataDownloadModalEndDateTimeInput', [
+    {
+        plugin: JustValidatePluginDate(fields => ({
+            required: true,
+            format: 'yyyy-MM-dd HH:mm:ss'
         })),
         errorMessage: '날짜를 선택하세요.'
     },
@@ -506,8 +554,11 @@ operationDataDownloadModalFormValidation.addField('#operationDataDownloadModalDa
     checkedBoxElements.forEach(element => {
         let operationSiteId = document.querySelector('#operationDataDownloadModalForm button[type=submit]').getAttribute('data-operation-site-id');
         let dataType = element.value;
-        let date = document.getElementById('operationDataDownloadModalDateInput').value;
-        let requestUrl = new URL(window.location.origin + '/api/ess/download/operation-sites/' + operationSiteId + '/' + dataType + '/?date=' + date);
+        let startTime = document.getElementById('operationDataDownloadModalStartDateTimeInput').value.replace(' ', 'T');
+        let endTime = document.getElementById('operationDataDownloadModalEndDateTimeInput').value.replace(' ', 'T');
+        let requestUrl = new URL(window.location.origin + '/api/ess/download/operation-sites/' + operationSiteId + '/' + dataType + '/');
+        requestUrl.searchParams.append('start-time', startTime);
+        requestUrl.searchParams.append('end-time', endTime);
 
         fetch(requestUrl).then(response => {
             return response.blob();

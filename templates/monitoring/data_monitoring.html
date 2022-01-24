@@ -9,6 +9,9 @@
 <script src="https://unpkg.com/@yaireo/tagify@4.9.4/dist/tagify.min.js"></script>
 <script src="https://unpkg.com/@yaireo/tagify@4.9.4/dist/tagify.polyfills.min.js"></script>
 <link href="https://unpkg.com/@yaireo/tagify@4.9.4/dist/tagify.css" rel="stylesheet" type="text/css" />
+<!-- Tempus Dominus Styles -->
+<link rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/@eonasdan/tempus-dominus@6.0.0-beta1/dist/css/tempus-dominus.css">
 
 <style>
     .card>.card-body>.row>div {
@@ -392,9 +395,32 @@
                     <div class="modal-body">
                         <form id="operationDataDownloadModalForm">
                             <div class="form-group">
-                                <label class="form-label">날짜:</label>
-                                <input type="text" class="form-control" id="operationDataDownloadModalDateInput"
-                                    placeholder="날짜를 선택해 주세요" required>
+                                <label for='linkedPickers1Input' class='form-label'>날짜:</label>
+                                <div class='input-group log-event m-b-10'
+                                    id='operationDataDownloadModalStartDateTimePicker' data-td-target-input='nearest'
+                                    data-td-target-toggle='nearest'>
+                                    <input id='operationDataDownloadModalStartDateTimeInput' type='text'
+                                        class='form-control'
+                                        data-td-target='#operationDataDownloadModalStartDateTimePicker'
+                                        placeholder="시작 날짜를 입력해주세요" />
+                                    <span class='input-group-text'
+                                        data-td-target='#operationDataDownloadModalStartDateTimePicker'
+                                        data-td-toggle='datetimepicker'>
+                                        <span class='fas fa-calendar'></span>
+                                    </span>
+                                </div>
+                                <div class='input-group log-event' id='operationDataDownloadModalEndDateTimePicker'
+                                    data-td-target-input='nearest' data-td-target-toggle='nearest'>
+                                    <input id='operationDataDownloadModalEndDateTimeInput' type='text'
+                                        class='form-control'
+                                        data-td-target='#operationDataDownloadModalEndDateTimePicker'
+                                        placeholder="마지막 날짜를 입력해주세요" />
+                                    <span class='input-group-text'
+                                        data-td-target='#operationDataDownloadModalEndDateTimePicker'
+                                        data-td-toggle='datetimepicker'>
+                                        <span class='fas fa-calendar'></span>
+                                    </span>
+                                </div>
                             </div>
                             <div class="form-group" id="operationDataDownloadModalDataTypeCheckboxGroup">
                                 <label class="form-label">데이터 타입:</label>
@@ -443,7 +469,8 @@
 <script src="https://cdn.amcharts.com/lib/5/index.js"></script>
 <script src="https://cdn.amcharts.com/lib/5/xy.js"></script>
 <script src="https://cdn.amcharts.com/lib/5/themes/Animated.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
+<!-- Tempus Dominus JavaScript -->
+<script src="https://cdn.jsdelivr.net/npm/@eonasdan/tempus-dominus@6.0.0-beta1/dist/js/tempus-dominus.min.js"></script>
 <script src="https://unpkg.com/just-validate@3.3.1/dist/just-validate.production.min.js"></script>
 <script
     src="https://cdn.jsdelivr.net/npm/just-validate-plugin-date@1.1.0/dist/just-validate-plugin-date.production.min.js"></script>
