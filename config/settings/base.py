@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     "django_elasticsearch_dsl_drf",
     "rest_framework",
     "ess",
+    "ess_feature",
 ]
 
 MIDDLEWARE = [
@@ -104,10 +105,23 @@ DATABASES = {
             "NAME": os.getenv("ESS_TEST_DB_NAME"),
         },
     },
+    "ess_feature": {
+        "ENGINE": os.getenv("ESS_FEATURE_DB_ENGINE"),
+        "HOST": os.getenv("ESS_FEATURE_DB_HOST"),
+        "PORT": os.getenv("ESS_FEATURE_DB_PORT"),
+        "NAME": os.getenv("ESS_FEATURE_DB_NAME"),
+        "USER": os.getenv("ESS_FEATURE_DB_USER"),
+        "PASSWORD": os.getenv("ESS_FEATURE_DB_PASSWORD"),
+        "TEST": {
+            "DEPENDENCIES": [],
+            "NAME": os.getenv("ESS_FEATURE_DB_NAME"),
+        },
+    },
 }
 
 DATABASE_ROUTERS = [
     "ess.routers.ESSRouter",
+    "ess_feature.routers.ESSFeatureRouter",
 ]
 
 ELASTICSEARCH_DSL = {"default": {"hosts": os.getenv("ESS_ELASTICSEARCH_HOST")}}
