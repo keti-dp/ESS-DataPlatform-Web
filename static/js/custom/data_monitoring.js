@@ -741,3 +741,233 @@ monitoringLogColumnInput.addEventListener('change', event => {
         });
     }, 1000);
 });
+
+// Old monitoring log view event
+// Trigger the contents of the modal depending on which button was clicked
+var monitoringLogViewModal = document.getElementById('monitoringLogViewModal');
+monitoringLogViewModal.addEventListener('show.bs.modal', function (event) {
+    let button = event.relatedTarget;
+    let operatingSiteId = button.getAttribute('data-operating-site-id');
+    let searchButton = monitoringLogViewModal.querySelector('.btn-primary');
+    searchButton.setAttribute('data-operating-site-id', operatingSiteId);
+});
+
+const monitoringLogViewModalStartDateTimePickerElement = document.getElementById('monitoringLogViewModalStartDateTimePicker');
+const monitoringLogViewModalStartDateTimeTempusDominus = new tempusDominus.TempusDominus(monitoringLogViewModalStartDateTimePickerElement, {
+    display: {
+        components: {
+            seconds: true
+        },
+        sideBySide: true
+    },
+    hooks: {
+        inputFormat: (context, date) => { return DateTime.fromISO(date.toISOString()).toFormat('yyyy-MM-dd HH:mm:ss') }
+    }
+});
+const monitoringLogViewModalEndDateTimeTempusDominus = new tempusDominus.TempusDominus(document.getElementById('monitoringLogViewModalEndDateTimePicker'), {
+    display: {
+        components: {
+            seconds: true
+        },
+        sideBySide: true
+    },
+    hooks: {
+        inputFormat: (context, date) => { return DateTime.fromISO(date.toISOString()).toFormat('yyyy-MM-dd HH:mm:ss') }
+    },
+    useCurrent: false
+});
+
+// Using event listeners
+monitoringLogViewModalStartDateTimePickerElement.addEventListener(tempusDominus.Namespace.events.change, (e) => {
+    monitoringLogViewModalEndDateTimeTempusDominus.updateOptions({
+        restrictions: {
+            minDate: e.detail.date
+        },
+    });
+});
+
+// Using subscribe method
+const monitoringLogViewModalEndDateTimeTempusDominusSubscription = monitoringLogViewModalEndDateTimeTempusDominus.subscribe(tempusDominus.Namespace.events.change, (e) => {
+    monitoringLogViewModalStartDateTimeTempusDominus.updateOptions({
+        restrictions: {
+            maxDate: e.date
+        }
+    });
+});
+
+// Validate operation data download modal form
+const monitoringLogViewModalFormValidation = new JustValidate('#monitoringLogViewModalForm', {
+    errorFieldCssClass: 'is-invalid',
+    tootip: {
+        position: 'bottom'
+    }
+});
+monitoringLogViewModalFormValidation.addField('#monitoringLogViewModalStartDateTimeInput', [
+    {
+        plugin: JustValidatePluginDate(fields => ({
+            required: true,
+            format: 'yyyy-MM-dd HH:mm:ss'
+        })),
+        errorMessage: '날짜를 선택하세요.'
+    },
+]).addField('#monitoringLogViewModalEndDateTimeInput', [
+    {
+        plugin: JustValidatePluginDate(fields => ({
+            required: true,
+            format: 'yyyy-MM-dd HH:mm:ss'
+        })),
+        errorMessage: '날짜를 선택하세요.'
+    },
+]).onSuccess(event => {
+    let monitoringLogViewModalGrid = document.querySelector('#monitoringLogViewModalGrid');
+    let monitoringLogViewModalGridLoading = monitoringLogViewModalGrid.previousElementSibling.firstElementChild;
+    let monitoringLogViewModalGridPagination = monitoringLogViewModalGrid.nextElementSibling;
+    let monitoringLogViewModalGridPaginationUlElement = monitoringLogViewModalGridPagination.firstElementChild;
+
+    monitoringLogViewModalGrid.innerHTML = '';
+    monitoringLogViewModalGrid.classList.add('d-none');
+    monitoringLogViewModalGridPagination.classList.add('d-none');
+    monitoringLogViewModalGridLoading.classList.remove('d-none');
+
+    let operatingSiteId = document.querySelector('#monitoringLogViewModalForm button').getAttribute('data-operating-site-id');
+
+    let requestUrl = new URL(window.location.origin + '/api/ess-feature/protectionmap/operating-sites/' + operatingSiteId + '/');
+    requestUrl.searchParams.append('start-time', document.getElementById('monitoringLogViewModalStartDateTimeInput').value.replace(' ', 'T'));
+    requestUrl.searchParams.append('end-time', document.getElementById('monitoringLogViewModalEndDateTimeInput').value.replace(' ', 'T'));
+
+    fetch(requestUrl).then(response => {
+        return response.json();
+    }).then(data => {
+        let columns = Object.keys(data['results'][0]).map(element => {
+            return { field: element };
+        });
+
+        let rows = data['results'].map(element => {
+            let row = {};
+
+            for (const key of Object.keys(element)) {
+                if (element[key]['description']) {
+                    row[key] = element[key]['description'];
+
+                    continue;
+                }
+
+                row[key] = element[key];
+            }
+
+            return row;
+        });
+
+
+        // let the grid know which columns and what data to use
+        let gridOptions = {
+            columnDefs: columns,
+            rowData: rows
+        };
+
+        // create the grid passing in the div to use together with the columns & data we want to use
+        new agGrid.Grid(monitoringLogViewModalGrid, gridOptions);
+
+        monitoringLogViewModalGridLoading.classList.add('d-none');
+        monitoringLogViewModalGrid.classList.remove('d-none');
+
+        if (data['previous'] || data['next']) {
+            monitoringLogViewModalGridPagination.classList.remove('d-none');
+            previousButtonEl = monitoringLogViewModalGridPaginationUlElement.firstElementChild;
+            nextButtonEl = monitoringLogViewModalGridPaginationUlElement.lastElementChild;
+
+            if (data['previous']) {
+                previousButtonEl.classList.remove('disabled');
+                previousButtonEl.firstElementChild.setAttribute('data-link', data['previous']);
+            } else {
+                previousButtonEl.classList.add('disabled');
+            }
+
+            if (data['next']) {
+                nextButtonEl.classList.remove('disabled');
+                nextButtonEl.firstElementChild.setAttribute('data-link', data['next']);
+            } else {
+                nextButtonEl.classList.add('disabled');
+            }
+        }
+
+        // - pagination event
+        monitoringLogViewModalGridPaginationUlElement.querySelectorAll('a').forEach(element => {
+            element.addEventListener('click', event => {
+                monitoringLogViewModalGrid.innerHTML = '';
+                monitoringLogViewModalGrid.classList.add('d-none');
+                monitoringLogViewModalGridPagination.classList.add('d-none');
+                monitoringLogViewModalGridLoading.classList.remove('d-none');
+
+                let requestUrl = new URL(element.getAttribute('data-link'));
+
+                fetch(requestUrl).then(response => {
+                    return response.json();
+                }).then(data => {
+                    let columns = Object.keys(data['results'][0]).map(element => {
+                        return { field: element };
+                    });
+
+                    let rows = data['results'].map(element => {
+                        let row = {};
+
+                        for (const key of Object.keys(element)) {
+                            if (element[key]['description']) {
+                                row[key] = element[key]['description'];
+
+                                continue;
+                            }
+
+                            row[key] = element[key];
+                        }
+
+                        return row;
+                    });
+
+
+                    // let the grid know which columns and what data to use
+                    let gridOptions = {
+                        columnDefs: columns,
+                        rowData: rows
+                    };
+
+                    // create the grid passing in the div to use together with the columns & data we want to use
+                    new agGrid.Grid(monitoringLogViewModalGrid, gridOptions);
+
+                    monitoringLogViewModalGridLoading.classList.add('d-none');
+                    monitoringLogViewModalGrid.classList.remove('d-none');
+
+                    if (data['previous'] || data['next']) {
+                        monitoringLogViewModalGridPagination.classList.remove('d-none');
+                        previousButtonEl = monitoringLogViewModalGridPaginationUlElement.firstElementChild;
+                        nextButtonEl = monitoringLogViewModalGridPaginationUlElement.lastElementChild;
+
+                        if (data['previous']) {
+                            previousButtonEl.classList.remove('disabled');
+                            previousButtonEl.firstElementChild.setAttribute('data-link', data['previous']);
+                        } else {
+                            previousButtonEl.classList.add('disabled');
+                        }
+
+                        if (data['next']) {
+                            nextButtonEl.classList.remove('disabled');
+                            nextButtonEl.firstElementChild.setAttribute('data-link', data['next']);
+                        } else {
+                            nextButtonEl.classList.add('disabled');
+                        }
+                    }
+                }).catch(error => {
+                    console.log(error);
+
+                    monitoringLogViewModalGridLoading.classList.add('d-none');
+                    monitoringLogViewModalGrid.classList.remove('d-none');
+                });
+            });
+        });
+    }).catch(error => {
+        console.log(error);
+
+        monitoringLogViewModalGridLoading.classList.add('d-none');
+        monitoringLogViewModalGrid.classList.remove('d-none');
+    });
+});

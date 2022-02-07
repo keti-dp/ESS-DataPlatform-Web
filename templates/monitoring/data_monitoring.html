@@ -13,6 +13,10 @@
 <link rel="stylesheet"
     href="https://cdn.jsdelivr.net/npm/@eonasdan/tempus-dominus@6.0.0-beta1/dist/css/tempus-dominus.css">
 
+<script src="https://unpkg.com/ag-grid-community/dist/ag-grid-community.min.noStyle.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/ag-grid-community/dist/styles/ag-grid.css">
+<link rel="stylesheet" href="https://unpkg.com/ag-grid-community/dist/styles/ag-theme-alpine.css">
+
 <style>
     .card>.card-body>.row>div {
         height: 225px;
@@ -140,7 +144,9 @@
                                             </button>
                                             <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
                                                 <li><a class="dropdown-item" href="#">ESS 정보 보기</a></li>
-                                                <li><a class="dropdown-item" href="#">지난 로그 보기</a></li>
+                                                <li><a class="dropdown-item" href="#" data-bs-toggle="modal"
+                                                        data-bs-target="#monitoringLogViewModal"
+                                                        data-operating-site-id="1">지난 로그 보기</a></li>
                                                 <li><a class="dropdown-item" href="#" data-bs-toggle="modal"
                                                         data-bs-target="#operationDataDownloadModal"
                                                         data-operation-site-id="1">운영 데이터 다운로드</a>
@@ -205,7 +211,9 @@
                                             </button>
                                             <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
                                                 <li><a class="dropdown-item" href="#">ESS 정보 보기</a></li>
-                                                <li><a class="dropdown-item" href="#">지난 로그 보기</a></li>
+                                                <li><a class="dropdown-item" href="#" data-bs-toggle="modal"
+                                                        data-bs-target="#monitoringLogViewModal"
+                                                        data-operating-site-id="2">지난 로그 보기</a></li>
                                                 <li><a class="dropdown-item" href="#" data-bs-toggle="modal"
                                                         data-bs-target="#operationDataDownloadModal"
                                                         data-operation-site-id="2">운영 데이터 다운로드</a></li>
@@ -250,7 +258,9 @@
                                             </button>
                                             <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
                                                 <li><a class="dropdown-item" href="#">ESS 정보 보기</a></li>
-                                                <li><a class="dropdown-item" href="#">지난 로그 보기</a></li>
+                                                <li><a class="dropdown-item" href="#" data-bs-toggle="modal"
+                                                        data-bs-target="#monitoringLogViewModal"
+                                                        data-operating-site-id="3">지난 로그 보기</a></li>
                                                 <li><a class="dropdown-item" href="#" data-bs-toggle="modal"
                                                         data-bs-target="#operationDataDownloadModal"
                                                         data-operation-site-id="3">운영 데이터 다운로드</a></li>
@@ -293,7 +303,9 @@
                                             </button>
                                             <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
                                                 <li><a class="dropdown-item" href="#">ESS 정보 보기</a></li>
-                                                <li><a class="dropdown-item" href="#">지난 로그 보기</a></li>
+                                                <li><a class="dropdown-item" href="#" data-bs-toggle="modal"
+                                                        data-bs-target="#monitoringLogViewModal"
+                                                        data-operating-site-id="4">지난 로그 보기</a></li>
                                                 <li><a class="dropdown-item" href="#" data-bs-toggle="modal"
                                                         data-bs-target="#operationDataDownloadModal"
                                                         data-operation-site-id="4">운영 데이터 다운로드</a></li>
@@ -336,7 +348,9 @@
                                             </button>
                                             <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
                                                 <li><a class="dropdown-item" href="#">ESS 정보 보기</a></li>
-                                                <li><a class="dropdown-item" href="#">지난 로그 보기</a></li>
+                                                <li><a class="dropdown-item" href="#" data-bs-toggle="modal"
+                                                        data-bs-target="#monitoringLogViewModal"
+                                                        data-operating-site-id="5">지난 로그 보기</a></li>
                                                 <li><a class="dropdown-item" href="#" data-bs-toggle="modal"
                                                         data-bs-target="#operationDataDownloadModal"
                                                         data-operation-site-id="5">운영 데이터 다운로드</a></li>
@@ -456,6 +470,67 @@
                 </div>
             </div>
         </div>
+
+        <!-- Download operation data modal -->
+        <div class="modal fade" id="monitoringLogViewModal" tabindex="-1" aria-labelledby="monitoringLogViewModalLabel"
+            aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="monitoringLogViewModalLabel">지난 로그 보기</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="monitoringLogViewModalForm">
+                            <div class="form-group">
+                                <label for='linkedPickers1Input' class='form-label'>날짜:</label>
+                                <div class='input-group log-event m-b-10' id='monitoringLogViewModalStartDateTimePicker'
+                                    data-td-target-input='nearest' data-td-target-toggle='nearest'>
+                                    <input id='monitoringLogViewModalStartDateTimeInput' type='text'
+                                        class='form-control' data-td-target='#monitoringLogViewModalStartDateTimePicker'
+                                        placeholder="시작 날짜를 입력해주세요" />
+                                    <span class='input-group-text'
+                                        data-td-target='#monitoringLogViewModalStartDateTimePicker'
+                                        data-td-toggle='datetimepicker'>
+                                        <span class='fas fa-calendar'></span>
+                                    </span>
+                                </div>
+                                <div class='input-group log-event' id='monitoringLogViewModalEndDateTimePicker'
+                                    data-td-target-input='nearest' data-td-target-toggle='nearest'>
+                                    <input id='monitoringLogViewModalEndDateTimeInput' type='text' class='form-control'
+                                        data-td-target='#monitoringLogViewModalEndDateTimePicker'
+                                        placeholder="마지막 날짜를 입력해주세요" />
+                                    <span class='input-group-text'
+                                        data-td-target='#monitoringLogViewModalEndDateTimePicker'
+                                        data-td-toggle='datetimepicker'>
+                                        <span class='fas fa-calendar'></span>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <button type="submit" class="btn btn-primary">검색</button>
+                            </div>
+                        </form>
+                        <div class="d-flex justify-content-center">
+                            <div class="lds-ripple d-none">
+                                <div></div>
+                            </div>
+                        </div>
+                        <div id="monitoringLogViewModalGrid" class="ag-theme-alpine d-none" style="height: 300px;">
+                        </div>
+                        <nav class="m-t-10 d-none" aria-label="grid page">
+                            <ul class="pagination justify-content-center">
+                                <li class="page-item"><a href="#" class="page-link">이전</a></li>
+                                <li class="page-item"><a href="#" class="page-link">다음</a></li>
+                            </ul>
+                        </nav>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+                    </div>
+                </div>
+            </div>
+        </div>
         <!-- [ Modal ] end -->
 
     </div>
@@ -474,6 +549,7 @@
 <script src="https://unpkg.com/just-validate@3.3.1/dist/just-validate.production.min.js"></script>
 <script
     src="https://cdn.jsdelivr.net/npm/just-validate-plugin-date@1.1.0/dist/just-validate-plugin-date.production.min.js"></script>
+<script src="https://unpkg.com/ag-grid-community/dist/ag-grid-community.min.js"></script>
 
 <script src="{% static 'js/custom/data_monitoring.js' %}"></script>
 <script>
