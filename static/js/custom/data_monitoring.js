@@ -971,3 +971,151 @@ monitoringLogViewModalFormValidation.addField('#monitoringLogViewModalStartDateT
         monitoringLogViewModalGrid.classList.remove('d-none');
     });
 });
+
+// Primary monitoring
+// - Monitoring log
+var primaryMonitoringLogEl = document.getElementById('primaryMonitoringLog');
+var primaryMonitoringLogLoading = primaryMonitoringLogEl.querySelector('div').firstElementChild;
+var primaryMonitoringLogPagination = primaryMonitoringLogEl.querySelector('nav');
+var primaryMonitoringLogPaginationUlEl = primaryMonitoringLogPagination.firstElementChild;
+var primaryMonitoringLogContainerEl = primaryMonitoringLogPagination.previousElementSibling;
+
+function getPrimaryMonitoringLogAlertContainerEl(data) {
+    let primaryMonitoringLogAlertContainerEl = document.createElement('div');
+    let primaryMonitoringLogAlertTimeEl = document.createElement('p');
+    let primaryMonitoringLogAlertEl = document.createElement('div');
+
+    let alertMessage = '운영 사이트 ' + data['operating_site'] + ' Bank ' + data['bank_id'] + '의 Rack ' + data['rack_id'] + '에서 ' + data['error_code']['description'] + ' 발생';
+    let alertLevel;
+
+    switch (data['level']['id']) {
+        case 1:
+            alertLevel = 'warning';
+            break;
+        case 2:
+            alertLevel = 'danger';
+        default:
+            break;
+    }
+
+    primaryMonitoringLogAlertTimeEl.setAttribute('class', 'm-b-0');
+    primaryMonitoringLogAlertTimeEl.innerHTML = '<small>' + DateTime.fromISO(data['timestamp']).toFormat('yyyy-MM-dd HH:mm:ss') + '</small>';
+    primaryMonitoringLogAlertEl.setAttribute('class', 'alert alert-' + alertLevel + ' p-l-10 p-t-0 p-b-0');
+    primaryMonitoringLogAlertEl.innerHTML = '<p class="m-t-0 m-b-0"><small>' + alertMessage + '</small></p>';
+
+    primaryMonitoringLogAlertContainerEl.appendChild(primaryMonitoringLogAlertTimeEl);
+    primaryMonitoringLogAlertContainerEl.appendChild(primaryMonitoringLogAlertEl);
+
+    return primaryMonitoringLogAlertContainerEl;
+}
+
+function setUpPaginationButton(data, paginationEl, paginationUlEl) {
+    if (data['previous'] || data['next']) {
+        paginationEl.classList.remove('d-none');
+        previousButtonEl = paginationUlEl.firstElementChild;
+        nextButtonEl = paginationUlEl.lastElementChild;
+
+        if (data['previous']) {
+            previousButtonEl.classList.remove('disabled');
+            previousButtonEl.firstElementChild.setAttribute('data-link', data['previous']);
+        } else {
+            previousButtonEl.classList.add('disabled');
+        }
+
+        if (data['next']) {
+            nextButtonEl.classList.remove('disabled');
+            nextButtonEl.firstElementChild.setAttribute('data-link', data['next']);
+        } else {
+            nextButtonEl.classList.add('disabled');
+        }
+    }
+}
+
+var startTime = DateTime.now().toISODate();
+var endTime = DateTime.now().plus({ days: 1 }).toISODate();
+var requestUrl = new URL(window.location.origin + '/api/ess-feature/protectionmap');
+requestUrl.searchParams.append('start-time', startTime);
+requestUrl.searchParams.append('end-time', endTime);
+
+fetch(requestUrl).then(response => {
+    return response.json();
+}).then(data => {
+    data['results'].forEach(element => {
+        let primaryMonitoringLogAlertContainerEl = getPrimaryMonitoringLogAlertContainerEl(element);
+
+        primaryMonitoringLogContainerEl.appendChild(primaryMonitoringLogAlertContainerEl);
+    });
+
+    primaryMonitoringLogLoading.classList.add('d-none');
+    primaryMonitoringLogContainerEl.classList.remove('d-none');
+
+    setUpPaginationButton(data, primaryMonitoringLogPagination, primaryMonitoringLogPaginationUlEl);
+
+    function loadLatestProtectionMapFeature() {
+        let time = DateTime.now().minus({ seconds: 2 }).toFormat('yyyy-MM-dd HH:mm:ss').replace(' ', 'T');
+        let requestUrl = new URL(window.location.origin + '/api/ess-feature/protectionmap/');
+        requestUrl.searchParams.append('time', time);
+
+        fetch(requestUrl).then(response => {
+            return response.json();
+        }).then(data => {
+            data['results'].forEach(element => {
+                let primaryMonitoringLogAlertContainerEl = getPrimaryMonitoringLogAlertContainerEl(element);
+
+                if (primaryMonitoringLogContainerEl.firstElementChild) {
+                    primaryMonitoringLogContainerEl.firstElementChild.before(primaryMonitoringLogAlertContainerEl);
+                } else {
+                    primaryMonitoringLogContainerEl.appendChild(primaryMonitoringLogAlertContainerEl);
+                }
+            });
+        }).catch(error => {
+            console.log(error);
+        });
+    }
+
+    // Load latest primary monitoring log
+    let primaryMonitoringLogInterval = setInterval(loadLatestProtectionMapFeature, 1000);
+
+    // Pagination event
+    primaryMonitoringLogPaginationUlEl.querySelectorAll('a').forEach(element => {
+        element.addEventListener('click', event => {
+            primaryMonitoringLogContainerEl.innerHTML = '';
+            primaryMonitoringLogContainerEl.classList.add('d-none');
+            primaryMonitoringLogPagination.classList.add('d-none');
+            primaryMonitoringLogLoading.classList.remove('d-none');
+
+            let requestUrl = new URL(element.getAttribute('data-link'));
+
+            // Load latest primary monitoring log in only page 1!
+            if (primaryMonitoringLogInterval) {
+                clearInterval(primaryMonitoringLogInterval);
+            }
+
+            if (!requestUrl.searchParams.get('page') || requestUrl.searchParams.get('page') == 1) {
+                primaryMonitoringLogInterval = setInterval(loadLatestProtectionMapFeature, 1000);
+            }
+
+            fetch(requestUrl).then(response => {
+                return response.json();
+            }).then(data => {
+                data['results'].forEach(element => {
+                    let primaryMonitoringLogAlertContainerEl = getPrimaryMonitoringLogAlertContainerEl(element);
+
+                    primaryMonitoringLogContainerEl.appendChild(primaryMonitoringLogAlertContainerEl);
+                });
+
+                primaryMonitoringLogLoading.classList.add('d-none');
+                primaryMonitoringLogContainerEl.classList.remove('d-none');
+
+                setUpPaginationButton(data, primaryMonitoringLogPagination, primaryMonitoringLogPaginationUlEl);
+            }).catch(error => {
+                console.log(error);
+
+                primaryMonitoringLogLoading.classList.add('d-none');
+                primaryMonitoringLog.classList.remove('d-none');
+            });
+        });
+    });
+}).catch(error => {
+    console.log(error);
+});

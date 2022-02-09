@@ -82,6 +82,10 @@
             opacity: 0;
         }
     }
+
+    .tooltip-inner {
+        text-align: left;
+    }
 </style>
 {% endblock %}
 
@@ -108,14 +112,35 @@
         <!-- [ Main Content ] start -->
         <div class="row">
             <div class="col-xl-4 col-md-12">
-                <div class="card">
+                <div id="primaryMonitoringCard" class="card">
                     <div class="card-header">
                         <h5>기본 모니터링</h5>
                     </div>
                     <div class="card-body">
                         <div class="row">
-                            <div class="col">
-                                <p>서비스를 준비중입니다.</p>
+                            <!-- Monitoring list area -->
+                            <div id="primaryMonitoringLog" class="col-xl-7 col-md-12 overflow-auto">
+                                <h6>전체 장애 발생 알림 <i class="bi bi-info-circle" data-bs-toggle="tooltip"
+                                        data-bs-placement="top" title=""
+                                        data-bs-original-title="첫 페이지만 실시간으로 업데이트 합니다."></i></h6>
+                                <!-- Loading -->
+                                <div class="d-flex justify-content-center">
+                                    <div class="lds-ripple">
+                                        <div></div>
+                                    </div>
+                                </div>
+                                <!-- Monitoring log container -->
+                                <div class="d-none"></div>
+                                <nav class="m-t-10 d-none" aria-label="grid page">
+                                    <ul class="pagination justify-content-center">
+                                        <li class="page-item"><a href="#" class="page-link">이전</a></li>
+                                        <li class="page-item"><a href="#" class="page-link">다음</a></li>
+                                    </ul>
+                                </nav>
+                            </div>
+
+                            <!-- Monitoring log area  -->
+                            <div class="col-xl-5 col-md-12 overflow-auto">
                             </div>
                         </div>
                     </div>
@@ -511,6 +536,7 @@
                                 <button type="submit" class="btn btn-primary">검색</button>
                             </div>
                         </form>
+                        <!-- Loading -->
                         <div class="d-flex justify-content-center">
                             <div class="lds-ripple d-none">
                                 <div></div>
