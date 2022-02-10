@@ -1119,3 +1119,112 @@ fetch(requestUrl).then(response => {
 }).catch(error => {
     console.log(error);
 });
+
+// - Monitoring log level type count visualization
+function getcreateMonitoringLogLevelTypeCountChartSeriesData(data) {
+    let seriesData = data.map(element => {
+        let logLevelDescription;
+
+        switch (element['level']) {
+            case 1:
+                logLevelDescription = '경고(Warning)';
+                break;
+            case 2:
+                logLevelDescription = '보호(Fault)';
+                break;
+            default:
+                break;
+        }
+
+        return {
+            value: element['level_count'],
+            category: logLevelDescription,
+        }
+    });
+
+    return seriesData;
+}
+
+function createMonitoringLogLevelTypeCountChart(chartSeries, chartSeriesData, chartLegend) {
+    chartSeries.data.setAll(chartSeriesData);
+
+    chartLegend.data.setAll(chartSeries.dataItems);
+
+    // Play initial series animation
+    chartSeries.appear(2000, 500);
+}
+
+// Create initial monitoring log level type count chart
+var primaryMonitoringLogLevelTypeCountChartRoot = am5.Root.new('primaryMonitoringLogLevelTypeCountChart');
+primaryMonitoringLogLevelTypeCountChartRoot.setThemes([am5themes_Animated.new(primaryMonitoringLogLevelTypeCountChartRoot)]);
+
+var primaryMonitoringLogLevelTypeCountChart = primaryMonitoringLogLevelTypeCountChartRoot.container.children.push(am5percent.PieChart.new(primaryMonitoringLogLevelTypeCountChartRoot, {
+    layout: primaryMonitoringLogLevelTypeCountChartRoot.verticalLayout,
+    innerRadius: am5.percent(50)
+}));
+
+var primaryMonitoringLogLevelTypeCountChartSeries = primaryMonitoringLogLevelTypeCountChart.series.push(am5percent.PieSeries.new(primaryMonitoringLogLevelTypeCountChartRoot, {
+    valueField: "value",
+    categoryField: "category",
+    alignLabels: false,
+    legendValueText: '{value}'
+}));
+
+primaryMonitoringLogLevelTypeCountChartSeries.get("colors").set("colors", [
+    am5.color(0xffe3bb),
+    am5.color(0xf9caca),
+]);
+
+primaryMonitoringLogLevelTypeCountChartSeries.labels.template.setAll({
+    textType: "circular",
+    inside: false,
+    radius: 10
+});
+
+var primaryMonitoringLogLevelTypeCountChartLegend = primaryMonitoringLogLevelTypeCountChart.children.push(am5.Legend.new(primaryMonitoringLogLevelTypeCountChartRoot, {
+    centerX: am5.percent(50),
+    x: am5.percent(50),
+    marginTop: 15,
+    marginBottom: 15,
+}));
+
+var startTime = DateTime.now().toISODate();
+var endTime = DateTime.now().plus({ days: 1 }).toISODate();
+var requestUrl = new URL(window.location.origin + '/api/ess-feature/protectionmap/operating-sites/1/stats/log-level-count');
+requestUrl.searchParams.append('start-time', startTime);
+requestUrl.searchParams.append('end-time', endTime);
+requestUrl.searchParams.append('time-bucket-width', '1days');
+
+fetch(requestUrl).then(response => {
+    return response.json();
+}).then(data => {
+    let seriesData = getcreateMonitoringLogLevelTypeCountChartSeriesData(data);
+
+    createMonitoringLogLevelTypeCountChart(primaryMonitoringLogLevelTypeCountChartSeries, seriesData, primaryMonitoringLogLevelTypeCountChartLegend);
+}).catch(error => {
+    console.log(error);
+});
+
+// Monitoring log level type count select event
+var primaryMonitoringLogLevelTypeCountEl = document.getElementById('primaryMonitoringLogLevelTypeCount');
+var primaryMonitoringLogLevelTypeCountSelectEl = primaryMonitoringLogLevelTypeCountEl.querySelector('select');
+primaryMonitoringLogLevelTypeCountSelectEl.addEventListener('change', event => {
+    let operatingSiteId = primaryMonitoringLogLevelTypeCountSelectEl.value;
+    let startTime = DateTime.now().toISODate();
+    let endTime = DateTime.now().plus({ days: 1 }).toISODate();
+    let requestUrl = new URL(window.location.origin + '/api/ess-feature/protectionmap/operating-sites/' + operatingSiteId + '/stats/log-level-count');
+    requestUrl.searchParams.append('start-time', startTime);
+    requestUrl.searchParams.append('end-time', endTime);
+    requestUrl.searchParams.append('time-bucket-width', '1days');
+
+    fetch(requestUrl).then(response => {
+        return response.json();
+    }).then(data => {
+        let seriesData = getcreateMonitoringLogLevelTypeCountChartSeriesData(data);
+
+        createMonitoringLogLevelTypeCountChart(primaryMonitoringLogLevelTypeCountChartSeries, seriesData, primaryMonitoringLogLevelTypeCountChartLegend);
+    }).catch(error => {
+        console.log(error);
+    });
+});
+

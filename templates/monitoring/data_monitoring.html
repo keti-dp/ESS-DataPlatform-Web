@@ -118,8 +118,8 @@
                     </div>
                     <div class="card-body">
                         <div class="row">
-                            <!-- Monitoring list area -->
-                            <div id="primaryMonitoringLog" class="col-xl-7 col-md-12 overflow-auto">
+                            <!-- Monitoring log area -->
+                            <div id="primaryMonitoringLog" class="col-xl-6 col-md-12 overflow-auto">
                                 <h6>전체 장애 발생 알림 <i class="bi bi-info-circle" data-bs-toggle="tooltip"
                                         data-bs-placement="top" title=""
                                         data-bs-original-title="첫 페이지만 실시간으로 업데이트 합니다."></i></h6>
@@ -139,8 +139,20 @@
                                 </nav>
                             </div>
 
-                            <!-- Monitoring log area  -->
-                            <div class="col-xl-5 col-md-12 overflow-auto">
+                            <!-- Monitoring log level type area  -->
+                            <div id="primaryMonitoringLogLevelTypeCount" class="col-xl-6 col-md-12 overflow-auto">
+                                <h6>이상 감지 유형 <i class="bi bi-info-circle" data-bs-toggle="tooltip"
+                                        data-bs-placement="top" title=""
+                                        data-bs-original-title="현재 날짜 기준으로 발생한 이상 감지 유형을 시각화합니다."></i></h6>
+                                <select class="form-select form-select-sm mb-1">
+                                    <option value="1">시온유 태양광</option>
+                                    <option value="2">2</option>
+                                    <option value="3">3</option>
+                                    <option value="4">4</option>
+                                    <option value="5">5</option>
+                                </select>
+                                <!-- Monitoring log level type chart container -->
+                                <div id="primaryMonitoringLogLevelTypeCountChart" style="height: 300px;"></div>
                             </div>
                         </div>
                     </div>
@@ -569,6 +581,7 @@
 <script src="https://cdn.jsdelivr.net/npm/luxon@2.1.1/build/global/luxon.min.js"></script>
 <script src="https://cdn.amcharts.com/lib/5/index.js"></script>
 <script src="https://cdn.amcharts.com/lib/5/xy.js"></script>
+<script src="https://cdn.amcharts.com/lib/5/percent.js"></script>
 <script src="https://cdn.amcharts.com/lib/5/themes/Animated.js"></script>
 <!-- Tempus Dominus JavaScript -->
 <script src="https://cdn.jsdelivr.net/npm/@eonasdan/tempus-dominus@6.0.0-beta1/dist/js/tempus-dominus.min.js"></script>
