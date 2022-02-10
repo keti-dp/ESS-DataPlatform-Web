@@ -1,3 +1,4 @@
+import csv
 from datetime import datetime
 from datetime import timedelta
 from django.db import connections, DataError
@@ -18,6 +19,7 @@ from django_elasticsearch_dsl_drf.filter_backends import (
 )
 from django_elasticsearch_dsl_drf.viewsets import BaseDocumentViewSet
 from django_elasticsearch_dsl_drf.pagination import PageNumberPagination
+from django.http import StreamingHttpResponse
 from rest_framework import status
 from rest_framework.views import Response
 from rest_framework.generics import ListAPIView, RetrieveAPIView
@@ -38,10 +40,26 @@ from .serializer import (
 )
 
 
+class Echo:
+    """An object that implements just the write method of the file-like interface."""
+
+    def write(self, value):
+        """Write the value by returning it, instead of storing in a buffer."""
+        return value
+
+
 def dictfetchall(cursor):
     "Return all rows from a cursor as a dict"
     columns = [col[0] for col in cursor.description]
     return [dict(zip(columns, row)) for row in cursor.fetchall()]
+
+
+def get_csv_items(rows, pseudo_buffer, fieldnames):
+    writer = csv.DictWriter(pseudo_buffer, fieldnames=fieldnames)
+    yield writer.writeheader()
+
+    for row in rows:
+        yield writer.writerow(row)
 
 
 class BankListView(ListAPIView):
@@ -475,3 +493,52 @@ class LatestEtcView(RetrieveAPIView):
         serializer = EtcSerializer(queryset)
 
         return Response(serializer.data)
+
+
+# Download operation data
+class OperationDataDownloadView(RetrieveAPIView):
+    def get(self, request, *args, **kwargs):
+        try:
+            data_type = kwargs["data_type"]
+            data_types = {"bank": Bank, "rack": Rack, "pcs": Pcs, "etc": Etc}
+            start_time_query_param = request.query_params.get("start-time")
+            start_time = datetime.strptime(start_time_query_param, "%Y-%m-%dT%H:%M:%S")
+            end_time_query_param = request.query_params.get("end-time")
+            end_time = datetime.strptime(end_time_query_param, "%Y-%m-%dT%H:%M:%S")
+
+            queryset = (
+                data_types[data_type]
+                .objects.filter(timestamp__gte=start_time, timestamp__lte=end_time)
+                .order_by("-timestamp")
+            )
+            fieldnames = list(queryset.values()[0].keys())
+
+            return StreamingHttpResponse(
+                (get_csv_items(queryset.values(), Echo(), fieldnames)),
+                content_type="text/csv",
+                headers={"Content-Disposition": 'attachment; filename="' + data_type + '.csv"'},
+            )
+        except KeyError:
+            return Response(
+                {"code": "400", "exception type": "Key Error", "message": "올바른 요청 URL을 입력하세요.(data_type)"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except ValueError:
+            return Response(
+                {
+                    "code": "400",
+                    "exception type": "Value Error",
+                    "message": "올바른 요청 파라미터를 입력하세요.(time 형식은 'YYYY-MM-DDThh:mm:ss' 입니다.)",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except TypeError:
+            return Response(
+                {"code": "400", "exception type": "Type Error", "message": "필수 요청 파라미터를 입력하세요.(start-time, end-time)"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except IndexError:
+            return Response(
+                {"code": "404", "exception type": "Index Error", "message": "해당 데이터를 찾을 수 없습니다."},
+                status=status.HTTP_404_NOT_FOUND,
+            )

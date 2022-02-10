@@ -254,7 +254,7 @@ function getLineChart(elementId, data, option = {}) {
     return series;
 }
 
-// Initial task
+/* Initial task */
 // - Create monitoring list
 var opertaionSiteMonitoringListColumn = document.getElementById('operationSite1-monitoring-list-column');
 opertaionSiteMonitoringListColumn.appendChild(getOperationSiteInfoMonitoringList('operationSite1', 'bank', [1]));
@@ -304,7 +304,6 @@ setInterval(async () => {
 }, 1000);
 
 // - Create monitoring list item chart
-
 var monitoringListItemChart;
 
 var monitoringListItemModalTriggerList = [].slice.call(document.querySelectorAll('[data-bs-target="#monitoringListItemModal"]'));
@@ -370,11 +369,37 @@ monitoringListItemModalTriggerList.forEach(element => {
     });
 });
 
-// - Create monitoring log
+// - Create room sensor of bank header in monitoring list
+setInterval(() => {
+    let requestUrl = new URL(window.location.origin + '/api/ess/operation-sites/1/banks/1/etc/latest/');
 
+    fetch(requestUrl).then(response => {
+        return response.json();
+    }).then(data => {
+        let header = document.querySelector('#operationSite1-monitoring-list-column > div:nth-child(1) > div.col > h6');
+        let oldSmall = header.querySelector('small');
+
+        if (oldSmall) {
+            header.removeChild(oldSmall);
+        }
+
+        let newSmall = document.createElement('small');
+        // Degree Celsius HTML Code '&#8451;'
+        newSmall.innerHTML = ' <span class="material-icons-two-tone">thermostat</span>' + data['sensor1_temperature'] + '&#8451;' + ' <span class="material-icons-two-tone">water_drop</span>' + data['sensor1_humidity'] + '%';
+
+        header.appendChild(newSmall);
+    }).catch(error => {
+        console.log(error);
+    });
+}, 1000);
+
+// - Create monitoring log
 let operationSite1MonitoringLogColumn = document.getElementById('operationSite1-monitoring-log-column');
-var reqeustUrl = new URL(window.location.origin + '/api/ess/search/data-monitoring-logs/?operation_site=operation1_local&time__gte=' +
-    DateTime.utc().toFormat('yyyy-MM-dd').toString() + '&time__lte=' + DateTime.utc().plus({ days: 1 }).toFormat('yyyy-MM-dd').toString());
+var monitoringLogContainerElement = operationSite1MonitoringLogColumn.querySelector('div');
+var requestUrl = new URL(window.location.origin + '/api/ess/search/data-monitoring-logs/');
+requestUrl.searchParams.append('operation_site', 'operation1_local');
+requestUrl.searchParams.append('time_gte', DateTime.utc().toFormat('yyyy-MM-dd').toString());
+requestUrl.searchParams.append('time_lte', DateTime.utc().plus({ days: 1 }).toFormat('yyyy-MM-dd').toString());
 
 function getMonitoringLogAlertEl(data) {
     let monitoringLogAlertEl = document.createElement('div');
@@ -407,34 +432,799 @@ function getMonitoringLogAlertEl(data) {
     return monitoringLogAlertEl;
 }
 
-fetch(reqeustUrl).then(response => {
+fetch(requestUrl).then(response => {
     return response.json();
 }).then(responseData => {
     for (const data of responseData['results']) {
-        var alertEl = getMonitoringLogAlertEl(data);
+        var alertElement = getMonitoringLogAlertEl(data);
 
-        operationSite1MonitoringLogColumn.appendChild(alertEl);
+        monitoringLogContainerElement.appendChild(alertElement);
     }
 }).catch(error => {
     console.log(error);
 });
 
-setInterval(() => {
+let initialMonitoringLogLoadInterval = setInterval(() => {
     // After wait for save time of monitoring log data, lazy request
     var time = DateTime.utc().minus({ seconds: 2 }).toFormat('yyyy-MM-dd HH:mm:ss').toString().replace(' ', 'T');
-    var reqeustUrl = new URL(window.location.origin + '/api/ess/search/data-monitoring-logs/?operation_site=operation1_local&time=' + time);
+    let requestUrl = new URL(window.location.origin + '/api/ess/search/data-monitoring-logs/');
+    requestUrl.searchParams.append('operation_site', 'operation1_local');
+    requestUrl.searchParams.append('time', time);
 
-    fetch(reqeustUrl).then(response => {
+    fetch(requestUrl).then(response => {
         return response.json();
     }).then(responseData => {
         let data = responseData['results'];
 
         data.forEach(element => {
-            let alertEl = getMonitoringLogAlertEl(element);
+            let alertElement = getMonitoringLogAlertEl(element);
 
-            operationSite1MonitoringLogColumn.querySelector('input').after(alertEl);
+            if (monitoringLogContainerElement.firstElementChild) {
+                monitoringLogContainerElement.firstElementChild.before(alertElement);
+            } else {
+                monitoringLogContainerElement.appendChild(alertElement);
+            }
         });
     }).catch(error => {
         console.log(error);
     });
 }, 1000);
+
+// - Download operation data
+// Trigger the contents of the modal depending on which button was clicked
+var operationDataDownloadModal = document.getElementById('operationDataDownloadModal');
+operationDataDownloadModal.addEventListener('show.bs.modal', function (event) {
+    let button = event.relatedTarget;
+    let operationSiteId = button.getAttribute('data-operation-site-id');
+    let downloadButton = operationDataDownloadModal.querySelector('.btn-primary');
+    downloadButton.setAttribute('data-operation-site-id', operationSiteId);
+});
+
+const operationDataDownloadModalStartDateTimePickerElement = document.getElementById('operationDataDownloadModalStartDateTimePicker');
+const operationDataDownloadModalStartDateTimeTempusDominus = new tempusDominus.TempusDominus(operationDataDownloadModalStartDateTimePickerElement, {
+    display: {
+        components: {
+            seconds: true
+        },
+        sideBySide: true
+    },
+    hooks: {
+        inputFormat: (context, date) => { return DateTime.fromISO(date.toISOString()).toFormat('yyyy-MM-dd HH:mm:ss') }
+    }
+});
+const operationDataDownloadModalEndDateTimeTempusDominus = new tempusDominus.TempusDominus(document.getElementById('operationDataDownloadModalEndDateTimePicker'), {
+    display: {
+        components: {
+            seconds: true
+        },
+        sideBySide: true
+    },
+    hooks: {
+        inputFormat: (context, date) => { return DateTime.fromISO(date.toISOString()).toFormat('yyyy-MM-dd HH:mm:ss') }
+    },
+    useCurrent: false
+});
+
+// Using event listeners
+operationDataDownloadModalStartDateTimePickerElement.addEventListener(tempusDominus.Namespace.events.change, (e) => {
+    operationDataDownloadModalEndDateTimeTempusDominus.updateOptions({
+        restrictions: {
+            minDate: e.detail.date
+        },
+    });
+});
+
+// Using subscribe method
+const operationDataDownloadModalEndDateTimeTempusDominusSubscription = operationDataDownloadModalEndDateTimeTempusDominus.subscribe(tempusDominus.Namespace.events.change, (e) => {
+    operationDataDownloadModalStartDateTimeTempusDominus.updateOptions({
+        restrictions: {
+            maxDate: e.date
+        }
+    });
+});
+
+// Validate operation data download modal form
+const operationDataDownloadModalFormValidation = new JustValidate('#operationDataDownloadModalForm', {
+    errorFieldCssClass: 'is-invalid',
+    tootip: {
+        position: 'bottom'
+    }
+});
+operationDataDownloadModalFormValidation.addField('#operationDataDownloadModalStartDateTimeInput', [
+    {
+        plugin: JustValidatePluginDate(fields => ({
+            required: true,
+            format: 'yyyy-MM-dd HH:mm:ss'
+        })),
+        errorMessage: '날짜를 선택하세요.'
+    },
+]).addField('#operationDataDownloadModalEndDateTimeInput', [
+    {
+        plugin: JustValidatePluginDate(fields => ({
+            required: true,
+            format: 'yyyy-MM-dd HH:mm:ss'
+        })),
+        errorMessage: '날짜를 선택하세요.'
+    },
+]).addRequiredGroup(
+    '#operationDataDownloadModalDataTypeCheckboxGroup',
+    '1가지 이상의 데이터 타입을 선택하세요.'
+).onSuccess(event => {
+    let checkedBoxElements = document.querySelectorAll('#operationDataDownloadModalDataTypeCheckboxGroup input:checked');
+    checkedBoxElements.forEach(element => {
+        let operationSiteId = document.querySelector('#operationDataDownloadModalForm button[type=submit]').getAttribute('data-operation-site-id');
+        let dataType = element.value;
+        let startTime = document.getElementById('operationDataDownloadModalStartDateTimeInput').value.replace(' ', 'T');
+        let endTime = document.getElementById('operationDataDownloadModalEndDateTimeInput').value.replace(' ', 'T');
+        let requestUrl = new URL(window.location.origin + '/api/ess/download/operation-sites/' + operationSiteId + '/' + dataType + '/');
+        requestUrl.searchParams.append('start-time', startTime);
+        requestUrl.searchParams.append('end-time', endTime);
+
+        fetch(requestUrl).then(response => {
+            return response.blob();
+        }).then(data => {
+            let tempAnchorElement = document.createElement('a');
+            tempAnchorElement.href = window.URL.createObjectURL(data);
+            tempAnchorElement.setAttribute('download', dataType);
+            tempAnchorElement.click();
+        }).catch(error => {
+            console.log(error);
+        });
+    });
+});
+
+// - Tagging monitoring log message search input
+var monitoringLogColumnInput = operationSite1MonitoringLogColumn.querySelector('input');
+new Tagify(monitoringLogColumnInput, {
+    originalInputValueFormat: valuesArr => valuesArr.map(item => item.value).join(',')
+});;
+
+/* Event task */
+// - Monitoring log level select event
+var monitoringLogLoadInterval;
+var monitoringLogColumnSelectElement = document.querySelector('#operationSite1-monitoring-log-column select');
+monitoringLogColumnSelectElement.addEventListener('change', event => {
+    monitoringLogContainerElement.innerHTML = '';
+
+    // Clear initial monitoring log load interval
+    if (initialMonitoringLogLoadInterval) {
+        clearInterval(initialMonitoringLogLoadInterval);
+    }
+
+    // Clear previous monitoring log load interval
+    if (monitoringLogLoadInterval) {
+        clearInterval(monitoringLogLoadInterval);
+    }
+
+    let logLevel = event.target.value;
+    let logMessage = monitoringLogColumnInput.value;
+    let requestUrl = new URL(window.location.origin + '/api/ess/search/data-monitoring-logs/');
+    requestUrl.searchParams.append('operation_site', 'operation1_local');
+    requestUrl.searchParams.append('time_gte', DateTime.utc().toFormat('yyyy-MM-dd').toString());
+    requestUrl.searchParams.append('time_lte', DateTime.utc().plus({ days: 1 }).toFormat('yyyy-MM-dd').toString());
+
+    if (logLevel !== 'all') {
+        requestUrl.searchParams.append('log_level', logLevel);
+    }
+
+    if (logMessage) {
+        logMessage.split(',').forEach(element => {
+            requestUrl.searchParams.append('message', element);
+        });
+    }
+
+    fetch(requestUrl).then(response => {
+        return response.json();
+    }).then(responseData => {
+        for (const data of responseData['results']) {
+            var alertElement = getMonitoringLogAlertEl(data);
+
+            monitoringLogContainerElement.appendChild(alertElement);
+        }
+    }).catch(error => {
+        console.log(error);
+    });
+
+    monitoringLogLoadInterval = setInterval(() => {
+        // After wait for save time of monitoring log data, lazy request
+        let time = DateTime.utc().minus({ seconds: 2 }).toFormat('yyyy-MM-dd HH:mm:ss').toString().replace(' ', 'T');
+        let requestUrl = new URL(window.location.origin + '/api/ess/search/data-monitoring-logs/');
+        requestUrl.searchParams.append('operation_site', 'operation1_local');
+        requestUrl.searchParams.append('time', time);
+
+        if (logLevel !== 'all') {
+            requestUrl.searchParams.append('log_level', logLevel);
+        }
+
+        if (logMessage) {
+            logMessage.split(',').forEach(element => {
+                requestUrl.searchParams.append('message', element);
+            });
+        }
+
+        fetch(requestUrl).then(response => {
+            return response.json();
+        }).then(responseData => {
+            let data = responseData['results'];
+
+            data.forEach(element => {
+                let alertElement = getMonitoringLogAlertEl(element);
+
+                if (monitoringLogContainerElement.firstElementChild) {
+                    monitoringLogContainerElement.firstElementChild.before(alertElement);
+                } else {
+                    monitoringLogContainerElement.appendChild(alertElement);
+                }
+            });
+        }).catch(error => {
+            console.log(error);
+        });
+    }, 1000);
+});
+
+// - Monitoring log message search input event
+monitoringLogColumnInput.addEventListener('change', event => {
+    monitoringLogContainerElement.innerHTML = '';
+
+    // Clear initial monitoring log load interval
+    if (initialMonitoringLogLoadInterval) {
+        clearInterval(initialMonitoringLogLoadInterval);
+    }
+
+    // Clear previous monitoring log load interval
+    if (monitoringLogLoadInterval) {
+        clearInterval(monitoringLogLoadInterval);
+    }
+
+    let logLevel = operationSite1MonitoringLogColumn.querySelector('select').value;
+    let logMessage = event.target.value;
+    let requestUrl = new URL(window.location.origin + '/api/ess/search/data-monitoring-logs/');
+    requestUrl.searchParams.append('operation_site', 'operation1_local');
+    requestUrl.searchParams.append('time_gte', DateTime.utc().toFormat('yyyy-MM-dd').toString());
+    requestUrl.searchParams.append('time_lte', DateTime.utc().plus({ days: 1 }).toFormat('yyyy-MM-dd').toString());
+
+    if (logLevel !== 'all') {
+        requestUrl.searchParams.append('log_level', logLevel);
+    }
+
+    if (logMessage) {
+        logMessage.split(',').forEach(element => {
+            requestUrl.searchParams.append('message', element);
+        });
+    }
+
+    fetch(requestUrl).then(response => {
+        return response.json();
+    }).then(responseData => {
+        for (const data of responseData['results']) {
+            var alertElement = getMonitoringLogAlertEl(data);
+
+            monitoringLogContainerElement.appendChild(alertElement);
+        }
+    }).catch(error => {
+        console.log(error);
+    });
+
+    monitoringLogLoadInterval = setInterval(() => {
+        // After wait for save time of monitoring log data, lazy request
+        let time = DateTime.utc().minus({ seconds: 2 }).toFormat('yyyy-MM-dd HH:mm:ss').toString().replace(' ', 'T');
+        let requestUrl = new URL(window.location.origin + '/api/ess/search/data-monitoring-logs/');
+        requestUrl.searchParams.append('operation_site', 'operation1_local');
+        requestUrl.searchParams.append('time', time);
+
+        if (logLevel !== 'all') {
+            requestUrl.searchParams.append('log_level', logLevel);
+        }
+
+        if (logMessage) {
+            logMessage.split(',').forEach(element => {
+                requestUrl.searchParams.append('message', element);
+            });
+        }
+
+        fetch(requestUrl).then(response => {
+            return response.json();
+        }).then(responseData => {
+            let data = responseData['results'];
+
+            data.forEach(element => {
+                let alertElement = getMonitoringLogAlertEl(element);
+
+                if (monitoringLogContainerElement.firstElementChild) {
+                    monitoringLogContainerElement.firstElementChild.before(alertElement);
+                } else {
+                    monitoringLogContainerElement.appendChild(alertElement);
+                }
+            });
+        }).catch(error => {
+            console.log(error);
+        });
+    }, 1000);
+});
+
+// Old monitoring log view event
+// Trigger the contents of the modal depending on which button was clicked
+var monitoringLogViewModal = document.getElementById('monitoringLogViewModal');
+monitoringLogViewModal.addEventListener('show.bs.modal', function (event) {
+    let button = event.relatedTarget;
+    let operatingSiteId = button.getAttribute('data-operating-site-id');
+    let searchButton = monitoringLogViewModal.querySelector('.btn-primary');
+    searchButton.setAttribute('data-operating-site-id', operatingSiteId);
+});
+
+const monitoringLogViewModalStartDateTimePickerElement = document.getElementById('monitoringLogViewModalStartDateTimePicker');
+const monitoringLogViewModalStartDateTimeTempusDominus = new tempusDominus.TempusDominus(monitoringLogViewModalStartDateTimePickerElement, {
+    display: {
+        components: {
+            seconds: true
+        },
+        sideBySide: true
+    },
+    hooks: {
+        inputFormat: (context, date) => { return DateTime.fromISO(date.toISOString()).toFormat('yyyy-MM-dd HH:mm:ss') }
+    }
+});
+const monitoringLogViewModalEndDateTimeTempusDominus = new tempusDominus.TempusDominus(document.getElementById('monitoringLogViewModalEndDateTimePicker'), {
+    display: {
+        components: {
+            seconds: true
+        },
+        sideBySide: true
+    },
+    hooks: {
+        inputFormat: (context, date) => { return DateTime.fromISO(date.toISOString()).toFormat('yyyy-MM-dd HH:mm:ss') }
+    },
+    useCurrent: false
+});
+
+// Using event listeners
+monitoringLogViewModalStartDateTimePickerElement.addEventListener(tempusDominus.Namespace.events.change, (e) => {
+    monitoringLogViewModalEndDateTimeTempusDominus.updateOptions({
+        restrictions: {
+            minDate: e.detail.date
+        },
+    });
+});
+
+// Using subscribe method
+const monitoringLogViewModalEndDateTimeTempusDominusSubscription = monitoringLogViewModalEndDateTimeTempusDominus.subscribe(tempusDominus.Namespace.events.change, (e) => {
+    monitoringLogViewModalStartDateTimeTempusDominus.updateOptions({
+        restrictions: {
+            maxDate: e.date
+        }
+    });
+});
+
+// Validate operation data download modal form
+const monitoringLogViewModalFormValidation = new JustValidate('#monitoringLogViewModalForm', {
+    errorFieldCssClass: 'is-invalid',
+    tootip: {
+        position: 'bottom'
+    }
+});
+monitoringLogViewModalFormValidation.addField('#monitoringLogViewModalStartDateTimeInput', [
+    {
+        plugin: JustValidatePluginDate(fields => ({
+            required: true,
+            format: 'yyyy-MM-dd HH:mm:ss'
+        })),
+        errorMessage: '날짜를 선택하세요.'
+    },
+]).addField('#monitoringLogViewModalEndDateTimeInput', [
+    {
+        plugin: JustValidatePluginDate(fields => ({
+            required: true,
+            format: 'yyyy-MM-dd HH:mm:ss'
+        })),
+        errorMessage: '날짜를 선택하세요.'
+    },
+]).onSuccess(event => {
+    let monitoringLogViewModalGrid = document.querySelector('#monitoringLogViewModalGrid');
+    let monitoringLogViewModalGridLoading = monitoringLogViewModalGrid.previousElementSibling.firstElementChild;
+    let monitoringLogViewModalGridPagination = monitoringLogViewModalGrid.nextElementSibling;
+    let monitoringLogViewModalGridPaginationUlElement = monitoringLogViewModalGridPagination.firstElementChild;
+
+    monitoringLogViewModalGrid.innerHTML = '';
+    monitoringLogViewModalGrid.classList.add('d-none');
+    monitoringLogViewModalGridPagination.classList.add('d-none');
+    monitoringLogViewModalGridLoading.classList.remove('d-none');
+
+    let operatingSiteId = document.querySelector('#monitoringLogViewModalForm button').getAttribute('data-operating-site-id');
+
+    let requestUrl = new URL(window.location.origin + '/api/ess-feature/protectionmap/operating-sites/' + operatingSiteId + '/');
+    requestUrl.searchParams.append('start-time', document.getElementById('monitoringLogViewModalStartDateTimeInput').value.replace(' ', 'T'));
+    requestUrl.searchParams.append('end-time', document.getElementById('monitoringLogViewModalEndDateTimeInput').value.replace(' ', 'T'));
+
+    fetch(requestUrl).then(response => {
+        return response.json();
+    }).then(data => {
+        let columns = Object.keys(data['results'][0]).map(element => {
+            return { field: element };
+        });
+
+        let rows = data['results'].map(element => {
+            let row = {};
+
+            for (const key of Object.keys(element)) {
+                if (element[key]['description']) {
+                    row[key] = element[key]['description'];
+
+                    continue;
+                }
+
+                row[key] = element[key];
+            }
+
+            return row;
+        });
+
+
+        // let the grid know which columns and what data to use
+        let gridOptions = {
+            columnDefs: columns,
+            rowData: rows
+        };
+
+        // create the grid passing in the div to use together with the columns & data we want to use
+        new agGrid.Grid(monitoringLogViewModalGrid, gridOptions);
+
+        monitoringLogViewModalGridLoading.classList.add('d-none');
+        monitoringLogViewModalGrid.classList.remove('d-none');
+
+        if (data['previous'] || data['next']) {
+            monitoringLogViewModalGridPagination.classList.remove('d-none');
+            previousButtonEl = monitoringLogViewModalGridPaginationUlElement.firstElementChild;
+            nextButtonEl = monitoringLogViewModalGridPaginationUlElement.lastElementChild;
+
+            if (data['previous']) {
+                previousButtonEl.classList.remove('disabled');
+                previousButtonEl.firstElementChild.setAttribute('data-link', data['previous']);
+            } else {
+                previousButtonEl.classList.add('disabled');
+            }
+
+            if (data['next']) {
+                nextButtonEl.classList.remove('disabled');
+                nextButtonEl.firstElementChild.setAttribute('data-link', data['next']);
+            } else {
+                nextButtonEl.classList.add('disabled');
+            }
+        }
+
+        // - pagination event
+        monitoringLogViewModalGridPaginationUlElement.querySelectorAll('a').forEach(element => {
+            element.addEventListener('click', event => {
+                monitoringLogViewModalGrid.innerHTML = '';
+                monitoringLogViewModalGrid.classList.add('d-none');
+                monitoringLogViewModalGridPagination.classList.add('d-none');
+                monitoringLogViewModalGridLoading.classList.remove('d-none');
+
+                let requestUrl = new URL(element.getAttribute('data-link'));
+
+                fetch(requestUrl).then(response => {
+                    return response.json();
+                }).then(data => {
+                    let columns = Object.keys(data['results'][0]).map(element => {
+                        return { field: element };
+                    });
+
+                    let rows = data['results'].map(element => {
+                        let row = {};
+
+                        for (const key of Object.keys(element)) {
+                            if (element[key]['description']) {
+                                row[key] = element[key]['description'];
+
+                                continue;
+                            }
+
+                            row[key] = element[key];
+                        }
+
+                        return row;
+                    });
+
+
+                    // let the grid know which columns and what data to use
+                    let gridOptions = {
+                        columnDefs: columns,
+                        rowData: rows
+                    };
+
+                    // create the grid passing in the div to use together with the columns & data we want to use
+                    new agGrid.Grid(monitoringLogViewModalGrid, gridOptions);
+
+                    monitoringLogViewModalGridLoading.classList.add('d-none');
+                    monitoringLogViewModalGrid.classList.remove('d-none');
+
+                    if (data['previous'] || data['next']) {
+                        monitoringLogViewModalGridPagination.classList.remove('d-none');
+                        previousButtonEl = monitoringLogViewModalGridPaginationUlElement.firstElementChild;
+                        nextButtonEl = monitoringLogViewModalGridPaginationUlElement.lastElementChild;
+
+                        if (data['previous']) {
+                            previousButtonEl.classList.remove('disabled');
+                            previousButtonEl.firstElementChild.setAttribute('data-link', data['previous']);
+                        } else {
+                            previousButtonEl.classList.add('disabled');
+                        }
+
+                        if (data['next']) {
+                            nextButtonEl.classList.remove('disabled');
+                            nextButtonEl.firstElementChild.setAttribute('data-link', data['next']);
+                        } else {
+                            nextButtonEl.classList.add('disabled');
+                        }
+                    }
+                }).catch(error => {
+                    console.log(error);
+
+                    monitoringLogViewModalGridLoading.classList.add('d-none');
+                    monitoringLogViewModalGrid.classList.remove('d-none');
+                });
+            });
+        });
+    }).catch(error => {
+        console.log(error);
+
+        monitoringLogViewModalGridLoading.classList.add('d-none');
+        monitoringLogViewModalGrid.classList.remove('d-none');
+    });
+});
+
+// Primary monitoring
+// - Monitoring log
+var primaryMonitoringLogEl = document.getElementById('primaryMonitoringLog');
+var primaryMonitoringLogLoading = primaryMonitoringLogEl.querySelector('div').firstElementChild;
+var primaryMonitoringLogPagination = primaryMonitoringLogEl.querySelector('nav');
+var primaryMonitoringLogPaginationUlEl = primaryMonitoringLogPagination.firstElementChild;
+var primaryMonitoringLogContainerEl = primaryMonitoringLogPagination.previousElementSibling;
+
+function getPrimaryMonitoringLogAlertContainerEl(data) {
+    let primaryMonitoringLogAlertContainerEl = document.createElement('div');
+    let primaryMonitoringLogAlertTimeEl = document.createElement('p');
+    let primaryMonitoringLogAlertEl = document.createElement('div');
+
+    let alertMessage = '운영 사이트 ' + data['operating_site'] + ' Bank ' + data['bank_id'] + '의 Rack ' + data['rack_id'] + '에서 ' + data['error_code']['description'] + ' 발생';
+    let alertLevel;
+
+    switch (data['level']['id']) {
+        case 1:
+            alertLevel = 'warning';
+            break;
+        case 2:
+            alertLevel = 'danger';
+        default:
+            break;
+    }
+
+    primaryMonitoringLogAlertTimeEl.setAttribute('class', 'm-b-0');
+    primaryMonitoringLogAlertTimeEl.innerHTML = '<small>' + DateTime.fromISO(data['timestamp']).toFormat('yyyy-MM-dd HH:mm:ss') + '</small>';
+    primaryMonitoringLogAlertEl.setAttribute('class', 'alert alert-' + alertLevel + ' p-l-10 p-t-0 p-b-0');
+    primaryMonitoringLogAlertEl.innerHTML = '<p class="m-t-0 m-b-0"><small>' + alertMessage + '</small></p>';
+
+    primaryMonitoringLogAlertContainerEl.appendChild(primaryMonitoringLogAlertTimeEl);
+    primaryMonitoringLogAlertContainerEl.appendChild(primaryMonitoringLogAlertEl);
+
+    return primaryMonitoringLogAlertContainerEl;
+}
+
+function setUpPaginationButton(data, paginationEl, paginationUlEl) {
+    if (data['previous'] || data['next']) {
+        paginationEl.classList.remove('d-none');
+        previousButtonEl = paginationUlEl.firstElementChild;
+        nextButtonEl = paginationUlEl.lastElementChild;
+
+        if (data['previous']) {
+            previousButtonEl.classList.remove('disabled');
+            previousButtonEl.firstElementChild.setAttribute('data-link', data['previous']);
+        } else {
+            previousButtonEl.classList.add('disabled');
+        }
+
+        if (data['next']) {
+            nextButtonEl.classList.remove('disabled');
+            nextButtonEl.firstElementChild.setAttribute('data-link', data['next']);
+        } else {
+            nextButtonEl.classList.add('disabled');
+        }
+    }
+}
+
+var startTime = DateTime.now().toISODate();
+var endTime = DateTime.now().plus({ days: 1 }).toISODate();
+var requestUrl = new URL(window.location.origin + '/api/ess-feature/protectionmap');
+requestUrl.searchParams.append('start-time', startTime);
+requestUrl.searchParams.append('end-time', endTime);
+
+fetch(requestUrl).then(response => {
+    return response.json();
+}).then(data => {
+    data['results'].forEach(element => {
+        let primaryMonitoringLogAlertContainerEl = getPrimaryMonitoringLogAlertContainerEl(element);
+
+        primaryMonitoringLogContainerEl.appendChild(primaryMonitoringLogAlertContainerEl);
+    });
+
+    primaryMonitoringLogLoading.classList.add('d-none');
+    primaryMonitoringLogContainerEl.classList.remove('d-none');
+
+    setUpPaginationButton(data, primaryMonitoringLogPagination, primaryMonitoringLogPaginationUlEl);
+
+    function loadLatestProtectionMapFeature() {
+        let time = DateTime.now().minus({ seconds: 2 }).toFormat('yyyy-MM-dd HH:mm:ss').replace(' ', 'T');
+        let requestUrl = new URL(window.location.origin + '/api/ess-feature/protectionmap/');
+        requestUrl.searchParams.append('time', time);
+
+        fetch(requestUrl).then(response => {
+            return response.json();
+        }).then(data => {
+            data['results'].forEach(element => {
+                let primaryMonitoringLogAlertContainerEl = getPrimaryMonitoringLogAlertContainerEl(element);
+
+                if (primaryMonitoringLogContainerEl.firstElementChild) {
+                    primaryMonitoringLogContainerEl.firstElementChild.before(primaryMonitoringLogAlertContainerEl);
+                } else {
+                    primaryMonitoringLogContainerEl.appendChild(primaryMonitoringLogAlertContainerEl);
+                }
+            });
+        }).catch(error => {
+            console.log(error);
+        });
+    }
+
+    // Load latest primary monitoring log
+    let primaryMonitoringLogInterval = setInterval(loadLatestProtectionMapFeature, 1000);
+
+    // Pagination event
+    primaryMonitoringLogPaginationUlEl.querySelectorAll('a').forEach(element => {
+        element.addEventListener('click', event => {
+            primaryMonitoringLogContainerEl.innerHTML = '';
+            primaryMonitoringLogContainerEl.classList.add('d-none');
+            primaryMonitoringLogPagination.classList.add('d-none');
+            primaryMonitoringLogLoading.classList.remove('d-none');
+
+            let requestUrl = new URL(element.getAttribute('data-link'));
+
+            // Load latest primary monitoring log in only page 1!
+            if (primaryMonitoringLogInterval) {
+                clearInterval(primaryMonitoringLogInterval);
+            }
+
+            if (!requestUrl.searchParams.get('page') || requestUrl.searchParams.get('page') == 1) {
+                primaryMonitoringLogInterval = setInterval(loadLatestProtectionMapFeature, 1000);
+            }
+
+            fetch(requestUrl).then(response => {
+                return response.json();
+            }).then(data => {
+                data['results'].forEach(element => {
+                    let primaryMonitoringLogAlertContainerEl = getPrimaryMonitoringLogAlertContainerEl(element);
+
+                    primaryMonitoringLogContainerEl.appendChild(primaryMonitoringLogAlertContainerEl);
+                });
+
+                primaryMonitoringLogLoading.classList.add('d-none');
+                primaryMonitoringLogContainerEl.classList.remove('d-none');
+
+                setUpPaginationButton(data, primaryMonitoringLogPagination, primaryMonitoringLogPaginationUlEl);
+            }).catch(error => {
+                console.log(error);
+
+                primaryMonitoringLogLoading.classList.add('d-none');
+                primaryMonitoringLog.classList.remove('d-none');
+            });
+        });
+    });
+}).catch(error => {
+    console.log(error);
+});
+
+// - Monitoring log level type count visualization
+function getcreateMonitoringLogLevelTypeCountChartSeriesData(data) {
+    let seriesData = data.map(element => {
+        let logLevelDescription;
+
+        switch (element['level']) {
+            case 1:
+                logLevelDescription = '경고(Warning)';
+                break;
+            case 2:
+                logLevelDescription = '보호(Fault)';
+                break;
+            default:
+                break;
+        }
+
+        return {
+            value: element['level_count'],
+            category: logLevelDescription,
+        }
+    });
+
+    return seriesData;
+}
+
+function createMonitoringLogLevelTypeCountChart(chartSeries, chartSeriesData, chartLegend) {
+    chartSeries.data.setAll(chartSeriesData);
+
+    chartLegend.data.setAll(chartSeries.dataItems);
+
+    // Play initial series animation
+    chartSeries.appear(2000, 500);
+}
+
+// Create initial monitoring log level type count chart
+var primaryMonitoringLogLevelTypeCountChartRoot = am5.Root.new('primaryMonitoringLogLevelTypeCountChart');
+primaryMonitoringLogLevelTypeCountChartRoot.setThemes([am5themes_Animated.new(primaryMonitoringLogLevelTypeCountChartRoot)]);
+
+var primaryMonitoringLogLevelTypeCountChart = primaryMonitoringLogLevelTypeCountChartRoot.container.children.push(am5percent.PieChart.new(primaryMonitoringLogLevelTypeCountChartRoot, {
+    layout: primaryMonitoringLogLevelTypeCountChartRoot.verticalLayout,
+    innerRadius: am5.percent(50)
+}));
+
+var primaryMonitoringLogLevelTypeCountChartSeries = primaryMonitoringLogLevelTypeCountChart.series.push(am5percent.PieSeries.new(primaryMonitoringLogLevelTypeCountChartRoot, {
+    valueField: "value",
+    categoryField: "category",
+    alignLabels: false,
+    legendValueText: '{value}'
+}));
+
+primaryMonitoringLogLevelTypeCountChartSeries.get("colors").set("colors", [
+    am5.color(0xffe3bb),
+    am5.color(0xf9caca),
+]);
+
+primaryMonitoringLogLevelTypeCountChartSeries.labels.template.setAll({
+    textType: "circular",
+    inside: false,
+    radius: 10
+});
+
+var primaryMonitoringLogLevelTypeCountChartLegend = primaryMonitoringLogLevelTypeCountChart.children.push(am5.Legend.new(primaryMonitoringLogLevelTypeCountChartRoot, {
+    centerX: am5.percent(50),
+    x: am5.percent(50),
+    marginTop: 15,
+    marginBottom: 15,
+}));
+
+var startTime = DateTime.now().toISODate();
+var endTime = DateTime.now().plus({ days: 1 }).toISODate();
+var requestUrl = new URL(window.location.origin + '/api/ess-feature/protectionmap/operating-sites/1/stats/log-level-count');
+requestUrl.searchParams.append('start-time', startTime);
+requestUrl.searchParams.append('end-time', endTime);
+requestUrl.searchParams.append('time-bucket-width', '1days');
+
+fetch(requestUrl).then(response => {
+    return response.json();
+}).then(data => {
+    let seriesData = getcreateMonitoringLogLevelTypeCountChartSeriesData(data);
+
+    createMonitoringLogLevelTypeCountChart(primaryMonitoringLogLevelTypeCountChartSeries, seriesData, primaryMonitoringLogLevelTypeCountChartLegend);
+}).catch(error => {
+    console.log(error);
+});
+
+// Monitoring log level type count select event
+var primaryMonitoringLogLevelTypeCountEl = document.getElementById('primaryMonitoringLogLevelTypeCount');
+var primaryMonitoringLogLevelTypeCountSelectEl = primaryMonitoringLogLevelTypeCountEl.querySelector('select');
+primaryMonitoringLogLevelTypeCountSelectEl.addEventListener('change', event => {
+    let operatingSiteId = primaryMonitoringLogLevelTypeCountSelectEl.value;
+    let startTime = DateTime.now().toISODate();
+    let endTime = DateTime.now().plus({ days: 1 }).toISODate();
+    let requestUrl = new URL(window.location.origin + '/api/ess-feature/protectionmap/operating-sites/' + operatingSiteId + '/stats/log-level-count');
+    requestUrl.searchParams.append('start-time', startTime);
+    requestUrl.searchParams.append('end-time', endTime);
+    requestUrl.searchParams.append('time-bucket-width', '1days');
+
+    fetch(requestUrl).then(response => {
+        return response.json();
+    }).then(data => {
+        let seriesData = getcreateMonitoringLogLevelTypeCountChartSeriesData(data);
+
+        createMonitoringLogLevelTypeCountChart(primaryMonitoringLogLevelTypeCountChartSeries, seriesData, primaryMonitoringLogLevelTypeCountChartLegend);
+    }).catch(error => {
+        console.log(error);
+    });
+});
+

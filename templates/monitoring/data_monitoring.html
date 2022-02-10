@@ -6,6 +6,16 @@
 
 {% block html_head %}
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
+<script src="https://unpkg.com/@yaireo/tagify@4.9.4/dist/tagify.min.js"></script>
+<script src="https://unpkg.com/@yaireo/tagify@4.9.4/dist/tagify.polyfills.min.js"></script>
+<link href="https://unpkg.com/@yaireo/tagify@4.9.4/dist/tagify.css" rel="stylesheet" type="text/css" />
+<!-- Tempus Dominus Styles -->
+<link rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/@eonasdan/tempus-dominus@6.0.0-beta1/dist/css/tempus-dominus.css">
+
+<script src="https://unpkg.com/ag-grid-community/dist/ag-grid-community.min.noStyle.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/ag-grid-community/dist/styles/ag-grid.css">
+<link rel="stylesheet" href="https://unpkg.com/ag-grid-community/dist/styles/ag-theme-alpine.css">
 
 <style>
     .card>.card-body>.row>div {
@@ -72,6 +82,10 @@
             opacity: 0;
         }
     }
+
+    .tooltip-inner {
+        text-align: left;
+    }
 </style>
 {% endblock %}
 
@@ -98,14 +112,47 @@
         <!-- [ Main Content ] start -->
         <div class="row">
             <div class="col-xl-4 col-md-12">
-                <div class="card">
+                <div id="primaryMonitoringCard" class="card">
                     <div class="card-header">
                         <h5>기본 모니터링</h5>
                     </div>
                     <div class="card-body">
                         <div class="row">
-                            <div class="col">
-                                <p>서비스를 준비중입니다.</p>
+                            <!-- Monitoring log area -->
+                            <div id="primaryMonitoringLog" class="col-xl-6 col-md-12 overflow-auto">
+                                <h6>전체 장애 발생 알림 <i class="bi bi-info-circle" data-bs-toggle="tooltip"
+                                        data-bs-placement="top" title=""
+                                        data-bs-original-title="첫 페이지만 실시간으로 업데이트 합니다."></i></h6>
+                                <!-- Loading -->
+                                <div class="d-flex justify-content-center">
+                                    <div class="lds-ripple">
+                                        <div></div>
+                                    </div>
+                                </div>
+                                <!-- Monitoring log container -->
+                                <div class="d-none"></div>
+                                <nav class="m-t-10 d-none" aria-label="grid page">
+                                    <ul class="pagination justify-content-center">
+                                        <li class="page-item"><a href="#" class="page-link">이전</a></li>
+                                        <li class="page-item"><a href="#" class="page-link">다음</a></li>
+                                    </ul>
+                                </nav>
+                            </div>
+
+                            <!-- Monitoring log level type area  -->
+                            <div id="primaryMonitoringLogLevelTypeCount" class="col-xl-6 col-md-12 overflow-auto">
+                                <h6>이상 감지 유형 <i class="bi bi-info-circle" data-bs-toggle="tooltip"
+                                        data-bs-placement="top" title=""
+                                        data-bs-original-title="현재 날짜 기준으로 발생한 이상 감지 유형을 시각화합니다."></i></h6>
+                                <select class="form-select form-select-sm mb-1">
+                                    <option value="1">시온유 태양광</option>
+                                    <option value="2">2</option>
+                                    <option value="3">3</option>
+                                    <option value="4">4</option>
+                                    <option value="5">5</option>
+                                </select>
+                                <!-- Monitoring log level type chart container -->
+                                <div id="primaryMonitoringLogLevelTypeCountChart" style="height: 300px;"></div>
                             </div>
                         </div>
                     </div>
@@ -134,8 +181,13 @@
                                             </button>
                                             <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
                                                 <li><a class="dropdown-item" href="#">ESS 정보 보기</a></li>
-                                                <li><a class="dropdown-item" href="#">지난 로그 보기</a></li>
-                                                <li><a class="dropdown-item" href="#">운영 데이터 다운로드</a></li>
+                                                <li><a class="dropdown-item" href="#" data-bs-toggle="modal"
+                                                        data-bs-target="#monitoringLogViewModal"
+                                                        data-operating-site-id="1">지난 로그 보기</a></li>
+                                                <li><a class="dropdown-item" href="#" data-bs-toggle="modal"
+                                                        data-bs-target="#operationDataDownloadModal"
+                                                        data-operation-site-id="1">운영 데이터 다운로드</a>
+                                                </li>
                                             </ul>
                                         </div>
                                     </div>
@@ -160,11 +212,14 @@
                             <!-- Monitoring log area  -->
                             <div id="operationSite1-monitoring-log-column" class="col-xl-4 col-md-12 overflow-auto">
                                 <select class="form-select form-select-sm mb-1">
-                                    <option>All</option>
-                                    <option>Warning</option>
-                                    <option>Danger</option>
+                                    <option value="all">All</option>
+                                    <option value="critical">Critical</option>
+                                    <option value="error">Error</option>
+                                    <option value="info">Info</option>
+                                    <option value="warning">Warning</option>
                                 </select>
                                 <input class="form-control form-control-sm mb-1" type="text" placeholder="검색어를 입력하세요.">
+                                <div></div>
                             </div>
                         </div>
                     </div>
@@ -193,8 +248,12 @@
                                             </button>
                                             <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
                                                 <li><a class="dropdown-item" href="#">ESS 정보 보기</a></li>
-                                                <li><a class="dropdown-item" href="#">지난 로그 보기</a></li>
-                                                <li><a class="dropdown-item" href="#">운영 데이터 다운로드</a></li>
+                                                <li><a class="dropdown-item" href="#" data-bs-toggle="modal"
+                                                        data-bs-target="#monitoringLogViewModal"
+                                                        data-operating-site-id="2">지난 로그 보기</a></li>
+                                                <li><a class="dropdown-item" href="#" data-bs-toggle="modal"
+                                                        data-bs-target="#operationDataDownloadModal"
+                                                        data-operation-site-id="2">운영 데이터 다운로드</a></li>
                                             </ul>
                                         </div>
                                     </div>
@@ -236,8 +295,12 @@
                                             </button>
                                             <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
                                                 <li><a class="dropdown-item" href="#">ESS 정보 보기</a></li>
-                                                <li><a class="dropdown-item" href="#">지난 로그 보기</a></li>
-                                                <li><a class="dropdown-item" href="#">운영 데이터 다운로드</a></li>
+                                                <li><a class="dropdown-item" href="#" data-bs-toggle="modal"
+                                                        data-bs-target="#monitoringLogViewModal"
+                                                        data-operating-site-id="3">지난 로그 보기</a></li>
+                                                <li><a class="dropdown-item" href="#" data-bs-toggle="modal"
+                                                        data-bs-target="#operationDataDownloadModal"
+                                                        data-operation-site-id="3">운영 데이터 다운로드</a></li>
                                             </ul>
                                         </div>
                                     </div>
@@ -277,8 +340,12 @@
                                             </button>
                                             <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
                                                 <li><a class="dropdown-item" href="#">ESS 정보 보기</a></li>
-                                                <li><a class="dropdown-item" href="#">지난 로그 보기</a></li>
-                                                <li><a class="dropdown-item" href="#">운영 데이터 다운로드</a></li>
+                                                <li><a class="dropdown-item" href="#" data-bs-toggle="modal"
+                                                        data-bs-target="#monitoringLogViewModal"
+                                                        data-operating-site-id="4">지난 로그 보기</a></li>
+                                                <li><a class="dropdown-item" href="#" data-bs-toggle="modal"
+                                                        data-bs-target="#operationDataDownloadModal"
+                                                        data-operation-site-id="4">운영 데이터 다운로드</a></li>
                                             </ul>
                                         </div>
                                     </div>
@@ -318,8 +385,12 @@
                                             </button>
                                             <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
                                                 <li><a class="dropdown-item" href="#">ESS 정보 보기</a></li>
-                                                <li><a class="dropdown-item" href="#">지난 로그 보기</a></li>
-                                                <li><a class="dropdown-item" href="#">운영 데이터 다운로드</a></li>
+                                                <li><a class="dropdown-item" href="#" data-bs-toggle="modal"
+                                                        data-bs-target="#monitoringLogViewModal"
+                                                        data-operating-site-id="5">지난 로그 보기</a></li>
+                                                <li><a class="dropdown-item" href="#" data-bs-toggle="modal"
+                                                        data-bs-target="#operationDataDownloadModal"
+                                                        data-operation-site-id="5">운영 데이터 다운로드</a></li>
                                             </ul>
                                         </div>
                                     </div>
@@ -338,6 +409,7 @@
             </div>
         </div>
 
+        <!-- [ Modal ] start -->
         <!-- Monitoring list item modal -->
         <div class="modal fade" id="monitoringListItemModal" tabindex="-1"
             aria-labelledby="monitoringListItemModalLabel" aria-hidden="true">
@@ -361,6 +433,144 @@
                 </div>
             </div>
         </div>
+
+        <!-- Download operation data modal -->
+        <div class="modal fade" id="operationDataDownloadModal" tabindex="-1"
+            aria-labelledby="operationDataDownloadModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="operationDataDownloadModalLabel">운영 데이터 다운로드</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="operationDataDownloadModalForm">
+                            <div class="form-group">
+                                <label for='linkedPickers1Input' class='form-label'>날짜:</label>
+                                <div class='input-group log-event m-b-10'
+                                    id='operationDataDownloadModalStartDateTimePicker' data-td-target-input='nearest'
+                                    data-td-target-toggle='nearest'>
+                                    <input id='operationDataDownloadModalStartDateTimeInput' type='text'
+                                        class='form-control'
+                                        data-td-target='#operationDataDownloadModalStartDateTimePicker'
+                                        placeholder="시작 날짜를 입력해주세요" />
+                                    <span class='input-group-text'
+                                        data-td-target='#operationDataDownloadModalStartDateTimePicker'
+                                        data-td-toggle='datetimepicker'>
+                                        <span class='fas fa-calendar'></span>
+                                    </span>
+                                </div>
+                                <div class='input-group log-event' id='operationDataDownloadModalEndDateTimePicker'
+                                    data-td-target-input='nearest' data-td-target-toggle='nearest'>
+                                    <input id='operationDataDownloadModalEndDateTimeInput' type='text'
+                                        class='form-control'
+                                        data-td-target='#operationDataDownloadModalEndDateTimePicker'
+                                        placeholder="마지막 날짜를 입력해주세요" />
+                                    <span class='input-group-text'
+                                        data-td-target='#operationDataDownloadModalEndDateTimePicker'
+                                        data-td-toggle='datetimepicker'>
+                                        <span class='fas fa-calendar'></span>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="form-group" id="operationDataDownloadModalDataTypeCheckboxGroup">
+                                <label class="form-label">데이터 타입:</label>
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input input-primary"
+                                        id="operationDataDownloadModalDataTypeCheckboxGroup1" value="bank">
+                                    <label class="form-check-label" for="data-type-checkbox-group-1">Bank</label>
+                                </div>
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input input-primary"
+                                        id="operationDataDownloadModalDataTypeCheckboxGroup2" value="rack">
+                                    <label class="form-check-label" for="data-type-checkbox-group-2">Rack</label>
+                                </div>
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input input-primary"
+                                        id="operationDataDownloadModalDataTypeCheckboxGroup3" value="pcs">
+                                    <label class="form-check-label" for="data-type-checkbox-group-3">Pcs</label>
+                                </div>
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input input-primary"
+                                        id="operationDataDownloadModalDataTypeCheckboxGroup4" value="etc">
+                                    <label class="form-check-label" for="data-type-checkbox-group-4">Etc</label>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <button type="submit" class="btn btn-primary">다운로드</button>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Download operation data modal -->
+        <div class="modal fade" id="monitoringLogViewModal" tabindex="-1" aria-labelledby="monitoringLogViewModalLabel"
+            aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="monitoringLogViewModalLabel">지난 로그 보기</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="monitoringLogViewModalForm">
+                            <div class="form-group">
+                                <label for='linkedPickers1Input' class='form-label'>날짜:</label>
+                                <div class='input-group log-event m-b-10' id='monitoringLogViewModalStartDateTimePicker'
+                                    data-td-target-input='nearest' data-td-target-toggle='nearest'>
+                                    <input id='monitoringLogViewModalStartDateTimeInput' type='text'
+                                        class='form-control' data-td-target='#monitoringLogViewModalStartDateTimePicker'
+                                        placeholder="시작 날짜를 입력해주세요" />
+                                    <span class='input-group-text'
+                                        data-td-target='#monitoringLogViewModalStartDateTimePicker'
+                                        data-td-toggle='datetimepicker'>
+                                        <span class='fas fa-calendar'></span>
+                                    </span>
+                                </div>
+                                <div class='input-group log-event' id='monitoringLogViewModalEndDateTimePicker'
+                                    data-td-target-input='nearest' data-td-target-toggle='nearest'>
+                                    <input id='monitoringLogViewModalEndDateTimeInput' type='text' class='form-control'
+                                        data-td-target='#monitoringLogViewModalEndDateTimePicker'
+                                        placeholder="마지막 날짜를 입력해주세요" />
+                                    <span class='input-group-text'
+                                        data-td-target='#monitoringLogViewModalEndDateTimePicker'
+                                        data-td-toggle='datetimepicker'>
+                                        <span class='fas fa-calendar'></span>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <button type="submit" class="btn btn-primary">검색</button>
+                            </div>
+                        </form>
+                        <!-- Loading -->
+                        <div class="d-flex justify-content-center">
+                            <div class="lds-ripple d-none">
+                                <div></div>
+                            </div>
+                        </div>
+                        <div id="monitoringLogViewModalGrid" class="ag-theme-alpine d-none" style="height: 300px;">
+                        </div>
+                        <nav class="m-t-10 d-none" aria-label="grid page">
+                            <ul class="pagination justify-content-center">
+                                <li class="page-item"><a href="#" class="page-link">이전</a></li>
+                                <li class="page-item"><a href="#" class="page-link">다음</a></li>
+                            </ul>
+                        </nav>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- [ Modal ] end -->
+
     </div>
     <!-- [ Main Content ] end -->
 </div>
@@ -371,7 +581,15 @@
 <script src="https://cdn.jsdelivr.net/npm/luxon@2.1.1/build/global/luxon.min.js"></script>
 <script src="https://cdn.amcharts.com/lib/5/index.js"></script>
 <script src="https://cdn.amcharts.com/lib/5/xy.js"></script>
+<script src="https://cdn.amcharts.com/lib/5/percent.js"></script>
 <script src="https://cdn.amcharts.com/lib/5/themes/Animated.js"></script>
+<!-- Tempus Dominus JavaScript -->
+<script src="https://cdn.jsdelivr.net/npm/@eonasdan/tempus-dominus@6.0.0-beta1/dist/js/tempus-dominus.min.js"></script>
+<script src="https://unpkg.com/just-validate@3.3.1/dist/just-validate.production.min.js"></script>
+<script
+    src="https://cdn.jsdelivr.net/npm/just-validate-plugin-date@1.1.0/dist/just-validate-plugin-date.production.min.js"></script>
+<script src="https://unpkg.com/ag-grid-community/dist/ag-grid-community.min.js"></script>
+
 <script src="{% static 'js/custom/data_monitoring.js' %}"></script>
 <script>
     var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));

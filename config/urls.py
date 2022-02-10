@@ -16,13 +16,13 @@ Including another URLconf
 from django.conf import settings
 from django.contrib import admin
 from django.urls import include, path
-from .views import DashboardView, DataMonitoringView, IndexView
+from .views import DataMonitoringView, IndexView
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("", IndexView.as_view(), name="index"),
-    path("dashboard/", DashboardView.as_view(), name="dashboard"),
     path("api/ess/", include("ess.urls"), name="ess"),
+    path("api/ess-feature/", include("ess_feature.urls"), name="ess-feature"),
     path("data-monitoring/", DataMonitoringView.as_view(), name="data-monitoring"),
 ]
 
