@@ -1119,3 +1119,84 @@ fetch(requestUrl).then(response => {
 }).catch(error => {
     console.log(error);
 });
+
+// - Monitoring log level type count visualization
+var startTime = DateTime.now().toISODate();
+var endTime = DateTime.now().plus({ days: 1 }).toISODate();
+var requestUrl = new URL(window.location.origin + '/api/ess-feature/protectionmap/operating-sites/1/stats/log-level-count');
+requestUrl.searchParams.append('start-time', startTime);
+requestUrl.searchParams.append('end-time', endTime);
+requestUrl.searchParams.append('time-bucket-width', '1days');
+
+fetch(requestUrl).then(response => {
+    return response.json();
+}).then(data => {
+    // - Monitoring log level type
+    var root = am5.Root.new('primaryMonitoringLogLevelTypeChart');
+
+    root.setThemes([am5themes_Animated.new(root)]);
+
+    // Create chart
+    var chart = root.container.children.push(am5percent.PieChart.new(root, {
+        layout: root.verticalLayout,
+        innerRadius: am5.percent(50)
+    }));
+
+
+    // Create series
+    var series = chart.series.push(am5percent.PieSeries.new(root, {
+        valueField: "value",
+        categoryField: "category",
+        alignLabels: false
+    }));
+
+    series.get("colors").set("colors", [
+        am5.color(0xffe3bb),
+        am5.color(0xf9caca),
+    ]);
+
+    series.labels.template.setAll({
+        textType: "circular",
+        centerX: 0,
+        centerY: 0
+    });
+
+    var seriesData = data.map(element => {
+        var logLevelDescription;
+
+        switch (element['level']) {
+            case 1:
+                logLevelDescription = '경고(Warning)';
+                break;
+            case 2:
+                logLevelDescription = '보호(Fault)';
+                break;
+            default:
+                break;
+        }
+
+        return {
+            value: element['level_count'],
+            category: logLevelDescription,
+        }
+    });
+
+    series.data.setAll(seriesData);
+
+    // Create legend
+    var legend = chart.children.push(am5.Legend.new(root, {
+        centerX: am5.percent(50),
+        x: am5.percent(50),
+        marginTop: 15,
+        marginBottom: 15,
+    }));
+
+    legend.data.setAll(series.dataItems);
+
+
+    // Play initial series animation
+    series.appear(1000, 100);
+}).catch(error => {
+    console.log(error);
+});
+
