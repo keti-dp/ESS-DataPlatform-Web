@@ -1,5 +1,195 @@
 from django.db import models
 
+# Common ESS Object Info(But, excluding the Pcs because the Pcs columns are very different)
+
+
+class CommonBankInfo(models.Model):
+    timestamp = models.DateTimeField(db_column="TIMESTAMP", primary_key=True)
+    bank_id = models.IntegerField(db_column="BANK_ID")
+    bank_soc = models.FloatField(db_column="BANK_SOC", blank=True, null=True)
+    bank_soh = models.FloatField(db_column="BANK_SOH", blank=True, null=True)
+    bank_dc_volt = models.FloatField(db_column="BANK_DC_VOLT", blank=True, null=True)
+    bank_dc_current = models.FloatField(db_column="BANK_DC_CURRENT", blank=True, null=True)
+    max_cell_voltage_of_bank = models.FloatField(db_column="MAX_CELL_VOLTAGE_OF_BANK", blank=True, null=True)
+    min_cell_voltage_of_bank = models.FloatField(db_column="MIN_CELL_VOLTAGE_OF_BANK", blank=True, null=True)
+    max_cell_temperature_of_bank = models.FloatField(db_column="MAX_CELL_TEMPERATURE_OF_BANK", blank=True, null=True)
+    min_cell_temperature_of_bank = models.FloatField(db_column="MIN_CELL_TEMPERATURE_OF_BANK", blank=True, null=True)
+    bank_power = models.FloatField(db_column="BANK_POWER", blank=True, null=True)
+    rack_temperature_imbalance_warning = models.IntegerField(
+        db_column="RACK_TEMPERATURE_IMBALANCE_WARNING", blank=True, null=True
+    )
+    rack_under_temperature_warning = models.IntegerField(
+        db_column="RACK_UNDER_TEMPERATURE_WARNING", blank=True, null=True
+    )
+    rack_over_temperature_warning = models.IntegerField(
+        db_column="RACK_OVER_TEMPERATURE_WARNING", blank=True, null=True
+    )
+    rack_voltage_imbalance_warning = models.IntegerField(
+        db_column="RACK_VOLTAGE_IMBALANCE_WARNING", blank=True, null=True
+    )
+    rack_under_voltage_protection_warning = models.IntegerField(
+        db_column="RACK_UNDER_VOLTAGE_PROTECTION_WARNING", blank=True, null=True
+    )
+    rack_over_voltage_protection_warning = models.IntegerField(
+        db_column="RACK_OVER_VOLTAGE_PROTECTION_WARNING", blank=True, null=True
+    )
+    rack_over_current_charge_warning = models.IntegerField(
+        db_column="RACK_OVER_CURRENT_CHARGE_WARNING", blank=True, null=True
+    )
+    rack_over_current_discharge_warning = models.IntegerField(
+        db_column="RACK_OVER_CURRENT_DISCHARGE_WARNING", blank=True, null=True
+    )
+    rack_temperature_imbalance_fault = models.IntegerField(
+        db_column="RACK_TEMPERATURE_IMBALANCE_FAULT", blank=True, null=True
+    )
+    rack_under_temperature_fault = models.IntegerField(db_column="RACK_UNDER_TEMPERATURE_FAULT", blank=True, null=True)
+    rack_over_temperature_fault = models.IntegerField(db_column="RACK_OVER_TEMPERATURE_FAULT", blank=True, null=True)
+    rack_voltage_imbalance_fault = models.IntegerField(db_column="RACK_VOLTAGE_IMBALANCE_FAULT", blank=True, null=True)
+    rack_under_voltage_protection_fault = models.IntegerField(
+        db_column="RACK_UNDER_VOLTAGE_PROTECTION_FAULT", blank=True, null=True
+    )
+    rack_over_voltage_protection_fault = models.IntegerField(
+        db_column="RACK_OVER_VOLTAGE_PROTECTION_FAULT", blank=True, null=True
+    )
+    rack_over_current_charge_fault = models.IntegerField(
+        db_column="RACK_OVER_CURRENT_CHARGE_FAULT", blank=True, null=True
+    )
+    rack_over_current_discharge_fault = models.IntegerField(
+        db_column="RACK_OVER_CURRENT_DISCHARGE_FAULT", blank=True, null=True
+    )
+    rack_charge_relay_plus_fault_status = models.IntegerField(
+        db_column="RACK_CHARGE_RELAY_PLUS_FAULT_STATUS", blank=True, null=True
+    )
+    rack_discharge_relay_minus_fault_status = models.IntegerField(
+        db_column="RACK_DISCHARGE_RELAY_MINUS_FAULT_STATUS", blank=True, null=True
+    )
+    rack_fuse_minus_fault_status = models.IntegerField(db_column="RACK_FUSE_MINUS_FAULT_STATUS", blank=True, null=True)
+    rack_fuse_plus_fault_status = models.IntegerField(db_column="RACK_FUSE_PLUS_FAULT_STATUS", blank=True, null=True)
+    rack_tray_rack_communication_fault = models.IntegerField(
+        db_column="RACK_TRAY_RACK_COMMUNICATION_FAULT", blank=True, null=True
+    )
+    battery_status_for_run = models.IntegerField(db_column="BATTERY_STATUS_FOR_RUN", blank=True, null=True)
+    battery_status_for_charge = models.IntegerField(db_column="BATTERY_STATUS_FOR_CHARGE", blank=True, null=True)
+    battery_status_for_fault = models.IntegerField(db_column="BATTERY_STATUS_FOR_FAULT", blank=True, null=True)
+    battery_status_for_warning = models.IntegerField(db_column="BATTERY_STATUS_FOR_WARNING", blank=True, null=True)
+
+    class Meta:
+        abstract = True
+        managed = False
+
+
+class CommonRackInfo(models.Model):
+    timestamp = models.DateTimeField(db_column="TIMESTAMP", primary_key=True)
+    bank_id = models.IntegerField(db_column="BANK_ID")
+    rack_id = models.IntegerField(db_column="RACK_ID")
+    rack_soc = models.FloatField(db_column="RACK_SOC", blank=True, null=True)
+    rack_soh = models.FloatField(db_column="RACK_SOH", blank=True, null=True)
+    rack_voltage = models.FloatField(db_column="RACK_VOLTAGE", blank=True, null=True)
+    rack_current = models.FloatField(db_column="RACK_CURRENT", blank=True, null=True)
+    rack_max_cell_voltage = models.FloatField(db_column="RACK_MAX_CELL_VOLTAGE", blank=True, null=True)
+    rack_max_cell_voltage_position = models.FloatField(
+        db_column="RACK_MAX_CELL_VOLTAGE_POSITION", blank=True, null=True
+    )
+    rack_min_cell_voltage = models.FloatField(db_column="RACK_MIN_CELL_VOLTAGE", blank=True, null=True)
+    rack_min_cell_voltage_position = models.FloatField(
+        db_column="RACK_MIN_CELL_VOLTAGE_POSITION", blank=True, null=True
+    )
+    rack_cell_voltage_gap = models.FloatField(db_column="RACK_CELL_VOLTAGE_GAP", blank=True, null=True)
+    rack_cell_voltage_average = models.FloatField(db_column="RACK_CELL_VOLTAGE_AVERAGE", blank=True, null=True)
+    rack_max_cell_temperature = models.FloatField(db_column="RACK_MAX_CELL_TEMPERATURE", blank=True, null=True)
+    rack_max_cell_temperature_position = models.FloatField(
+        db_column="RACK_MAX_CELL_TEMPERATURE_POSITION", blank=True, null=True
+    )
+    rack_min_cell_temperature = models.FloatField(db_column="RACK_MIN_CELL_TEMPERATURE", blank=True, null=True)
+    rack_min_cell_temperature_position = models.FloatField(
+        db_column="RACK_MIN_CELL_TEMPERATURE_POSITION", blank=True, null=True
+    )
+    rack_cell_temperature_gap = models.FloatField(db_column="RACK_CELL_TEMPERATURE_GAP", blank=True, null=True)
+    rack_discharge_relay_minus_status = models.IntegerField(
+        db_column="RACK_DISCHARGE_RELAY_MINUS_STATUS", blank=True, null=True
+    )
+    rack_charge_relay_plus_status = models.IntegerField(
+        db_column="RACK_CHARGE_RELAY_PLUS_STATUS", blank=True, null=True
+    )
+    rack_cell_balance_status = models.IntegerField(db_column="RACK_CELL_BALANCE_STATUS", blank=True, null=True)
+    rack_current_sensor_discharge = models.IntegerField(
+        db_column="RACK_CURRENT_SENSOR_DISCHARGE", blank=True, null=True
+    )
+    rack_current_sensor_charge = models.IntegerField(db_column="RACK_CURRENT_SENSOR_CHARGE", blank=True, null=True)
+    rack_status_for_run = models.IntegerField(db_column="RACK_STATUS_FOR_RUN", blank=True, null=True)
+    rack_status_for_fault = models.IntegerField(db_column="RACK_STATUS_FOR_FAULT", blank=True, null=True)
+    rack_status_for_warning = models.IntegerField(db_column="RACK_STATUS_FOR_WARNING", blank=True, null=True)
+    rack_temperature_imbalance_warning = models.IntegerField(
+        db_column="RACK_TEMPERATURE_IMBALANCE_WARNING", blank=True, null=True
+    )
+    rack_under_temperature_warning = models.IntegerField(
+        db_column="RACK_UNDER_TEMPERATURE_WARNING", blank=True, null=True
+    )
+    rack_over_temperature_warning = models.IntegerField(
+        db_column="RACK_OVER_TEMPERATURE_WARNING", blank=True, null=True
+    )
+    rack_voltage_imbalance_warning = models.IntegerField(
+        db_column="RACK_VOLTAGE_IMBALANCE_WARNING", blank=True, null=True
+    )
+    rack_under_voltage_protection_warning = models.IntegerField(
+        db_column="RACK_UNDER_VOLTAGE_PROTECTION_WARNING", blank=True, null=True
+    )
+    rack_over_voltage_protection_warning = models.IntegerField(
+        db_column="RACK_OVER_VOLTAGE_PROTECTION_WARNING", blank=True, null=True
+    )
+    rack_over_current_charge_warning = models.IntegerField(
+        db_column="RACK_OVER_CURRENT_CHARGE_WARNING", blank=True, null=True
+    )
+    rack_over_current_discharge_warning = models.IntegerField(
+        db_column="RACK_OVER_CURRENT_DISCHARGE_WARNING", blank=True, null=True
+    )
+    rack_temperature_imbalance_fault = models.IntegerField(
+        db_column="RACK_TEMPERATURE_IMBALANCE_FAULT", blank=True, null=True
+    )
+    rack_under_temperature_fault = models.IntegerField(db_column="RACK_UNDER_TEMPERATURE_FAULT", blank=True, null=True)
+    rack_over_temperature_fault = models.IntegerField(db_column="RACK_OVER_TEMPERATURE_FAULT", blank=True, null=True)
+    rack_voltage_imbalance_fault = models.IntegerField(db_column="RACK_VOLTAGE_IMBALANCE_FAULT", blank=True, null=True)
+    rack_under_voltage_protection_fault = models.IntegerField(
+        db_column="RACK_UNDER_VOLTAGE_PROTECTION_FAULT", blank=True, null=True
+    )
+    rack_over_voltage_protection_fault = models.IntegerField(
+        db_column="RACK_OVER_VOLTAGE_PROTECTION_FAULT", blank=True, null=True
+    )
+    rack_over_current_charge_fault = models.IntegerField(
+        db_column="RACK_OVER_CURRENT_CHARGE_FAULT", blank=True, null=True
+    )
+    rack_over_current_discharge_fault = models.IntegerField(
+        db_column="RACK_OVER_CURRENT_DISCHARGE_FAULT", blank=True, null=True
+    )
+    rack_charge_relay_plus_fault_status = models.IntegerField(
+        db_column="RACK_CHARGE_RELAY_PLUS_FAULT_STATUS", blank=True, null=True
+    )
+    rack_discharge_relay_minus_fault_status = models.IntegerField(
+        db_column="RACK_DISCHARGE_RELAY_MINUS_FAULT_STATUS", blank=True, null=True
+    )
+    rack_fuse_minus_fault_status = models.IntegerField(db_column="RACK_FUSE_MINUS_FAULT_STATUS", blank=True, null=True)
+    rack_fuse_plus_fault_status = models.IntegerField(db_column="RACK_FUSE_PLUS_FAULT_STATUS", blank=True, null=True)
+    rack_tray_rack_communication_fault = models.IntegerField(
+        db_column="RACK_TRAY_RACK_COMMUNICATION_FAULT", blank=True, null=True
+    )
+
+    class Meta:
+        abstract = True
+        managed = False
+
+
+class CommonEtcInfo(models.Model):
+    timestamp = models.DateTimeField(db_column="TIMESTAMP", primary_key=True)
+    sensor1_temperature = models.FloatField(db_column="SENSOR1_TEMPERATURE", blank=True, null=True)
+    sensor1_humidity = models.FloatField(db_column="SENSOR1_HUMIDITY", blank=True, null=True)
+
+    class Meta:
+        abstract = True
+        managed = False
+
+
+# ESS Object Info
+
 
 class Bank(models.Model):
     timestamp = models.DateTimeField(db_column="TIMESTAMP", primary_key=True)
@@ -103,19 +293,159 @@ class Bank(models.Model):
         db_table = "bank"
 
 
-class Etc(models.Model):
+class SecondESSBank(CommonBankInfo):
+    max_module_temperature = models.FloatField(db_column="MAX_MODULE_TEMPERATURE", blank=True, null=True)
+    min_module_temperature = models.FloatField(db_column="MIN_MODULE_TEMPERATURE", blank=True, null=True)
+    max_module_humidity = models.FloatField(db_column="MAX_MODULE_HUMIDITY", blank=True, null=True)
+    min_module_humidity = models.FloatField(db_column="MIN_MODULE_HUMIDITY", blank=True, null=True)
+    rack_tray_voltage_imbalance_warning = models.IntegerField(
+        db_column="RACK_TRAY_VOLTAGE_IMBALANCE_WARNING", blank=True, null=True
+    )
+    master_rack_communication_fault = models.TextField(
+        db_column="MASTER_RACK_COMMUNICATION_FAULT", blank=True, default=""
+    )
+    battery_status_for_standby = models.IntegerField(db_column="BATTERY_STATUS_FOR_STANDBY", blank=True, null=True)
+    battery_status_for_discharge = models.IntegerField(db_column="BATTERY_STATUS_FOR_DISCHARGE", blank=True, null=True)
+    rack_to_master_bms_communication_status = models.IntegerField(
+        db_column="RACK_TO_MASTER_BMS_COMMUNICATION_STATUS", blank=True, null=True
+    )
+    charging_stop_of_status = models.IntegerField(db_column="CHARGING_STOP_OF_STATUS", blank=True, null=True)
+    discharging_stop_of_status = models.IntegerField(db_column="DISCHARGING_STOP_OF_STATUS", blank=True, null=True)
+    emergency_status = models.IntegerField(db_column="EMERGENCY_STATUS", blank=True, null=True)
+    tvoc_status = models.IntegerField(db_column="TVOC_STATUS", blank=True, null=True)
+    order_source = models.IntegerField(db_column="ORDER_SOURCE", blank=True, null=True)
+    emergency_source = models.IntegerField(db_column="EMERGENCY_SOURCE", blank=True, null=True)
+
+    class Meta(CommonBankInfo.Meta):
+        db_table = "bank"
+
+
+class Rack(models.Model):
     timestamp = models.DateTimeField(db_column="TIMESTAMP", primary_key=True)
     bank_id = models.IntegerField(db_column="BANK_ID")
-    sensor1_temperature = models.FloatField(db_column="SENSOR1_TEMPERATURE", blank=True, null=True)
-    sensor1_humidity = models.FloatField(db_column="SENSOR1_HUMIDITY", blank=True, null=True)
-    inv1_active_power = models.FloatField(db_column="INV1_ACTIVE_POWER", blank=True, null=True)
-    inv1_cumluative_power_generation = models.FloatField(
-        db_column="INV1_CUMLUATIVE_POWER_GENERATION", blank=True, null=True
+    rack_id = models.IntegerField(db_column="RACK_ID")
+    rack_soc = models.FloatField(db_column="RACK_SOC", blank=True, null=True)
+    rack_soh = models.FloatField(db_column="RACK_SOH", blank=True, null=True)
+    rack_voltage = models.FloatField(db_column="RACK_VOLTAGE", blank=True, null=True)
+    rack_current = models.FloatField(db_column="RACK_CURRENT", blank=True, null=True)
+    rack_max_cell_voltage = models.FloatField(db_column="RACK_MAX_CELL_VOLTAGE", blank=True, null=True)
+    rack_max_cell_voltage_position = models.FloatField(
+        db_column="RACK_MAX_CELL_VOLTAGE_POSITION", blank=True, null=True
+    )
+    rack_min_cell_voltage = models.FloatField(db_column="RACK_MIN_CELL_VOLTAGE", blank=True, null=True)
+    rack_min_cell_voltage_position = models.FloatField(
+        db_column="RACK_MIN_CELL_VOLTAGE_POSITION", blank=True, null=True
+    )
+    rack_cell_voltage_gap = models.FloatField(db_column="RACK_CELL_VOLTAGE_GAP", blank=True, null=True)
+    rack_cell_voltage_average = models.FloatField(db_column="RACK_CELL_VOLTAGE_AVERAGE", blank=True, null=True)
+    rack_max_cell_temperature = models.FloatField(db_column="RACK_MAX_CELL_TEMPERATURE", blank=True, null=True)
+    rack_max_cell_temperature_position = models.FloatField(
+        db_column="RACK_MAX_CELL_TEMPERATURE_POSITION", blank=True, null=True
+    )
+    rack_min_cell_temperature = models.FloatField(db_column="RACK_MIN_CELL_TEMPERATURE", blank=True, null=True)
+    rack_min_cell_temperature_position = models.FloatField(
+        db_column="RACK_MIN_CELL_TEMPERATURE_POSITION", blank=True, null=True
+    )
+    rack_cell_temperature_gap = models.FloatField(db_column="RACK_CELL_TEMPERATURE_GAP", blank=True, null=True)
+    rack_cell_temperature_average = models.FloatField(db_column="RACK_CELL_TEMPERATURE_AVERAGE", blank=True, null=True)
+    rack_discharge_relay_minus_status = models.IntegerField(
+        db_column="RACK_DISCHARGE_RELAY_MINUS_STATUS", blank=True, null=True
+    )
+    rack_charge_relay_plus_status = models.IntegerField(
+        db_column="RACK_CHARGE_RELAY_PLUS_STATUS", blank=True, null=True
+    )
+    rack_cell_balance_status = models.IntegerField(db_column="RACK_CELL_BALANCE_STATUS", blank=True, null=True)
+    rack_current_sensor_discharge = models.IntegerField(
+        db_column="RACK_CURRENT_SENSOR_DISCHARGE", blank=True, null=True
+    )
+    rack_current_sensor_charge = models.IntegerField(db_column="RACK_CURRENT_SENSOR_CHARGE", blank=True, null=True)
+    rack_status_for_run = models.IntegerField(db_column="RACK_STATUS_FOR_RUN", blank=True, null=True)
+    rack_status_for_fault = models.IntegerField(db_column="RACK_STATUS_FOR_FAULT", blank=True, null=True)
+    rack_status_for_warning = models.IntegerField(db_column="RACK_STATUS_FOR_WARNING", blank=True, null=True)
+    rack_temperature_imbalance_warning = models.IntegerField(
+        db_column="RACK_TEMPERATURE_IMBALANCE_WARNING", blank=True, null=True
+    )
+    rack_under_temperature_warning = models.IntegerField(
+        db_column="RACK_UNDER_TEMPERATURE_WARNING", blank=True, null=True
+    )
+    rack_over_temperature_warning = models.IntegerField(
+        db_column="RACK_OVER_TEMPERATURE_WARNING", blank=True, null=True
+    )
+    rack_voltage_imbalance_warning = models.IntegerField(
+        db_column="RACK_VOLTAGE_IMBALANCE_WARNING", blank=True, null=True
+    )
+    rack_under_voltage_protection_warning = models.IntegerField(
+        db_column="RACK_UNDER_VOLTAGE_PROTECTION_WARNING", blank=True, null=True
+    )
+    rack_over_voltage_protection_warning = models.IntegerField(
+        db_column="RACK_OVER_VOLTAGE_PROTECTION_WARNING", blank=True, null=True
+    )
+    rack_over_current_charge_warning = models.IntegerField(
+        db_column="RACK_OVER_CURRENT_CHARGE_WARNING", blank=True, null=True
+    )
+    rack_over_current_discharge_warning = models.IntegerField(
+        db_column="RACK_OVER_CURRENT_DISCHARGE_WARNING", blank=True, null=True
+    )
+    rack_temperature_imbalance_fault = models.IntegerField(
+        db_column="RACK_TEMPERATURE_IMBALANCE_FAULT", blank=True, null=True
+    )
+    rack_under_temperature_fault = models.IntegerField(db_column="RACK_UNDER_TEMPERATURE_FAULT", blank=True, null=True)
+    rack_over_temperature_fault = models.IntegerField(db_column="RACK_OVER_TEMPERATURE_FAULT", blank=True, null=True)
+    rack_voltage_imbalance_fault = models.IntegerField(db_column="RACK_VOLTAGE_IMBALANCE_FAULT", blank=True, null=True)
+    rack_under_voltage_protection_fault = models.IntegerField(
+        db_column="RACK_UNDER_VOLTAGE_PROTECTION_FAULT", blank=True, null=True
+    )
+    rack_over_voltage_protection_fault = models.IntegerField(
+        db_column="RACK_OVER_VOLTAGE_PROTECTION_FAULT", blank=True, null=True
+    )
+    rack_over_current_charge_fault = models.IntegerField(
+        db_column="RACK_OVER_CURRENT_CHARGE_FAULT", blank=True, null=True
+    )
+    rack_over_current_discharge_fault = models.IntegerField(
+        db_column="RACK_OVER_CURRENT_DISCHARGE_FAULT", blank=True, null=True
+    )
+    rack_charge_relay_plus_fault_status = models.IntegerField(
+        db_column="RACK_CHARGE_RELAY_PLUS_FAULT_STATUS", blank=True, null=True
+    )
+    rack_discharge_relay_minus_fault_status = models.IntegerField(
+        db_column="RACK_DISCHARGE_RELAY_MINUS_FAULT_STATUS", blank=True, null=True
+    )
+    rack_fuse_minus_fault_status = models.IntegerField(db_column="RACK_FUSE_MINUS_FAULT_STATUS", blank=True, null=True)
+    rack_fuse_plus_fault_status = models.IntegerField(db_column="RACK_FUSE_PLUS_FAULT_STATUS", blank=True, null=True)
+    rack_tray_rack_communication_fault = models.IntegerField(
+        db_column="RACK_TRAY_RACK_COMMUNICATION_FAULT", blank=True, null=True
     )
 
     class Meta:
         managed = False
-        db_table = "etc"
+        db_table = "rack"
+
+
+class SecondESSRack(CommonRackInfo):
+    rack_max_module_temperature = models.FloatField(db_column="RACK_MAX_MODULE_TEMPERATURE", blank=True, null=True)
+    rack_max_module_temperature_position = models.FloatField(
+        db_column="RACK_MAX_MODULE_TEMPERATURE_POSITION", blank=True, null=True
+    )
+    rack_min_module_temperature = models.FloatField(db_column="RACK_MIN_MODULE_TEMPERATURE", blank=True, null=True)
+    rack_min_module_temperature_position = models.FloatField(
+        db_column="RACK_MIN_MODULE_TEMPERATURE_POSITION", blank=True, null=True
+    )
+    rack_max_module_humidity = models.FloatField(db_column="RACK_MAX_MODULE_HUMIDITY", blank=True, null=True)
+    rack_max_module_humidity_position = models.FloatField(
+        db_column="RACK_MAX_MODULE_HUMIDITY_POSITION", blank=True, null=True
+    )
+    rack_min_module_humidity = models.FloatField(db_column="RACK_MIN_MODULE_HUMIDITY", blank=True, null=True)
+    rack_min_module_humidity_position = models.FloatField(
+        db_column="RACK_MIN_MODULE_HUMIDITY_POSITION", blank=True, null=True
+    )
+    rack_status_for_online = models.IntegerField(db_column="RACK_STATUS_FOR_Online", blank=True, null=True)
+    rack_tray_volatge_imbalance_warning = models.IntegerField(
+        db_column="RACK_TRAY_VOLATGE_IMBALANCE_WARNING", blank=True, null=True
+    )
+    rack_module_fault = models.TextField(db_column="RACK_MODULE_FAULT", blank=True, null=True)
+
+    class Meta(CommonRackInfo.Meta):
+        db_table = "rack"
 
 
 class Pcs(models.Model):
@@ -224,105 +554,90 @@ class Pcs(models.Model):
         db_table = "pcs"
 
 
-class Rack(models.Model):
+class SecondESSPcs(models.Model):
+    timestamp = models.DateTimeField(db_column="TIMESTAMP", primary_key=True)
+    ai_vdc = models.FloatField(db_column="AI_VDC", blank=True, null=True)
+    ai_idc = models.FloatField(db_column="AI_IDC", blank=True, null=True)
+    ai_pdc = models.FloatField(db_column="AI_PDC", blank=True, null=True)
+    ai_freq = models.FloatField(db_column="AI_FREQ", blank=True, null=True)
+    ai_vab_rms = models.FloatField(db_column="AI_VAB_RMS", blank=True, null=True)
+    ai_vbc_rms = models.FloatField(db_column="AI_VBC_RMS", blank=True, null=True)
+    ai_vca_rms = models.FloatField(db_column="AI_VCA_RMS", blank=True, null=True)
+    ai_ias_rms = models.FloatField(db_column="AI_IAS_RMS", blank=True, null=True)
+    ai_ibs_rms = models.FloatField(db_column="AI_IBS_RMS", blank=True, null=True)
+    ai_ics_rms = models.FloatField(db_column="AI_ICS_RMS", blank=True, null=True)
+    ai_sac = models.FloatField(db_column="AI_SAC", blank=True, null=True)
+    ai_pac = models.FloatField(db_column="AI_PAC", blank=True, null=True)
+    ai_qac = models.FloatField(db_column="AI_QAC", blank=True, null=True)
+    ai_pf = models.FloatField(db_column="AI_PF", blank=True, null=True)
+    ai_c_kwh_ach = models.FloatField(db_column="AI_C_KWH_ACH", blank=True, null=True)
+    ai_c_kwh_acl = models.FloatField(db_column="AI_C_KWH_ACL", blank=True, null=True)
+    ai_d_kwh_ach = models.FloatField(db_column="AI_D_KWH_ACH", blank=True, null=True)
+    ai_d_kwh_acl = models.FloatField(db_column="AI_D_KWH_ACL", blank=True, null=True)
+    ai_c_kwh_dch = models.FloatField(db_column="AI_C_KWH_DCH", blank=True, null=True)
+    ai_c_kwh_dcl = models.FloatField(db_column="AI_C_KWH_DCL", blank=True, null=True)
+    ai_d_kwh_dch = models.FloatField(db_column="AI_D_KWH_DCH", blank=True, null=True)
+    ai_d_kwh_dcl = models.FloatField(db_column="AI_D_KWH_DCL", blank=True, null=True)
+    cmd_kw = models.FloatField(db_column="CMD_KW", blank=True, null=True)
+    cmd_kvar = models.FloatField(db_column="CMD_KVAR", blank=True, null=True)
+    cmd_vdc_ref = models.FloatField(db_column="CMD_VDC_REF", blank=True, null=True)
+    st_run = models.FloatField(db_column="ST_RUN", blank=True, null=True)
+    st_stop = models.FloatField(db_column="ST_STOP", blank=True, null=True)
+    st_ready = models.FloatField(db_column="ST_READY", blank=True, null=True)
+    st_mode_l_r = models.FloatField(db_column="ST_MODE_L_R", blank=True, null=True)
+    st_mode_cv = models.FloatField(db_column="ST_MODE_CV", blank=True, null=True)
+    st_fault = models.FloatField(db_column="ST_FAULT", blank=True, null=True)
+    st_charge = models.FloatField(db_column="ST_CHARGE", blank=True, null=True)
+    st_discharge = models.FloatField(db_column="ST_DISCHARGE", blank=True, null=True)
+    di_dk = models.FloatField(db_column="DI_DK", blank=True, null=True)
+    di_ak = models.FloatField(db_column="DI_AK", blank=True, null=True)
+    di_ck = models.FloatField(db_column="DI_CK", blank=True, null=True)
+    di_temp = models.FloatField(db_column="DI_TEMP", blank=True, null=True)
+    di_spd = models.FloatField(db_column="DI_SPD", blank=True, null=True)
+    di_ds = models.FloatField(db_column="DI_DS", blank=True, null=True)
+    di_start = models.FloatField(db_column="DI_START", blank=True, null=True)
+    di_es = models.FloatField(db_column="DI_ES", blank=True, null=True)
+    flt_ovar = models.FloatField(db_column="FLT_OVAR", blank=True, null=True)
+    flt_uvar = models.FloatField(db_column="FLT_UVAR", blank=True, null=True)
+    flt_ofr = models.FloatField(db_column="FLT_OFR", blank=True, null=True)
+    flt_ufr = models.FloatField(db_column="FLT_UFR", blank=True, null=True)
+    flt_ocar = models.FloatField(db_column="FLT_OCAR", blank=True, null=True)
+    flt_ovdr = models.FloatField(db_column="FLT_OVDR", blank=True, null=True)
+    flt_uvdr = models.FloatField(db_column="FLT_UVDR", blank=True, null=True)
+    flt_ocdr = models.FloatField(db_column="FLT_OCDR", blank=True, null=True)
+    flt_cfd = models.FloatField(db_column="FLT_CFD", blank=True, null=True)
+    flt_otr = models.FloatField(db_column="FLT_OTR", blank=True, null=True)
+    flt_spd = models.FloatField(db_column="FLT_SPD", blank=True, null=True)
+    flt_rvet = models.FloatField(db_column="FLT_RVET", blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = "pcs"
+
+
+class Etc(models.Model):
     timestamp = models.DateTimeField(db_column="TIMESTAMP", primary_key=True)
     bank_id = models.IntegerField(db_column="BANK_ID")
-    rack_id = models.IntegerField(db_column="RACK_ID")
-    rack_soc = models.FloatField(db_column="RACK_SOC", blank=True, null=True)
-    rack_soh = models.FloatField(db_column="RACK_SOH", blank=True, null=True)
-    rack_voltage = models.FloatField(db_column="RACK_VOLTAGE", blank=True, null=True)
-    rack_current = models.FloatField(db_column="RACK_CURRENT", blank=True, null=True)
-    rack_max_cell_voltage = models.FloatField(db_column="RACK_MAX_CELL_VOLTAGE", blank=True, null=True)
-    rack_max_cell_voltage_position = models.FloatField(
-        db_column="RACK_MAX_CELL_VOLTAGE_POSITION", blank=True, null=True
-    )
-    rack_min_cell_voltage = models.FloatField(db_column="RACK_MIN_CELL_VOLTAGE", blank=True, null=True)
-    rack_min_cell_voltage_position = models.FloatField(
-        db_column="RACK_MIN_CELL_VOLTAGE_POSITION", blank=True, null=True
-    )
-    rack_cell_voltage_gap = models.FloatField(db_column="RACK_CELL_VOLTAGE_GAP", blank=True, null=True)
-    rack_cell_voltage_average = models.FloatField(db_column="RACK_CELL_VOLTAGE_AVERAGE", blank=True, null=True)
-    rack_max_cell_temperature = models.FloatField(db_column="RACK_MAX_CELL_TEMPERATURE", blank=True, null=True)
-    rack_max_cell_temperature_position = models.FloatField(
-        db_column="RACK_MAX_CELL_TEMPERATURE_POSITION", blank=True, null=True
-    )
-    rack_min_cell_temperature = models.FloatField(db_column="RACK_MIN_CELL_TEMPERATURE", blank=True, null=True)
-    rack_min_cell_temperature_position = models.FloatField(
-        db_column="RACK_MIN_CELL_TEMPERATURE_POSITION", blank=True, null=True
-    )
-    rack_cell_temperature_gap = models.FloatField(db_column="RACK_CELL_TEMPERATURE_GAP", blank=True, null=True)
-    rack_cell_temperature_average = models.FloatField(db_column="RACK_CELL_TEMPERATURE_AVERAGE", blank=True, null=True)
-    rack_discharge_relay_minus_status = models.IntegerField(
-        db_column="RACK_DISCHARGE_RELAY_MINUS_STATUS", blank=True, null=True
-    )
-    rack_charge_relay_plus_status = models.IntegerField(
-        db_column="RACK_CHARGE_RELAY_PLUS_STATUS", blank=True, null=True
-    )
-    rack_cell_balance_status = models.IntegerField(db_column="RACK_CELL_BALANCE_STATUS", blank=True, null=True)
-    rack_current_sensor_discharge = models.IntegerField(
-        db_column="RACK_CURRENT_SENSOR_DISCHARGE", blank=True, null=True
-    )
-    rack_current_sensor_charge = models.IntegerField(db_column="RACK_CURRENT_SENSOR_CHARGE", blank=True, null=True)
-    rack_status_for_run = models.IntegerField(db_column="RACK_STATUS_FOR_RUN", blank=True, null=True)
-    rack_status_for_fault = models.IntegerField(db_column="RACK_STATUS_FOR_FAULT", blank=True, null=True)
-    rack_status_for_warning = models.IntegerField(db_column="RACK_STATUS_FOR_WARNING", blank=True, null=True)
-    rack_temperature_imbalance_warning = models.IntegerField(
-        db_column="RACK_TEMPERATURE_IMBALANCE_WARNING", blank=True, null=True
-    )
-    rack_under_temperature_warning = models.IntegerField(
-        db_column="RACK_UNDER_TEMPERATURE_WARNING", blank=True, null=True
-    )
-    rack_over_temperature_warning = models.IntegerField(
-        db_column="RACK_OVER_TEMPERATURE_WARNING", blank=True, null=True
-    )
-    rack_voltage_imbalance_warning = models.IntegerField(
-        db_column="RACK_VOLTAGE_IMBALANCE_WARNING", blank=True, null=True
-    )
-    rack_under_voltage_protection_warning = models.IntegerField(
-        db_column="RACK_UNDER_VOLTAGE_PROTECTION_WARNING", blank=True, null=True
-    )
-    rack_over_voltage_protection_warning = models.IntegerField(
-        db_column="RACK_OVER_VOLTAGE_PROTECTION_WARNING", blank=True, null=True
-    )
-    rack_over_current_charge_warning = models.IntegerField(
-        db_column="RACK_OVER_CURRENT_CHARGE_WARNING", blank=True, null=True
-    )
-    rack_over_current_discharge_warning = models.IntegerField(
-        db_column="RACK_OVER_CURRENT_DISCHARGE_WARNING", blank=True, null=True
-    )
-    rack_temperature_imbalance_fault = models.IntegerField(
-        db_column="RACK_TEMPERATURE_IMBALANCE_FAULT", blank=True, null=True
-    )
-    rack_under_temperature_fault = models.IntegerField(db_column="RACK_UNDER_TEMPERATURE_FAULT", blank=True, null=True)
-    rack_over_temperature_fault = models.IntegerField(db_column="RACK_OVER_TEMPERATURE_FAULT", blank=True, null=True)
-    rack_voltage_imbalance_fault = models.IntegerField(db_column="RACK_VOLTAGE_IMBALANCE_FAULT", blank=True, null=True)
-    rack_under_voltage_protection_fault = models.IntegerField(
-        db_column="RACK_UNDER_VOLTAGE_PROTECTION_FAULT", blank=True, null=True
-    )
-    rack_over_voltage_protection_fault = models.IntegerField(
-        db_column="RACK_OVER_VOLTAGE_PROTECTION_FAULT", blank=True, null=True
-    )
-    rack_over_current_charge_fault = models.IntegerField(
-        db_column="RACK_OVER_CURRENT_CHARGE_FAULT", blank=True, null=True
-    )
-    rack_over_current_discharge_fault = models.IntegerField(
-        db_column="RACK_OVER_CURRENT_DISCHARGE_FAULT", blank=True, null=True
-    )
-    rack_charge_relay_plus_fault_status = models.IntegerField(
-        db_column="RACK_CHARGE_RELAY_PLUS_FAULT_STATUS", blank=True, null=True
-    )
-    rack_discharge_relay_minus_fault_status = models.IntegerField(
-        db_column="RACK_DISCHARGE_RELAY_MINUS_FAULT_STATUS", blank=True, null=True
-    )
-    rack_fuse_minus_fault_status = models.IntegerField(db_column="RACK_FUSE_MINUS_FAULT_STATUS", blank=True, null=True)
-    rack_fuse_plus_fault_status = models.IntegerField(db_column="RACK_FUSE_PLUS_FAULT_STATUS", blank=True, null=True)
-    rack_tray_rack_communication_fault = models.IntegerField(
-        db_column="RACK_TRAY_RACK_COMMUNICATION_FAULT", blank=True, null=True
+    sensor1_temperature = models.FloatField(db_column="SENSOR1_TEMPERATURE", blank=True, null=True)
+    sensor1_humidity = models.FloatField(db_column="SENSOR1_HUMIDITY", blank=True, null=True)
+    inv1_active_power = models.FloatField(db_column="INV1_ACTIVE_POWER", blank=True, null=True)
+    inv1_cumluative_power_generation = models.FloatField(
+        db_column="INV1_CUMLUATIVE_POWER_GENERATION", blank=True, null=True
     )
 
     class Meta:
         managed = False
-        db_table = "rack"
+        db_table = "etc"
+
+
+class SecondESSEtc(CommonEtcInfo):
+    sensor2_temperature = models.FloatField(db_column="SENSOR2_TEMPERATURE", blank=True, null=True)
+    sensor2_humidity = models.FloatField(db_column="SENSOR2_HUMIDITY", blank=True, null=True)
+    active_power_total = models.FloatField(db_column="ACTIVE_POWER_TOTAL", blank=True, null=True)
+    active_energy_total_high = models.FloatField(db_column="ACTIVE_ENERGY_TOTAL_HIGH", blank=True, null=True)
+
+    class Meta(CommonEtcInfo.Meta):
+        db_table = "etc"
 
 
 class EssMonitoringLog(models.Model):
