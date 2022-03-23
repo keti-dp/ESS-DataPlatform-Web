@@ -95,7 +95,7 @@ var avgRackSoHChart;
 var avgBankPowerChart;
 
 // Create initial avg bank soc chart
-var requestUrl = new URL(window.location.origin + '/api/ess/operation-sites/1/banks/1/stats/bank-avg-soc');
+var requestUrl = new URL(window.location.origin + '/api/ess/operating-sites/1/banks/1/stats/avg-bank-soc');
 requestUrl.searchParams.append('date', currentDate);
 requestUrl.searchParams.append('time-bucket-width', '1hour');
 
@@ -124,7 +124,7 @@ fetch(requestUrl).then(response => {
 });
 
 // Create initial avg rank soc chart 
-var requestUrl = new URL(window.location.origin + '/api/ess/operation-sites/1/banks/1/racks/1/stats/rack-avg-soc');
+var requestUrl = new URL(window.location.origin + '/api/ess/operating-sites/1/banks/1/racks/1/stats/avg-rack-soc');
 requestUrl.searchParams.append('date', currentDate);
 requestUrl.searchParams.append('time-bucket-width', '1hour');
 
@@ -153,7 +153,7 @@ fetch(requestUrl).then(response => {
 });
 
 // Create initial avg bank soh chart
-var requestUrl = new URL(window.location.origin + '/api/ess/operation-sites/1/banks/1/stats/bank-avg-soh');
+var requestUrl = new URL(window.location.origin + '/api/ess/operating-sites/1/banks/1/stats/avg-bank-soh');
 requestUrl.searchParams.append('date', currentDate);
 requestUrl.searchParams.append('time-bucket-width', '1hour');
 
@@ -182,7 +182,7 @@ fetch(requestUrl).then(response => {
 });
 
 // Create initial avg rack soh chart
-var requestUrl = new URL(window.location.origin + '/api/ess/operation-sites/1/banks/1/racks/1/stats/rack-avg-soh');
+var requestUrl = new URL(window.location.origin + '/api/ess/operating-sites/1/banks/1/racks/1/stats/avg-rack-soh');
 requestUrl.searchParams.append('date', currentDate);
 requestUrl.searchParams.append('time-bucket-width', '1hour');
 
@@ -211,7 +211,7 @@ fetch(requestUrl).then(response => {
 });
 
 // Create initial avg bank power chart
-var requestUrl = new URL(window.location.origin + '/api/ess/operation-sites/1/banks/1/stats/avg-bank-power');
+var requestUrl = new URL(window.location.origin + '/api/ess/operating-sites/1/banks/1/stats/avg-bank-power');
 requestUrl.searchParams.append('date', currentDate);
 requestUrl.searchParams.append('time-bucket-width', '1hour');
 
@@ -243,7 +243,7 @@ var avgBankSoCDatePicker = $('#avg-bank-soc-date-input').datepicker({
 });
 avgBankSoCDatePicker.on('changeDate', () => {
     let date = avgBankSoCDatePicker.val();
-    let requestUrl = new URL(window.location.origin + '/api/ess/operation-sites/1/banks/1/stats/bank-avg-soc');
+    let requestUrl = new URL(window.location.origin + '/api/ess/operating-sites/1/banks/1/stats/avg-bank-soc');
     requestUrl.searchParams.append('date', date);
     requestUrl.searchParams.append('time-bucket-width', '1hour');
 
@@ -278,7 +278,7 @@ avgRackSoCSelect.addEventListener('change', (event) => {
         avgRackSoCDatePicker.focus();
     } else {
         let date = avgRackSoCDatePicker.val();
-        let requestUrl = new URL(window.location.origin + '/api/ess/operation-sites/1/banks/1/racks/' + avgRackSoCSelect.value + '/stats/rack-avg-soc');
+        let requestUrl = new URL(window.location.origin + '/api/ess/operating-sites/1/banks/1/racks/' + avgRackSoCSelect.value + '/stats/avg-rack-soc');
         requestUrl.searchParams.append('date', date);
         requestUrl.searchParams.append('time-bucket-width', '1hour');
 
@@ -307,7 +307,7 @@ avgRackSoCDatePicker.on('changeDate', () => {
     } else {
         let date = avgRackSoCDatePicker.val();
 
-        let requestUrl = new URL(window.location.origin + '/api/ess/operation-sites/1/banks/1/racks/' + avgRackSoCSelect.value + '/stats/rack-avg-soc');
+        let requestUrl = new URL(window.location.origin + '/api/ess/operating-sites/1/banks/1/racks/' + avgRackSoCSelect.value + '/stats/avg-rack-soc');
         requestUrl.searchParams.append('date', date);
         requestUrl.searchParams.append('time-bucket-width', '1hour');
 
@@ -339,7 +339,7 @@ var avgBankSoHDatePicker = $('#avg-bank-soh-date-input').datepicker({
 avgBankSoHDatePicker.on('changeDate', () => {
     let date = avgBankSoHDatePicker.val();
 
-    let requestUrl = new URL(window.location.origin + '/api/ess/operation-sites/1/banks/1/stats/bank-avg-soh');
+    let requestUrl = new URL(window.location.origin + '/api/ess/operating-sites/1/banks/1/stats/avg-bank-soh');
     requestUrl.searchParams.append('date', date);
     requestUrl.searchParams.append('time-bucket-width', '1hour');
 
@@ -375,7 +375,7 @@ avgRackSoHSelect.addEventListener('change', (event) => {
     } else {
         let date = avgRackSoHDatePicker.val();
 
-        let requestUrl = new URL(window.location.origin + '/api/ess/operation-sites/1/banks/1/racks/' + avgRackSoHSelect.value + '/stats/rack-avg-soh');
+        let requestUrl = new URL(window.location.origin + '/api/ess/operating-sites/1/banks/1/racks/' + avgRackSoHSelect.value + '/stats/avg-rack-soh');
         requestUrl.searchParams.append('date', date);
         requestUrl.searchParams.append('time-bucket-width', '1hour');
 
@@ -404,7 +404,7 @@ avgRackSoHDatePicker.on('changeDate', () => {
     } else {
         let date = avgRackSoHDatePicker.val();
 
-        let requestUrl = new URL(window.location.origin + '/api/ess/operation-sites/1/banks/1/racks/' + avgRackSoHSelect.value + '/stats/rack-avg-soh');
+        let requestUrl = new URL(window.location.origin + '/api/ess/operating-sites/1/banks/1/racks/' + avgRackSoHSelect.value + '/stats/avg-rack-soh');
         requestUrl.searchParams.append('date', date);
         requestUrl.searchParams.append('time-bucket-width', '1hour');
 
@@ -436,7 +436,7 @@ var avgBankPowerDatePicker = $('#avg-bank-power-date-input').datepicker({
 avgBankPowerDatePicker.on('changeDate', () => {
     let date = avgBankPowerDatePicker.val();
 
-    let requestUrl = new URL(window.location.origin + '/api/ess/operation-sites/1/banks/1/stats/avg-bank-power');
+    let requestUrl = new URL(window.location.origin + '/api/ess/operating-sites/1/banks/1/stats/avg-bank-power');
     requestUrl.searchParams.append('date', date);
     requestUrl.searchParams.append('time-bucket-width', '1hour');
 

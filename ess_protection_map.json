@@ -1,6 +1,6 @@
 {
     "dataType": {
-        "operationSite1": {
+        "operatingSite1": {
             "bank": {
                 "BANK_SOC": {
                     "type": "number",
@@ -343,10 +343,380 @@
                     "value": "-"
                 }
             }
+        },
+        "secondOperatingSite": {
+            "bank": {
+                "BANK_SOC": {
+                    "type": "number",
+                    "value": "-"
+                },
+                "BANK_SOH": {
+                    "type": "number",
+                    "value": "-"
+                },
+                "BANK_DC_VOLT": {
+                    "type": "number",
+                    "value": "-"
+                },
+                "BANK_DC_CURRENT": {
+                    "type": "number",
+                    "value": "-"
+                },
+                "BANK_POWER": {
+                    "type": "number",
+                    "value": "-"
+                },
+                "MAX_CELL_VOLTAGE_OF_BANK": {
+                    "type": "number",
+                    "value": "3.20~4.05"
+                },
+                "MIN_CELL_VOLTAGE_OF_BANK": {
+                    "type": "number",
+                    "value": "3.20~4.05"
+                },
+                "MAX_CELL_TEMPERATURE_OF_BANK": {
+                    "type": "number",
+                    "value": "0~50"
+                },
+                "MIN_CELL_TEMPERATURE_OF_BANK": {
+                    "type": "number",
+                    "value": "0~50"
+                },
+                "MAX_MODULE_TEMPERATURE": {
+                    "type": "number",
+                    "value": "-"
+                },
+                "MIN_MODULE_TEMPERATURE": {
+                    "type": "number",
+                    "value": "-"
+                },
+                "MAX_MODULE_HUMIDITY": {
+                    "type": "number",
+                    "value": "-"
+                },
+                "MIN_MODULE_HUMIDITY": {
+                    "type": "number",
+                    "value": "-"
+                },
+                "RACK_TEMPERATURE_IMBALANCE_WARNING": {
+                    "type": "boolean",
+                    "value": "0,1"
+                },
+                "RACK_UNDER_TEMPERATURE_WARNING": {
+                    "type": "boolean",
+                    "value": "0,1"
+                },
+                "RACK_OVER_TEMPERATURE_WARNING": {
+                    "type": "boolean",
+                    "value": "0,1"
+                },
+                "RACK_VOLTAGE_IMBALANCE_WARNING": {
+                    "type": "boolean",
+                    "value": "0,1"
+                },
+                "RACK_UNDER_VOLTAGE_PROTECTION_WARNING": {
+                    "type": "boolean",
+                    "value": "0,1"
+                },
+                "RACK_OVER_VOLTAGE_PROTECTION_WARNING": {
+                    "type": "boolean",
+                    "value": "0,1"
+                },
+                "RACK_OVER_CURRENT_CHARGE_WARNING": {
+                    "type": "boolean",
+                    "value": "0,1"
+                },
+                "RACK_OVER_CURRENT_DISCHARGE_WARNING": {
+                    "type": "boolean",
+                    "value": "0,1"
+                },
+                "RACK_TRAY_VOLTAGE_IMBALANCE_WARNING": {
+                    "type": "boolean",
+                    "value": "0,1"
+                },
+                "RACK_TEMPERATURE_IMBALANCE_FAULT": {
+                    "type": "boolean",
+                    "value": "0,1"
+                },
+                "RACK_UNDER_TEMPERATURE_FAULT": {
+                    "type": "boolean",
+                    "value": "0,1"
+                },
+                "RACK_OVER_TEMPERATURE_FAULT": {
+                    "type": "boolean",
+                    "value": "0,1"
+                },
+                "RACK_VOLTAGE_IMBALANCE_FAULT": {
+                    "type": "boolean",
+                    "value": "0,1"
+                },
+                "RACK_UNDER_VOLTAGE_PROTECTION_FAULT": {
+                    "type": "boolean",
+                    "value": "0,1"
+                },
+                "RACK_OVER_VOLTAGE_PROTECTION_FAULT": {
+                    "type": "boolean",
+                    "value": "0,1"
+                },
+                "RACK_OVER_CURRENT_CHARGE_FAULT": {
+                    "type": "boolean",
+                    "value": "0,1"
+                },
+                "RACK_OVER_CURRENT_DISCHARGE_FAULT": {
+                    "type": "boolean",
+                    "value": "0,1"
+                },
+                "RACK_CHARGE_RELAY_PLUS_FAULT_STATUS": {
+                    "type": "boolean",
+                    "value": "0,1"
+                },
+                "RACK_DISCHARGE_RELAY_MINUS_FAULT_STATUS": {
+                    "type": "boolean",
+                    "value": "0,1"
+                },
+                "RACK_FUSE_MINUS_FAULT_STATUS": {
+                    "type": "boolean",
+                    "value": "0,1"
+                },
+                "RACK_FUSE_PLUS_FAULT_STATUS": {
+                    "type": "boolean",
+                    "value": "0,1"
+                },
+                "RACK_TRAY_RACK_COMMUNICATION_FAULT": {
+                    "type": "boolean",
+                    "value": "0,1"
+                },
+                "MASTER_RACK_COMMUNICATION_FAULT": {
+                    "type": "boolean",
+                    "value": "0,1"
+                },
+                "BATTERY_STATUS_FOR_STANDBY": {
+                    "type": "boolean",
+                    "value": "0,1"
+                },
+                "BATTERY_STATUS_FOR_CHARGE": {
+                    "type": "boolean",
+                    "value": "0,1"
+                },
+                "BATTERY_STATUS_FOR_DISCHARGE": {
+                    "type": "boolean",
+                    "value": "0,1"
+                },
+                "BATTERY_STATUS_FOR_FAULT": {
+                    "type": "boolean",
+                    "value": "0,1"
+                },
+                "BATTERY_STATUS_FOR_WARNING": {
+                    "type": "boolean",
+                    "value": "0,1"
+                },
+                "RACK_TO_MASTER_BMS_COMMUNICATION_STATUS": {
+                    "type": "boolean",
+                    "value": "0,1"
+                },
+                "CHARGING_STOP_OF_STATUS": {
+                    "type": "boolean",
+                    "value": "0,1"
+                },
+                "DISCHARGING_STOP_OF_STATUS": {
+                    "type": "boolean",
+                    "value": "0,1"
+                },
+                "EMERGENCY_STATUS": {
+                    "type": "boolean",
+                    "value": "0,1"
+                },
+                "TVOC_STATUS": {
+                    "type": "boolean",
+                    "value": "0,1"
+                },
+                "BATTERY_STATUS_FOR_RUN": {
+                    "type": "boolean",
+                    "value": "0,1"
+                },
+                "EMERGENCY_SOURCE": {
+                    "type": "boolean",
+                    "value": "0,1"
+                }
+            },
+            "rack": {
+                "RACK_SOC": {
+                    "type": "number",
+                    "value": "-"
+                },
+                "RACK_SOH": {
+                    "type": "number",
+                    "value": "-"
+                },
+                "RACK_VOLTAGE": {
+                    "type": "number",
+                    "value": "-"
+                },
+                "RACK_CURRENT": {
+                    "type": "number",
+                    "value": "120"
+                },
+                "RACK_MAX_CELL_VOLTAGE": {
+                    "type": "number",
+                    "value": "3.20~4.05"
+                },
+                "RACK_MIN_CELL_VOLTAGE": {
+                    "type": "number",
+                    "value": "3.20~4.05"
+                },
+                "RACK_CELL_VOLTAGE_GAP": {
+                    "type": "number",
+                    "value": "0.3"
+                },
+                "RACK_CELL_VOLTAGE_AVERAGE": {
+                    "type": "number",
+                    "value": "3.20~4.05"
+                },
+                "RACK_MAX_CELL_TEMPERATURE": {
+                    "type": "number",
+                    "value": "0~50"
+                },
+                "RACK_MIN_CELL_TEMPERATURE": {
+                    "type": "number",
+                    "value": "0~50"
+                },
+                "RACK_CELL_TEMPERATURE_GAP": {
+                    "type": "number",
+                    "value": "20"
+                },
+                "RACK_MAX_MODULE_TEMPERATURE": {
+                    "type": "number",
+                    "value": "-"
+                },
+                "RACK_MIN_MODULE_TEMPERATURE": {
+                    "type": "number",
+                    "value": "-"
+                },
+                "RACK_MAX_MODULE_HUMIDITY": {
+                    "type": "number",
+                    "value": "-"
+                },
+                "RACK_MIN_MODULE_HUMIDITY": {
+                    "type": "number",
+                    "value": "-"
+                },
+                "RACK_DISCHARGE_RELAY_MINUS_STATUS": {
+                    "type": "boolean",
+                    "value": "0,1"
+                },
+                "RACK_CHARGE_RELAY_PLUS_STATUS": {
+                    "type": "boolean",
+                    "value": "0,1"
+                },
+                "RACK_STATUS_FOR_RUN": {
+                    "type": "boolean",
+                    "value": "0,1"
+                },
+                "RACK_STATUS_FOR_FAULT": {
+                    "type": "boolean",
+                    "value": "0,1"
+                },
+                "RACK_STATUS_FOR_WARNING": {
+                    "type": "boolean",
+                    "value": "0,1"
+                },
+                "RACK_TEMPERATURE_IMBALANCE_WARNING": {
+                    "type": "boolean",
+                    "value": "0,1"
+                },
+                "RACK_UNDER_TEMPERATURE_WARNING": {
+                    "type": "boolean",
+                    "value": "0,1"
+                },
+                "RACK_OVER_TEMPERATURE_WARNING": {
+                    "type": "boolean",
+                    "value": "0,1"
+                },
+                "RACK_VOLTAGE_IMBALANCE_WARNING": {
+                    "type": "boolean",
+                    "value": "0,1"
+                },
+                "RACK_UNDER_VOLTAGE_PROTECTION_WARNING": {
+                    "type": "boolean",
+                    "value": "0,1"
+                },
+                "RACK_OVER_VOLTAGE_PROTECTION_WARNING": {
+                    "type": "boolean",
+                    "value": "0,1"
+                },
+                "RACK_OVER_CURRENT_CHARGE_WARNING": {
+                    "type": "boolean",
+                    "value": "0,1"
+                },
+                "RACK_OVER_CURRENT_DISCHARGE_WARNING": {
+                    "type": "boolean",
+                    "value": "0,1"
+                },
+                "RACK_TRAY_VOLATGE_IMBALANCE_WARNING": {
+                    "type": "boolean",
+                    "value": "0,1"
+                },
+                "RACK_TEMPERATURE_IMBALANCE_FAULT": {
+                    "type": "boolean",
+                    "value": "0,1"
+                },
+                "RACK_UNDER_TEMPERATURE_FAULT": {
+                    "type": "boolean",
+                    "value": "0,1"
+                },
+                "RACK_OVER_TEMPERATURE_FAULT": {
+                    "type": "boolean",
+                    "value": "0,1"
+                },
+                "RACK_VOLTAGE_IMBALANCE_FAULT": {
+                    "type": "boolean",
+                    "value": "0,1"
+                },
+                "RACK_UNDER_VOLTAGE_PROTECTION_FAULT": {
+                    "type": "boolean",
+                    "value": "0,1"
+                },
+                "RACK_OVER_VOLTAGE_PROTECTION_FAULT": {
+                    "type": "boolean",
+                    "value": "0,1"
+                },
+                "RACK_OVER_CURRENT_CHARGE_FAULT": {
+                    "type": "boolean",
+                    "value": "0,1"
+                },
+                "RACK_OVER_CURRENT_DISCHARGE_FAULT": {
+                    "type": "boolean",
+                    "value": "0,1"
+                },
+                "RACK_CHARGE_RELAY_PLUS_FAULT_STATUS": {
+                    "type": "boolean",
+                    "value": "0,1"
+                },
+                "RACK_DISCHARGE_RELAY_MINUS_FAULT_STATUS": {
+                    "type": "boolean",
+                    "value": "0,1"
+                },
+                "RACK_FUSE_MINUS_FAULT_STATUS": {
+                    "type": "boolean",
+                    "value": "0,1"
+                },
+                "RACK_FUSE_PLUS_FAULT_STATUS": {
+                    "type": "boolean",
+                    "value": "0,1"
+                },
+                "RACK_TRAY_RACK_COMMUNICATION_FAULT": {
+                    "type": "boolean",
+                    "value": "0,1"
+                },
+                "RACK_MODULE_FAULT": {
+                    "type": "boolean",
+                    "value": "0,1"
+                }
+            }
         }
     },
     "meta": {
         "description": "ESS Protection Map",
-        "version": "2.2"
+        "version": "3.0"
     }
 }
