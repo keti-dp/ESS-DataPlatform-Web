@@ -101,11 +101,15 @@ class ESSBankListView(ListAPIView):
 
     def get(self, request, *args, **kwargs):
         try:
-            operating_site_id = kwargs["operating_site_id"]
-            database = "ess" + str(operating_site_id)
             queryset = self.get_queryset()
             page = self.paginate_queryset(queryset)
-            serializer = self.get_serializer(page, many=True)
+
+            if page is not None:
+                serializer = self.get_serializer(page, many=True)
+
+                return self.get_paginated_response(serializer.data)
+
+            serializer = self.get_serializer(queryset, many=True)
 
             return Response(serializer.data)
         except KeyError:
@@ -150,11 +154,15 @@ class ESSRackListView(ListAPIView):
 
     def get(self, request, *args, **kwargs):
         try:
-            operating_site_id = kwargs["operating_site_id"]
-            database = "ess" + str(operating_site_id)
             queryset = self.get_queryset()
             page = self.paginate_queryset(queryset)
-            serializer = self.get_serializer(page, many=True)
+
+            if page is not None:
+                serializer = self.get_serializer(page, many=True)
+
+                return self.get_paginated_response(serializer.data)
+
+            serializer = self.get_serializer(queryset, many=True)
 
             return Response(serializer.data)
         except KeyError:
@@ -198,11 +206,15 @@ class ESSPcsListView(ListAPIView):
 
     def get(self, request, *args, **kwargs):
         try:
-            operating_site_id = kwargs["operating_site_id"]
-            database = "ess" + str(operating_site_id)
             queryset = self.get_queryset()
             page = self.paginate_queryset(queryset)
-            serializer = self.get_serializer(page, many=True)
+
+            if page is not None:
+                serializer = self.get_serializer(page, many=True)
+
+                return self.get_paginated_response(serializer.data)
+
+            serializer = self.get_serializer(queryset, many=True)
 
             return Response(serializer.data)
         except KeyError:
@@ -246,11 +258,15 @@ class ESSEtcListView(ListAPIView):
 
     def get(self, request, *args, **kwargs):
         try:
-            operating_site_id = kwargs["operating_site_id"]
-            database = "ess" + str(operating_site_id)
             queryset = self.get_queryset()
             page = self.paginate_queryset(queryset)
-            serializer = self.get_serializer(page, many=True)
+
+            if page is not None:
+                serializer = self.get_serializer(page, many=True)
+
+                return self.get_paginated_response(serializer.data)
+
+            serializer = self.get_serializer(queryset, many=True)
 
             return Response(serializer.data)
         except KeyError:
@@ -270,6 +286,12 @@ class ESSEtcListView(ListAPIView):
 
 class ESSRackDetailListView(ListAPIView):
     pagination_class = LargeResultsSetPagination
+
+    def get_serializer_class(self):
+        operating_site_id = self.kwargs["operating_site_id"]
+        database = "ess" + str(operating_site_id)
+
+        return ESS_RACK_SERIALIZER[database]
 
     def get_queryset(self):
         operating_site_id = self.kwargs["operating_site_id"]
@@ -298,11 +320,15 @@ class ESSRackDetailListView(ListAPIView):
 
     def get(self, request, *args, **kwargs):
         try:
-            operating_site_id = kwargs["operating_site_id"]
-            database = "ess" + str(operating_site_id)
             queryset = self.get_queryset()
             page = self.paginate_queryset(queryset)
-            serializer = ESS_RACK_SERIALIZER[database](page, many=True)
+
+            if page is not None:
+                serializer = self.get_serializer(page, many=True)
+
+                return self.get_paginated_response(serializer.data)
+
+            serializer = self.get_serializer(queryset, many=True)
 
             return Response(serializer.data)
         except KeyError:

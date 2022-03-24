@@ -344,7 +344,7 @@
                 }
             }
         },
-        "secondOperatingSite": {
+        "operatingSite2": {
             "bank": {
                 "BANK_SOC": {
                     "type": "number",
