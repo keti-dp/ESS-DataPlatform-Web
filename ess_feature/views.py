@@ -1,5 +1,6 @@
 from django.core.exceptions import ValidationError
 from django.db import connections, DataError
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.generics import ListAPIView
 from rest_framework.views import Response, status
 from .models import ProtectionMapFeature
@@ -16,11 +17,21 @@ def dictfetchall(cursor):
 
 class ProtectionMapFeatureView(ListAPIView):
     serializer_class = ProtectionMapFeatureSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ["error_code", "level"]
 
     def get_queryset(self):
         operating_site_id = self.kwargs["operating_site_id"]
+        time_query_param = self.request.query_params.get("time")
         start_time_query_param = self.request.query_params.get("start-time")
         end_time_query_param = self.request.query_params.get("end-time")
+
+        if time_query_param is not None:
+            queryset = ProtectionMapFeature.objects.filter(
+                operating_site=operating_site_id, timestamp=time_query_param
+            ).order_by("-timestamp")
+
+            return queryset
 
         queryset = ProtectionMapFeature.objects.filter(
             operating_site=operating_site_id, timestamp__gte=start_time_query_param, timestamp__lt=end_time_query_param

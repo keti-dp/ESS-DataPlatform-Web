@@ -228,18 +228,6 @@
                     "type": "boolean",
                     "value": "0,1"
                 },
-                "RACK_STATUS_FOR_RUN": {
-                    "type": "boolean",
-                    "value": "0,1"
-                },
-                "RACK_STATUS_FOR_FAULT": {
-                    "type": "boolean",
-                    "value": "0,1"
-                },
-                "RACK_STATUS_FOR_WARNING": {
-                    "type": "boolean",
-                    "value": "0,1"
-                },
                 "RACK_TEMPERATURE_IMBALANCE_WARNING": {
                     "type": "boolean",
                     "value": "0,1"
@@ -608,18 +596,6 @@
                     "type": "boolean",
                     "value": "0,1"
                 },
-                "RACK_STATUS_FOR_RUN": {
-                    "type": "boolean",
-                    "value": "0,1"
-                },
-                "RACK_STATUS_FOR_FAULT": {
-                    "type": "boolean",
-                    "value": "0,1"
-                },
-                "RACK_STATUS_FOR_WARNING": {
-                    "type": "boolean",
-                    "value": "0,1"
-                },
                 "RACK_TEMPERATURE_IMBALANCE_WARNING": {
                     "type": "boolean",
                     "value": "0,1"
@@ -712,6 +688,17 @@
                     "type": "boolean",
                     "value": "0,1"
                 }
+            }
+        }
+    },
+    "info": {
+        "rackCount": {
+            "operatingSite1": {
+                "bank1": 8
+            },
+            "operatingSite2": {
+                "bank1": 9,
+                "bank2": 8
             }
         }
     },

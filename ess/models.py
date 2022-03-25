@@ -293,7 +293,7 @@ class Bank(models.Model):
         db_table = "bank"
 
 
-class SecondESSBank(CommonBankInfo):
+class ESS2Bank(CommonBankInfo):
     max_module_temperature = models.FloatField(db_column="MAX_MODULE_TEMPERATURE", blank=True, null=True)
     min_module_temperature = models.FloatField(db_column="MIN_MODULE_TEMPERATURE", blank=True, null=True)
     max_module_humidity = models.FloatField(db_column="MAX_MODULE_HUMIDITY", blank=True, null=True)
@@ -421,7 +421,7 @@ class Rack(models.Model):
         db_table = "rack"
 
 
-class SecondESSRack(CommonRackInfo):
+class ESS2Rack(CommonRackInfo):
     rack_max_module_temperature = models.FloatField(db_column="RACK_MAX_MODULE_TEMPERATURE", blank=True, null=True)
     rack_max_module_temperature_position = models.FloatField(
         db_column="RACK_MAX_MODULE_TEMPERATURE_POSITION", blank=True, null=True
@@ -554,7 +554,7 @@ class Pcs(models.Model):
         db_table = "pcs"
 
 
-class SecondESSPcs(models.Model):
+class ESS2Pcs(models.Model):
     timestamp = models.DateTimeField(db_column="TIMESTAMP", primary_key=True)
     ai_vdc = models.FloatField(db_column="AI_VDC", blank=True, null=True)
     ai_idc = models.FloatField(db_column="AI_IDC", blank=True, null=True)
@@ -630,7 +630,7 @@ class Etc(models.Model):
         db_table = "etc"
 
 
-class SecondESSEtc(CommonEtcInfo):
+class ESS2Etc(CommonEtcInfo):
     sensor2_temperature = models.FloatField(db_column="SENSOR2_TEMPERATURE", blank=True, null=True)
     sensor2_humidity = models.FloatField(db_column="SENSOR2_HUMIDITY", blank=True, null=True)
     active_power_total = models.FloatField(db_column="ACTIVE_POWER_TOTAL", blank=True, null=True)

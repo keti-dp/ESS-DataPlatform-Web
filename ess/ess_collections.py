@@ -1,53 +1,53 @@
-from .models import Bank, Rack, Pcs, Etc, SecondESSBank, SecondESSRack, SecondESSPcs, SecondESSEtc
+from .models import Bank, Rack, Pcs, Etc, ESS2Bank, ESS2Rack, ESS2Pcs, ESS2Etc
 from .serializer import (
     BankSerializer,
     EtcSerializer,
     PcsSerializer,
     RackSerializer,
-    SecondESSBankSerializer,
-    SecondESSRackSerializer,
-    SecondESSPcsSerializer,
-    SecondESSEtcSerializer,
+    ESS2BankSerializer,
+    ESS2RackSerializer,
+    ESS2PcsSerializer,
+    ESS2EtcSerializer,
 )
 
 ESS_BANK = {
     "ess1": Bank,
-    "ess2": SecondESSBank,
+    "ess2": ESS2Bank,
 }
 
 ESS_RACK = {
     "ess1": Rack,
-    "ess2": SecondESSRack,
+    "ess2": ESS2Rack,
 }
 
 ESS_PCS = {
     "ess1": Pcs,
-    "ess2": SecondESSPcs,
+    "ess2": ESS2Pcs,
 }
 
 ESS_ETC = {
     "ess1": Etc,
-    "ess2": SecondESSEtc,
+    "ess2": ESS2Etc,
 }
 
 ESS_BANK_SERIALIZER = {
     "ess1": BankSerializer,
-    "ess2": SecondESSBankSerializer,
+    "ess2": ESS2BankSerializer,
 }
 
 ESS_RACK_SERIALIZER = {
     "ess1": RackSerializer,
-    "ess2": SecondESSRackSerializer,
+    "ess2": ESS2RackSerializer,
 }
 
 ESS_PCS_SERIALIZER = {
     "ess1": PcsSerializer,
-    "ess2": SecondESSPcsSerializer,
+    "ess2": ESS2PcsSerializer,
 }
 
 ESS_ETC_SERIALIZER = {
     "ess1": EtcSerializer,
-    "ess2": SecondESSEtcSerializer,
+    "ess2": ESS2EtcSerializer,
 }
 
 ESS_DATA_DATE = {

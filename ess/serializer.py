@@ -1,6 +1,6 @@
 from rest_flex_fields import FlexFieldsModelSerializer
 from rest_framework import serializers
-from .models import Bank, Rack, Pcs, Etc, SecondESSBank, SecondESSRack, SecondESSPcs, SecondESSEtc
+from .models import Bank, Rack, Pcs, Etc, ESS2Bank, ESS2Rack, ESS2Pcs, ESS2Etc
 
 
 class BankSerializer(FlexFieldsModelSerializer):
@@ -27,33 +27,33 @@ class EtcSerializer(FlexFieldsModelSerializer):
         fields = "__all__"
 
 
-class SecondESSBankSerializer(FlexFieldsModelSerializer):
+class ESS2BankSerializer(FlexFieldsModelSerializer):
     # If model type is JSONField, not working - TypeError
     # so model type is TextField -> serializer JSONField working!!
     master_rack_communication_fault = serializers.JSONField()
 
     class Meta:
-        model = SecondESSBank
+        model = ESS2Bank
         fields = "__all__"
 
 
-class SecondESSRackSerializer(FlexFieldsModelSerializer):
+class ESS2RackSerializer(FlexFieldsModelSerializer):
     rack_module_fault = serializers.JSONField()
 
     class Meta:
-        model = SecondESSRack
+        model = ESS2Rack
         fields = "__all__"
 
 
-class SecondESSPcsSerializer(FlexFieldsModelSerializer):
+class ESS2PcsSerializer(FlexFieldsModelSerializer):
     class Meta:
-        model = SecondESSPcs
+        model = ESS2Pcs
         fields = "__all__"
 
 
-class SecondESSEtcSerializer(FlexFieldsModelSerializer):
+class ESS2EtcSerializer(FlexFieldsModelSerializer):
     class Meta:
-        model = SecondESSEtc
+        model = ESS2Etc
         fields = "__all__"
 
 

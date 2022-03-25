@@ -146,7 +146,7 @@
                                         data-bs-original-title="현재 날짜 기준으로 발생한 이상 감지 유형을 시각화합니다."></i></h6>
                                 <select class="form-select form-select-sm mb-1">
                                     <option value="1">시온유 태양광</option>
-                                    <option value="2">2</option>
+                                    <option value="2">판리2호 태양광</option>
                                     <option value="3">3</option>
                                     <option value="4">4</option>
                                     <option value="5">5</option>
@@ -198,28 +198,24 @@
                     <div class="card-body">
                         <div class="row">
                             <!-- Monitoring list area -->
-                            <div id="operatingSite1MonitoringListColumn" class="col-xl-8 col-md-12 overflow-auto">
-                                <!-- Bank -->
-                                <!-- <div class="row">
-                                    <div class="col-auto p-r-0"><i class="bi bi-circle-fill text-secondary"></i></div>
-                                    <div class="col">
-                                        <h6>Bank 1</h6>
-                                    </div>
-                                    <hr>
-                                </div> -->
-                            </div>
+                            <div id="operatingSite1MonitoringListColumn" class="col-xl-8 col-md-12 overflow-auto"></div>
 
                             <!-- Monitoring log area  -->
                             <div id="operatingSite1MonitoringLogColumn" class="col-xl-4 col-md-12 overflow-auto">
                                 <select class="form-select form-select-sm mb-1">
                                     <option value="all">All</option>
-                                    <option value="critical">Critical</option>
-                                    <option value="error">Error</option>
-                                    <option value="info">Info</option>
                                     <option value="warning">Warning</option>
+                                    <option value="danger">Danger</option>
+
                                 </select>
                                 <input class="form-control form-control-sm mb-1" type="text" placeholder="검색어를 입력하세요.">
-                                <div></div>
+                                <div>
+                                    <div class="text-center">
+                                        <div class="spinner-border" role="status">
+                                            <span class="visually-hidden">Loading...</span>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -264,28 +260,23 @@
                     <div class="card-body">
                         <div class="row">
                             <!-- Monitoring list area -->
-                            <div id="secondOperatingSiteMonitoringListColumn" class="col-xl-8 col-md-12 overflow-auto">
-                                <!-- Bank -->
-                                <!-- <div class="row">
-                                    <div class="col-auto p-r-0"><i class="bi bi-circle-fill text-secondary"></i></div>
-                                    <div class="col">
-                                        <h6>Bank 1</h6>
-                                    </div>
-                                    <hr>
-                                </div> -->
-                            </div>
+                            <div id="operatingSite2MonitoringListColumn" class="col-xl-8 col-md-12 overflow-auto"></div>
 
                             <!-- Monitoring log area  -->
-                            <div id="secondOperatingSiteMonitoringLogColumn" class="col-xl-4 col-md-12 overflow-auto">
+                            <div id="operatingSite2MonitoringLogColumn" class="col-xl-4 col-md-12 overflow-auto">
                                 <select class="form-select form-select-sm mb-1">
                                     <option value="all">All</option>
-                                    <option value="critical">Critical</option>
-                                    <option value="error">Error</option>
-                                    <option value="info">Info</option>
                                     <option value="warning">Warning</option>
+                                    <option value="danger">Danger</option>
                                 </select>
                                 <input class="form-control form-control-sm mb-1" type="text" placeholder="검색어를 입력하세요.">
-                                <div></div>
+                                <div>
+                                    <div class="text-center">
+                                        <div class="spinner-border" role="status">
+                                            <span class="visually-hidden">Loading...</span>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
