@@ -124,9 +124,9 @@
                                         data-bs-placement="top" title=""
                                         data-bs-original-title="첫 페이지만 실시간으로 업데이트 합니다."></i></h6>
                                 <!-- Loading -->
-                                <div class="d-flex justify-content-center">
-                                    <div class="lds-ripple">
-                                        <div></div>
+                                <div class="text-center">
+                                    <div class="spinner-border" role="status">
+                                        <span class="visually-hidden">Loading...</span>
                                     </div>
                                 </div>
                                 <!-- Monitoring log container -->
@@ -152,7 +152,14 @@
                                     <option value="5">5</option>
                                 </select>
                                 <!-- Monitoring log level type chart container -->
-                                <div id="primaryMonitoringLogLevelTypeCountChart" style="height: 300px;"></div>
+                                <!-- Loading -->
+                                <div class="text-center">
+                                    <div class="spinner-border" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                </div>
+                                <div id="primaryMonitoringLogLevelTypeCountChart" class="d-none" style="height: 300px;">
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -203,19 +210,18 @@
                             <!-- Monitoring log area  -->
                             <div id="operatingSite1MonitoringLogColumn" class="col-xl-4 col-md-12 overflow-auto">
                                 <select class="form-select form-select-sm mb-1">
-                                    <option value="all">All</option>
-                                    <option value="warning">Warning</option>
-                                    <option value="danger">Danger</option>
-
+                                    <option value="0">All</option>
+                                    <option value="1">Warning</option>
+                                    <option value="2">Danger</option>
                                 </select>
                                 <input class="form-control form-control-sm mb-1" type="text" placeholder="검색어를 입력하세요.">
-                                <div>
-                                    <div class="text-center">
-                                        <div class="spinner-border" role="status">
-                                            <span class="visually-hidden">Loading...</span>
-                                        </div>
+                                <!-- Loading -->
+                                <div class="text-center">
+                                    <div class="spinner-border" role="status">
+                                        <span class="visually-hidden">Loading...</span>
                                     </div>
                                 </div>
+                                <div id="operatingSite1MonitoringLogColumnLogContainer"></div>
                             </div>
                         </div>
                     </div>
@@ -265,18 +271,18 @@
                             <!-- Monitoring log area  -->
                             <div id="operatingSite2MonitoringLogColumn" class="col-xl-4 col-md-12 overflow-auto">
                                 <select class="form-select form-select-sm mb-1">
-                                    <option value="all">All</option>
-                                    <option value="warning">Warning</option>
-                                    <option value="danger">Danger</option>
+                                    <option value="0">All</option>
+                                    <option value="1">Warning</option>
+                                    <option value="2">Danger</option>
                                 </select>
                                 <input class="form-control form-control-sm mb-1" type="text" placeholder="검색어를 입력하세요.">
-                                <div>
-                                    <div class="text-center">
-                                        <div class="spinner-border" role="status">
-                                            <span class="visually-hidden">Loading...</span>
-                                        </div>
+                                <!-- Loading -->
+                                <div class="text-center">
+                                    <div class="spinner-border" role="status">
+                                        <span class="visually-hidden">Loading...</span>
                                     </div>
                                 </div>
+                                <div id="operatingSite2MonitoringLogColumnLogContainer"></div>
                             </div>
                         </div>
                     </div>
@@ -561,9 +567,9 @@
                             </div>
                         </form>
                         <!-- Loading -->
-                        <div class="d-flex justify-content-center">
-                            <div class="lds-ripple d-none">
-                                <div></div>
+                        <div class="text-center">
+                            <div class="spinner-border d-none" role="status">
+                                <span class="visually-hidden">Loading...</span>
                             </div>
                         </div>
                         <div id="monitoringLogViewModalGrid" class="ag-theme-alpine d-none" style="height: 300px;">

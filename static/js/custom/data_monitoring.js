@@ -1,7 +1,11 @@
 // Luxon alias 'DateTime'
 var DateTime = luxon.DateTime;
-
 const essProtectionMap = JSON.parse(document.getElementById('ess-protection-map').textContent);
+const essMonitoringLogLevel = {
+    'all': '0',
+    'warning': '1',
+    'danger': '2',
+}
 
 async function loadData(requestUrl) {
     let response = await fetch(requestUrl);
@@ -224,6 +228,39 @@ function drawMonitoringListAndGetoperatingSiteInfoWarningFlag(operatingSiteId, o
     }
 
     return isWarningOfoperatingSiteInfo;
+}
+
+function getMonitoringLogAlertElement(data) {
+    let monitoringLogAlertElement = document.createElement('div');
+    let alertClass;
+
+    switch (data['level']['id']) {
+        case 1:
+            alertClass = 'alert-warning'
+
+            break;
+        case 2:
+            alertClass = 'alert-danger'
+
+            break;
+        default:
+            alertClass = 'alert-primary'
+
+            break;
+    }
+
+    monitoringLogAlertElement.setAttribute('class', `alert ${alertClass} m-b-5 p-l-10 p-t-0 p-b-0`);
+    monitoringLogAlertElement.setAttribute('role', 'alert');
+    monitoringLogAlertElement.innerHTML = `
+        <p class="text-truncate m-t-0 m-b-0">
+            <small>${DateTime.fromISO(data['timestamp']).toFormat('HH:mm:ss')}</small>
+        </p>
+        <p class="text-truncate m-t-0 m-b-0">
+            <small>${data['error_code']['description']}</small>
+        </p>
+    `;
+
+    return monitoringLogAlertElement;
 }
 
 function getLineChart(elementId, data, option = {}) {
@@ -455,58 +492,28 @@ monitoringListItemModalTriggerList.forEach(element => {
 });
 
 // - Create monitoring log
+let initialMonitoringLogLoadInterval = {};
+
 var operatingSiteMonitoringLogColumnIds = ['operatingSite1MonitoringLogColumn', 'operatingSite2MonitoringLogColumn'];
 operatingSiteMonitoringLogColumnIds.forEach(async (operatingSiteMonitoringLogColumnId, index) => {
     let operatingSiteId = index + 1;
     let operatingSiteMonitoringLogColumnElement = document.getElementById(operatingSiteMonitoringLogColumnId);
-    let monitoringLogContainerElement = operatingSiteMonitoringLogColumnElement.querySelector('div');
+    let monitoringLogContainerElement = document.getElementById(`${operatingSiteMonitoringLogColumnId}LogContainer`);
+    let monitoringLogLoadingElement = operatingSiteMonitoringLogColumnElement.querySelector('.spinner-border');
     let requestUrl = new URL(`${window.location.origin}/api/ess-feature/protectionmap/operating-sites/${operatingSiteId}/`);
     requestUrl.searchParams.append('start-time', DateTime.utc().toFormat('yyyy-MM-dd').toString());
     requestUrl.searchParams.append('end-time', DateTime.utc().plus({ days: 1 }).toFormat('yyyy-MM-dd').toString());
 
-    function getMonitoringLogAlertElement(data) {
-        let monitoringLogAlertElement = document.createElement('div');
-        let alertClass;
-
-        switch (data['level']['id']) {
-            case 1:
-                alertClass = 'alert-warning'
-
-                break;
-            case 2:
-                alertClass = 'alert-danger'
-
-                break;
-            default:
-                alertClass = 'alert-primary'
-
-                break;
-        }
-
-        monitoringLogAlertElement.setAttribute('class', `alert ${alertClass} m-b-5 p-l-10 p-t-0 p-b-0`);
-        monitoringLogAlertElement.setAttribute('role', 'alert');
-        monitoringLogAlertElement.innerHTML = `
-        <p class="text-truncate m-t-0 m-b-0">
-            <small>${DateTime.fromISO(data['timestamp']).toFormat('HH:mm:ss')}</small>
-        </p>
-        <p class="text-truncate m-t-0 m-b-0">
-            <small>${data['error_code']['description']}</small>
-        </p>
-    `;
-
-        return monitoringLogAlertElement;
-    }
-
     let protectionmapLogData = await loadData(requestUrl);
     protectionmapLogData['results'].forEach(result => {
         let alertElement = getMonitoringLogAlertElement(result);
-        let loadingElement = monitoringLogContainerElement.querySelector('.spinner-border');
 
         monitoringLogContainerElement.appendChild(alertElement);
-        loadingElement.classList.add('d-none');
     });
 
-    var initialMonitoringLogLoadInterval = setInterval(() => {
+    monitoringLogLoadingElement.classList.add('d-none');
+
+    initialMonitoringLogLoadInterval[operatingSiteMonitoringLogColumnId] = setInterval(() => {
         // After wait for save time of monitoring log data, lazy request
         let time = DateTime.now().minus({ seconds: 2 }).toFormat('yyyy-MM-dd HH:mm:ss').toString().replace(' ', 'T');
         let requestUrl = new URL(`${window.location.origin}/api/ess-feature/protectionmap/operating-sites/${operatingSiteId}/`);
@@ -641,84 +648,83 @@ operatingDataDownloadModalFormValidation.addField('#operatingDataDownloadModalSt
 });
 
 /* Event task */
+let monitoringLogLoadInterval = {};
 
-operatingSiteMonitoringLogColumnIds.forEach(operatingSiteMonitoringLogColumnId => {
-    // - Tagging monitoring log message search input
+operatingSiteMonitoringLogColumnIds.forEach((operatingSiteMonitoringLogColumnId, index) => {
+    let operatingSiteId = index + 1;
     let operatingSiteMonitoringLogColumnElement = document.getElementById(operatingSiteMonitoringLogColumnId);
     let monitoringLogColumnInputElement = operatingSiteMonitoringLogColumnElement.querySelector('input');
+    let monitoringLogContainerElement = document.getElementById(`${operatingSiteMonitoringLogColumnId}LogContainer`);
+    let monitoringLogLoadingElement = operatingSiteMonitoringLogColumnElement.querySelector('.spinner-border');
+
+    // - Tagging monitoring log message search input
     new Tagify(monitoringLogColumnInputElement, {
         originalInputValueFormat: valuesArr => valuesArr.map(item => item.value).join(',')
     });;
 
     // - Monitoring log level select event
-    let monitoringLogLoadInterval;
     let monitoringLogColumnSelectElement = operatingSiteMonitoringLogColumnElement.querySelector('select');
-    monitoringLogColumnSelectElement.addEventListener('change', event => {
+    monitoringLogColumnSelectElement.addEventListener('change', async (event) => {
         monitoringLogContainerElement.innerHTML = '';
+        monitoringLogLoadingElement.classList.remove('d-none');
 
         // Clear initial monitoring log load interval
-        if (initialMonitoringLogLoadInterval) {
-            clearInterval(initialMonitoringLogLoadInterval);
+        if (initialMonitoringLogLoadInterval[operatingSiteMonitoringLogColumnId]) {
+            clearInterval(initialMonitoringLogLoadInterval[operatingSiteMonitoringLogColumnId]);
         }
 
         // Clear previous monitoring log load interval
-        if (monitoringLogLoadInterval) {
-            clearInterval(monitoringLogLoadInterval);
+        if (monitoringLogLoadInterval[operatingSiteMonitoringLogColumnId]) {
+            clearInterval(monitoringLogLoadInterval[operatingSiteMonitoringLogColumnId]);
         }
 
         let logLevel = event.target.value;
-        let logMessage = monitoringLogColumnInput.value;
-        let requestUrl = new URL(window.location.origin + '/api/ess/search/data-monitoring-logs/');
-        requestUrl.searchParams.append('operating_site', 'operating1_local');
-        requestUrl.searchParams.append('time_gte', DateTime.utc().toFormat('yyyy-MM-dd').toString());
-        requestUrl.searchParams.append('time_lte', DateTime.utc().plus({ days: 1 }).toFormat('yyyy-MM-dd').toString());
+        let logMessage = monitoringLogColumnInputElement.value;
+        let requestUrl = new URL(`${window.location.origin}/api/ess-feature/protectionmap/operating-sites/${operatingSiteId}/`);
+        requestUrl.searchParams.append('start-time', DateTime.utc().toFormat('yyyy-MM-dd').toString());
+        requestUrl.searchParams.append('end-time', DateTime.utc().plus({ days: 1 }).toFormat('yyyy-MM-dd').toString());
 
-        if (logLevel !== 'all') {
-            requestUrl.searchParams.append('log_level', logLevel);
+        if (logLevel !== essMonitoringLogLevel['all']) {
+            requestUrl.searchParams.append('level', logLevel);
         }
 
         if (logMessage) {
-            logMessage.split(',').forEach(element => {
-                requestUrl.searchParams.append('message', element);
-            });
+            requestUrl.searchParams.append('message', logMessage);
         }
 
-        fetch(requestUrl).then(response => {
-            return response.json();
-        }).then(responseData => {
-            for (const data of responseData['results']) {
-                var alertElement = getMonitoringLogAlertEl(data);
+        let monitoringLogData = await loadData(requestUrl);
+        monitoringLogData['results'].forEach(element => {
+            var alertElement = getMonitoringLogAlertElement(element);
 
-                monitoringLogContainerElement.appendChild(alertElement);
-            }
-        }).catch(error => {
-            console.log(error);
+            monitoringLogContainerElement.appendChild(alertElement);
         });
 
-        monitoringLogLoadInterval = setInterval(() => {
+        monitoringLogLoadingElement.classList.add('d-none');
+
+        monitoringLogLoadInterval[operatingSiteMonitoringLogColumnId] = setInterval(() => {
             // After wait for save time of monitoring log data, lazy request
             let time = DateTime.utc().minus({ seconds: 2 }).toFormat('yyyy-MM-dd HH:mm:ss').toString().replace(' ', 'T');
-            let requestUrl = new URL(window.location.origin + '/api/ess/search/data-monitoring-logs/');
-            requestUrl.searchParams.append('operating_site', 'operating1_local');
+            let requestUrl = new URL(`${window.location.origin}/api/ess-feature/protectionmap/operating-sites/${operatingSiteId}/`);
             requestUrl.searchParams.append('time', time);
 
-            if (logLevel !== 'all') {
-                requestUrl.searchParams.append('log_level', logLevel);
+            if (logLevel !== essMonitoringLogLevel['all']) {
+                requestUrl.searchParams.append('level', logLevel);
             }
 
             if (logMessage) {
-                logMessage.split(',').forEach(element => {
-                    requestUrl.searchParams.append('message', element);
-                });
+                requestUrl.searchParams.append('message', logMessage);
             }
 
             fetch(requestUrl).then(response => {
-                return response.json();
+                if (response.ok) {
+                    return response.json();
+                }
+
+                throw new Error(response.statusText);
             }).then(responseData => {
                 let data = responseData['results'];
-
                 data.forEach(element => {
-                    let alertElement = getMonitoringLogAlertEl(element);
+                    let alertElement = getMonitoringLogAlertElement(element);
 
                     if (monitoringLogContainerElement.firstElementChild) {
                         monitoringLogContainerElement.firstElementChild.before(alertElement);
@@ -733,72 +739,67 @@ operatingSiteMonitoringLogColumnIds.forEach(operatingSiteMonitoringLogColumnId =
     });
 
     // - Monitoring log message search input event
-    monitoringLogColumnInput.addEventListener('change', event => {
+    monitoringLogColumnInputElement.addEventListener('change', async (event) => {
         monitoringLogContainerElement.innerHTML = '';
+        monitoringLogLoadingElement.classList.remove('d-none');
 
         // Clear initial monitoring log load interval
-        if (initialMonitoringLogLoadInterval) {
-            clearInterval(initialMonitoringLogLoadInterval);
+        if (initialMonitoringLogLoadInterval[operatingSiteMonitoringLogColumnId]) {
+            clearInterval(initialMonitoringLogLoadInterval[operatingSiteMonitoringLogColumnId]);
         }
 
         // Clear previous monitoring log load interval
-        if (monitoringLogLoadInterval) {
-            clearInterval(monitoringLogLoadInterval);
+        if (monitoringLogLoadInterval[operatingSiteMonitoringLogColumnId]) {
+            clearInterval(monitoringLogLoadInterval[operatingSiteMonitoringLogColumnId]);
         }
 
-        let logLevel = operatingSite1MonitoringLogColumn.querySelector('select').value;
+        let logLevel = operatingSiteMonitoringLogColumnElement.querySelector('select').value;
         let logMessage = event.target.value;
-        let requestUrl = new URL(window.location.origin + '/api/ess/search/data-monitoring-logs/');
-        requestUrl.searchParams.append('operating_site', 'operating1_local');
-        requestUrl.searchParams.append('time_gte', DateTime.utc().toFormat('yyyy-MM-dd').toString());
-        requestUrl.searchParams.append('time_lte', DateTime.utc().plus({ days: 1 }).toFormat('yyyy-MM-dd').toString());
+        let requestUrl = new URL(`${window.location.origin}/api/ess-feature/protectionmap/operating-sites/${operatingSiteId}/`);
+        requestUrl.searchParams.append('start-time', DateTime.utc().toFormat('yyyy-MM-dd').toString());
+        requestUrl.searchParams.append('end-time', DateTime.utc().plus({ days: 1 }).toFormat('yyyy-MM-dd').toString());
 
-        if (logLevel !== 'all') {
-            requestUrl.searchParams.append('log_level', logLevel);
+        if (logLevel !== essMonitoringLogLevel['all']) {
+            requestUrl.searchParams.append('level', logLevel);
         }
 
         if (logMessage) {
-            logMessage.split(',').forEach(element => {
-                requestUrl.searchParams.append('message', element);
-            });
+            requestUrl.searchParams.append('message', logMessage);
         }
 
-        fetch(requestUrl).then(response => {
-            return response.json();
-        }).then(responseData => {
-            for (const data of responseData['results']) {
-                var alertElement = getMonitoringLogAlertEl(data);
+        let monitoringLogData = await loadData(requestUrl);
+        monitoringLogData['results'].forEach(element => {
+            var alertElement = getMonitoringLogAlertElement(element);
 
-                monitoringLogContainerElement.appendChild(alertElement);
-            }
-        }).catch(error => {
-            console.log(error);
+            monitoringLogContainerElement.appendChild(alertElement);
         });
 
-        monitoringLogLoadInterval = setInterval(() => {
+        monitoringLogLoadingElement.classList.add('d-none');
+
+        monitoringLogLoadInterval[operatingSiteMonitoringLogColumnId] = setInterval(() => {
             // After wait for save time of monitoring log data, lazy request
             let time = DateTime.utc().minus({ seconds: 2 }).toFormat('yyyy-MM-dd HH:mm:ss').toString().replace(' ', 'T');
-            let requestUrl = new URL(window.location.origin + '/api/ess/search/data-monitoring-logs/');
-            requestUrl.searchParams.append('operating_site', 'operating1_local');
+            let requestUrl = new URL(`${window.location.origin}/api/ess-feature/protectionmap/operating-sites/${operatingSiteId}/`);
             requestUrl.searchParams.append('time', time);
 
-            if (logLevel !== 'all') {
-                requestUrl.searchParams.append('log_level', logLevel);
+            if (logLevel !== essMonitoringLogLevel['all']) {
+                requestUrl.searchParams.append('level', logLevel);
             }
 
             if (logMessage) {
-                logMessage.split(',').forEach(element => {
-                    requestUrl.searchParams.append('message', element);
-                });
+                requestUrl.searchParams.append('message', logMessage);
             }
 
             fetch(requestUrl).then(response => {
-                return response.json();
+                if (response.ok) {
+                    return response.json();
+                }
+
+                throw new Error(response.statusText);
             }).then(responseData => {
                 let data = responseData['results'];
-
                 data.forEach(element => {
-                    let alertElement = getMonitoringLogAlertEl(element);
+                    let alertElement = getMonitoringLogAlertElement(element);
 
                     if (monitoringLogContainerElement.firstElementChild) {
                         monitoringLogContainerElement.firstElementChild.before(alertElement);
@@ -812,169 +813,6 @@ operatingSiteMonitoringLogColumnIds.forEach(operatingSiteMonitoringLogColumnId =
         }, 1000);
     });
 });
-
-
-// - Monitoring log level select event
-// var monitoringLogLoadInterval;
-// var monitoringLogColumnSelectElement = document.querySelector('#operatingSite1MonitoringLogColumn select');
-// monitoringLogColumnSelectElement.addEventListener('change', event => {
-//     monitoringLogContainerElement.innerHTML = '';
-
-//     // Clear initial monitoring log load interval
-//     if (initialMonitoringLogLoadInterval) {
-//         clearInterval(initialMonitoringLogLoadInterval);
-//     }
-
-//     // Clear previous monitoring log load interval
-//     if (monitoringLogLoadInterval) {
-//         clearInterval(monitoringLogLoadInterval);
-//     }
-
-//     let logLevel = event.target.value;
-//     let logMessage = monitoringLogColumnInput.value;
-//     let requestUrl = new URL(window.location.origin + '/api/ess/search/data-monitoring-logs/');
-//     requestUrl.searchParams.append('operating_site', 'operating1_local');
-//     requestUrl.searchParams.append('time_gte', DateTime.utc().toFormat('yyyy-MM-dd').toString());
-//     requestUrl.searchParams.append('time_lte', DateTime.utc().plus({ days: 1 }).toFormat('yyyy-MM-dd').toString());
-
-//     if (logLevel !== 'all') {
-//         requestUrl.searchParams.append('log_level', logLevel);
-//     }
-
-//     if (logMessage) {
-//         logMessage.split(',').forEach(element => {
-//             requestUrl.searchParams.append('message', element);
-//         });
-//     }
-
-//     fetch(requestUrl).then(response => {
-//         return response.json();
-//     }).then(responseData => {
-//         for (const data of responseData['results']) {
-//             var alertElement = getMonitoringLogAlertEl(data);
-
-//             monitoringLogContainerElement.appendChild(alertElement);
-//         }
-//     }).catch(error => {
-//         console.log(error);
-//     });
-
-//     monitoringLogLoadInterval = setInterval(() => {
-//         // After wait for save time of monitoring log data, lazy request
-//         let time = DateTime.utc().minus({ seconds: 2 }).toFormat('yyyy-MM-dd HH:mm:ss').toString().replace(' ', 'T');
-//         let requestUrl = new URL(window.location.origin + '/api/ess/search/data-monitoring-logs/');
-//         requestUrl.searchParams.append('operating_site', 'operating1_local');
-//         requestUrl.searchParams.append('time', time);
-
-//         if (logLevel !== 'all') {
-//             requestUrl.searchParams.append('log_level', logLevel);
-//         }
-
-//         if (logMessage) {
-//             logMessage.split(',').forEach(element => {
-//                 requestUrl.searchParams.append('message', element);
-//             });
-//         }
-
-//         fetch(requestUrl).then(response => {
-//             return response.json();
-//         }).then(responseData => {
-//             let data = responseData['results'];
-
-//             data.forEach(element => {
-//                 let alertElement = getMonitoringLogAlertEl(element);
-
-//                 if (monitoringLogContainerElement.firstElementChild) {
-//                     monitoringLogContainerElement.firstElementChild.before(alertElement);
-//                 } else {
-//                     monitoringLogContainerElement.appendChild(alertElement);
-//                 }
-//             });
-//         }).catch(error => {
-//             console.log(error);
-//         });
-//     }, 1000);
-// });
-
-// // - Monitoring log message search input event
-// monitoringLogColumnInput.addEventListener('change', event => {
-//     monitoringLogContainerElement.innerHTML = '';
-
-//     // Clear initial monitoring log load interval
-//     if (initialMonitoringLogLoadInterval) {
-//         clearInterval(initialMonitoringLogLoadInterval);
-//     }
-
-//     // Clear previous monitoring log load interval
-//     if (monitoringLogLoadInterval) {
-//         clearInterval(monitoringLogLoadInterval);
-//     }
-
-//     let logLevel = operatingSite1MonitoringLogColumn.querySelector('select').value;
-//     let logMessage = event.target.value;
-//     let requestUrl = new URL(window.location.origin + '/api/ess/search/data-monitoring-logs/');
-//     requestUrl.searchParams.append('operating_site', 'operating1_local');
-//     requestUrl.searchParams.append('time_gte', DateTime.utc().toFormat('yyyy-MM-dd').toString());
-//     requestUrl.searchParams.append('time_lte', DateTime.utc().plus({ days: 1 }).toFormat('yyyy-MM-dd').toString());
-
-//     if (logLevel !== 'all') {
-//         requestUrl.searchParams.append('log_level', logLevel);
-//     }
-
-//     if (logMessage) {
-//         logMessage.split(',').forEach(element => {
-//             requestUrl.searchParams.append('message', element);
-//         });
-//     }
-
-//     fetch(requestUrl).then(response => {
-//         return response.json();
-//     }).then(responseData => {
-//         for (const data of responseData['results']) {
-//             var alertElement = getMonitoringLogAlertEl(data);
-
-//             monitoringLogContainerElement.appendChild(alertElement);
-//         }
-//     }).catch(error => {
-//         console.log(error);
-//     });
-
-//     monitoringLogLoadInterval = setInterval(() => {
-//         // After wait for save time of monitoring log data, lazy request
-//         let time = DateTime.utc().minus({ seconds: 2 }).toFormat('yyyy-MM-dd HH:mm:ss').toString().replace(' ', 'T');
-//         let requestUrl = new URL(window.location.origin + '/api/ess/search/data-monitoring-logs/');
-//         requestUrl.searchParams.append('operating_site', 'operating1_local');
-//         requestUrl.searchParams.append('time', time);
-
-//         if (logLevel !== 'all') {
-//             requestUrl.searchParams.append('log_level', logLevel);
-//         }
-
-//         if (logMessage) {
-//             logMessage.split(',').forEach(element => {
-//                 requestUrl.searchParams.append('message', element);
-//             });
-//         }
-
-//         fetch(requestUrl).then(response => {
-//             return response.json();
-//         }).then(responseData => {
-//             let data = responseData['results'];
-
-//             data.forEach(element => {
-//                 let alertElement = getMonitoringLogAlertEl(element);
-
-//                 if (monitoringLogContainerElement.firstElementChild) {
-//                     monitoringLogContainerElement.firstElementChild.before(alertElement);
-//                 } else {
-//                     monitoringLogContainerElement.appendChild(alertElement);
-//                 }
-//             });
-//         }).catch(error => {
-//             console.log(error);
-//         });
-//     }, 1000);
-// });
 
 // Old monitoring log view event
 // Trigger the contents of the modal depending on which button was clicked
@@ -1065,18 +903,27 @@ monitoringLogViewModalFormValidation.addField('#monitoringLogViewModalStartDateT
 
     let operatingSiteId = document.querySelector('#monitoringLogViewModalForm button').getAttribute('data-operating-site-id');
 
-    let requestUrl = new URL(window.location.origin + '/api/ess-feature/protectionmap/operating-sites/' + operatingSiteId + '/');
+    let requestUrl = new URL(`${window.location.origin}/api/ess-feature/protectionmap/operating-sites/${operatingSiteId}/`);
     requestUrl.searchParams.append('start-time', document.getElementById('monitoringLogViewModalStartDateTimeInput').value.replace(' ', 'T'));
     requestUrl.searchParams.append('end-time', document.getElementById('monitoringLogViewModalEndDateTimeInput').value.replace(' ', 'T'));
 
     fetch(requestUrl).then(response => {
-        return response.json();
-    }).then(data => {
-        let columns = Object.keys(data['results'][0]).map(element => {
-            return { field: element };
-        });
+        if (response.ok) {
+            return response.json();
+        }
 
-        let rows = data['results'].map(element => {
+        throw new Error(response.statusText);
+    }).then(responseData => {
+        let data = responseData['results'];
+        let columns;
+
+        if (Array.isArray(data) && data.length > 0) {
+            columns = Object.keys(responseData['results'][0]).map(element => {
+                return { field: element };
+            });
+        }
+
+        let rows = responseData['results'].map(element => {
             let row = {};
 
             for (const key of Object.keys(element)) {
@@ -1107,21 +954,21 @@ monitoringLogViewModalFormValidation.addField('#monitoringLogViewModalStartDateT
 
         if (data['previous'] || data['next']) {
             monitoringLogViewModalGridPagination.classList.remove('d-none');
-            previousButtonEl = monitoringLogViewModalGridPaginationUlElement.firstElementChild;
-            nextButtonEl = monitoringLogViewModalGridPaginationUlElement.lastElementChild;
+            previousButtonElement = monitoringLogViewModalGridPaginationUlElement.firstElementChild;
+            nextButtonElement = monitoringLogViewModalGridPaginationUlElement.lastElementChild;
 
             if (data['previous']) {
-                previousButtonEl.classList.remove('disabled');
-                previousButtonEl.firstElementChild.setAttribute('data-link', data['previous']);
+                previousButtonElement.classList.remove('disabled');
+                previousButtonElement.firstElementChild.setAttribute('data-link', data['previous']);
             } else {
-                previousButtonEl.classList.add('disabled');
+                previousButtonElement.classList.add('disabled');
             }
 
             if (data['next']) {
-                nextButtonEl.classList.remove('disabled');
-                nextButtonEl.firstElementChild.setAttribute('data-link', data['next']);
+                nextButtonElement.classList.remove('disabled');
+                nextButtonElement.firstElementChild.setAttribute('data-link', data['next']);
             } else {
-                nextButtonEl.classList.add('disabled');
+                nextButtonElement.classList.add('disabled');
             }
         }
 
@@ -1173,21 +1020,21 @@ monitoringLogViewModalFormValidation.addField('#monitoringLogViewModalStartDateT
 
                     if (data['previous'] || data['next']) {
                         monitoringLogViewModalGridPagination.classList.remove('d-none');
-                        previousButtonEl = monitoringLogViewModalGridPaginationUlElement.firstElementChild;
-                        nextButtonEl = monitoringLogViewModalGridPaginationUlElement.lastElementChild;
+                        previousButtonElement = monitoringLogViewModalGridPaginationUlElement.firstElementChild;
+                        nextButtonElement = monitoringLogViewModalGridPaginationUlElement.lastElementChild;
 
                         if (data['previous']) {
-                            previousButtonEl.classList.remove('disabled');
-                            previousButtonEl.firstElementChild.setAttribute('data-link', data['previous']);
+                            previousButtonElement.classList.remove('disabled');
+                            previousButtonElement.firstElementChild.setAttribute('data-link', data['previous']);
                         } else {
-                            previousButtonEl.classList.add('disabled');
+                            previousButtonElement.classList.add('disabled');
                         }
 
                         if (data['next']) {
-                            nextButtonEl.classList.remove('disabled');
-                            nextButtonEl.firstElementChild.setAttribute('data-link', data['next']);
+                            nextButtonElement.classList.remove('disabled');
+                            nextButtonElement.firstElementChild.setAttribute('data-link', data['next']);
                         } else {
-                            nextButtonEl.classList.add('disabled');
+                            nextButtonElement.classList.add('disabled');
                         }
                     }
                 }).catch(error => {
@@ -1208,98 +1055,108 @@ monitoringLogViewModalFormValidation.addField('#monitoringLogViewModalStartDateT
 
 // Primary monitoring
 // - Monitoring log
-var primaryMonitoringLogEl = document.getElementById('primaryMonitoringLog');
-var primaryMonitoringLogLoading = primaryMonitoringLogEl.querySelector('div').firstElementChild;
-var primaryMonitoringLogPagination = primaryMonitoringLogEl.querySelector('nav');
-var primaryMonitoringLogPaginationUlEl = primaryMonitoringLogPagination.firstElementChild;
-var primaryMonitoringLogContainerEl = primaryMonitoringLogPagination.previousElementSibling;
+var primaryMonitoringLogElement = document.getElementById('primaryMonitoringLog');
+var primaryMonitoringLogLoadingElement = primaryMonitoringLogElement.querySelector('.spinner-border');
+var primaryMonitoringLogPagination = primaryMonitoringLogElement.querySelector('nav');
+var primaryMonitoringLogPaginationUlElement = primaryMonitoringLogPagination.firstElementChild;
+var primaryMonitoringLogContainerElement = primaryMonitoringLogPagination.previousElementSibling;
 
-function getPrimaryMonitoringLogAlertContainerEl(data) {
-    let primaryMonitoringLogAlertContainerEl = document.createElement('div');
-    let primaryMonitoringLogAlertTimeEl = document.createElement('p');
-    let primaryMonitoringLogAlertEl = document.createElement('div');
-
-    let alertMessage = '운영 사이트 ' + data['operating_site'] + ' Bank ' + data['bank_id'] + '의 Rack ' + data['rack_id'] + '에서 ' + data['error_code']['description'] + ' 발생';
+function getPrimaryMonitoringLogAlertContainerElement(data) {
+    let primaryMonitoringLogAlertContainerElement = document.createElement('div');
+    let alertMessage = `운영 사이트 ${data['operating_site']} Bank ${data['bank_id']}의 Rack ${data['rack_id']}에서 ${data['error_code']['description']} 발생`;
     let alertLevel;
 
-    switch (data['level']['id']) {
-        case 1:
+    switch (data['level']['id'].toString()) {
+        case essMonitoringLogLevel['warning']:
             alertLevel = 'warning';
+
             break;
-        case 2:
+        case essMonitoringLogLevel['danger']:
             alertLevel = 'danger';
+
+            break;
         default:
+            alertLevel = 'primary';
+
             break;
     }
 
-    primaryMonitoringLogAlertTimeEl.setAttribute('class', 'm-b-0');
-    primaryMonitoringLogAlertTimeEl.innerHTML = '<small>' + DateTime.fromISO(data['timestamp']).toFormat('yyyy-MM-dd HH:mm:ss') + '</small>';
-    primaryMonitoringLogAlertEl.setAttribute('class', 'alert alert-' + alertLevel + ' p-l-10 p-t-0 p-b-0');
-    primaryMonitoringLogAlertEl.innerHTML = '<p class="m-t-0 m-b-0"><small>' + alertMessage + '</small></p>';
+    let primaryMonitoringLogAlert = `
+        <p class="m-b-0"><small>${DateTime.fromISO(data['timestamp']).toFormat('yyyy-MM-dd HH:mm:ss')}</small></p>
+        <div class="alert alert-${alertLevel} p-l-10 p-t-0 p-b-0">
+            <p class="m-t-0 m-b-0"><small> ${alertMessage} </small></p>
+        </div>
+    `;
+    primaryMonitoringLogAlertContainerElement.innerHTML = primaryMonitoringLogAlert;
 
-    primaryMonitoringLogAlertContainerEl.appendChild(primaryMonitoringLogAlertTimeEl);
-    primaryMonitoringLogAlertContainerEl.appendChild(primaryMonitoringLogAlertEl);
-
-    return primaryMonitoringLogAlertContainerEl;
+    return primaryMonitoringLogAlertContainerElement;
 }
 
 function setUpPaginationButton(data, paginationEl, paginationUlEl) {
     if (data['previous'] || data['next']) {
         paginationEl.classList.remove('d-none');
-        previousButtonEl = paginationUlEl.firstElementChild;
-        nextButtonEl = paginationUlEl.lastElementChild;
+        previousButtonElement = paginationUlEl.firstElementChild;
+        nextButtonElement = paginationUlEl.lastElementChild;
 
         if (data['previous']) {
-            previousButtonEl.classList.remove('disabled');
-            previousButtonEl.firstElementChild.setAttribute('data-link', data['previous']);
+            previousButtonElement.classList.remove('disabled');
+            previousButtonElement.firstElementChild.setAttribute('data-link', data['previous']);
         } else {
-            previousButtonEl.classList.add('disabled');
+            previousButtonElement.classList.add('disabled');
         }
 
         if (data['next']) {
-            nextButtonEl.classList.remove('disabled');
-            nextButtonEl.firstElementChild.setAttribute('data-link', data['next']);
+            nextButtonElement.classList.remove('disabled');
+            nextButtonElement.firstElementChild.setAttribute('data-link', data['next']);
         } else {
-            nextButtonEl.classList.add('disabled');
+            nextButtonElement.classList.add('disabled');
         }
     }
 }
 
 var startTime = DateTime.now().toISODate();
 var endTime = DateTime.now().plus({ days: 1 }).toISODate();
-var requestUrl = new URL(window.location.origin + '/api/ess-feature/protectionmap');
+var requestUrl = new URL(`${window.location.origin}/api/ess-feature/protectionmap/`);
 requestUrl.searchParams.append('start-time', startTime);
 requestUrl.searchParams.append('end-time', endTime);
 
 fetch(requestUrl).then(response => {
-    return response.json();
+    if (response.ok) {
+        return response.json();
+    }
+
+    throw new Error(response.statusText);
 }).then(data => {
     data['results'].forEach(element => {
-        let primaryMonitoringLogAlertContainerEl = getPrimaryMonitoringLogAlertContainerEl(element);
+        let primaryMonitoringLogAlertContainerElement = getPrimaryMonitoringLogAlertContainerElement(element);
 
-        primaryMonitoringLogContainerEl.appendChild(primaryMonitoringLogAlertContainerEl);
+        primaryMonitoringLogContainerElement.appendChild(primaryMonitoringLogAlertContainerElement);
     });
 
-    primaryMonitoringLogLoading.classList.add('d-none');
-    primaryMonitoringLogContainerEl.classList.remove('d-none');
+    primaryMonitoringLogLoadingElement.classList.add('d-none');
+    primaryMonitoringLogContainerElement.classList.remove('d-none');
 
-    setUpPaginationButton(data, primaryMonitoringLogPagination, primaryMonitoringLogPaginationUlEl);
+    setUpPaginationButton(data, primaryMonitoringLogPagination, primaryMonitoringLogPaginationUlElement);
 
     function loadLatestProtectionMapFeature() {
         let time = DateTime.now().minus({ seconds: 2 }).toFormat('yyyy-MM-dd HH:mm:ss').replace(' ', 'T');
-        let requestUrl = new URL(window.location.origin + '/api/ess-feature/protectionmap/');
+        let requestUrl = new URL(`${window.location.origin}/api/ess-feature/protectionmap/`);
         requestUrl.searchParams.append('time', time);
 
         fetch(requestUrl).then(response => {
-            return response.json();
+            if (response.ok) {
+                return response.json();
+            }
+
+            throw new Error(response.statusText);
         }).then(data => {
             data['results'].forEach(element => {
-                let primaryMonitoringLogAlertContainerEl = getPrimaryMonitoringLogAlertContainerEl(element);
+                let primaryMonitoringLogAlertContainerElement = getPrimaryMonitoringLogAlertContainerElement(element);
 
-                if (primaryMonitoringLogContainerEl.firstElementChild) {
-                    primaryMonitoringLogContainerEl.firstElementChild.before(primaryMonitoringLogAlertContainerEl);
+                if (primaryMonitoringLogContainerElement.firstElementChild) {
+                    primaryMonitoringLogContainerElement.firstElementChild.before(primaryMonitoringLogAlertContainerElement);
                 } else {
-                    primaryMonitoringLogContainerEl.appendChild(primaryMonitoringLogAlertContainerEl);
+                    primaryMonitoringLogContainerElement.appendChild(primaryMonitoringLogAlertContainerElement);
                 }
             });
         }).catch(error => {
@@ -1311,12 +1168,12 @@ fetch(requestUrl).then(response => {
     let primaryMonitoringLogInterval = setInterval(loadLatestProtectionMapFeature, 1000);
 
     // Pagination event
-    primaryMonitoringLogPaginationUlEl.querySelectorAll('a').forEach(element => {
+    primaryMonitoringLogPaginationUlElement.querySelectorAll('a').forEach(element => {
         element.addEventListener('click', event => {
-            primaryMonitoringLogContainerEl.innerHTML = '';
-            primaryMonitoringLogContainerEl.classList.add('d-none');
+            primaryMonitoringLogContainerElement.innerHTML = '';
+            primaryMonitoringLogContainerElement.classList.add('d-none');
             primaryMonitoringLogPagination.classList.add('d-none');
-            primaryMonitoringLogLoading.classList.remove('d-none');
+            primaryMonitoringLogLoadingElement.classList.remove('d-none');
 
             let requestUrl = new URL(element.getAttribute('data-link'));
 
@@ -1333,19 +1190,19 @@ fetch(requestUrl).then(response => {
                 return response.json();
             }).then(data => {
                 data['results'].forEach(element => {
-                    let primaryMonitoringLogAlertContainerEl = getPrimaryMonitoringLogAlertContainerEl(element);
+                    let primaryMonitoringLogAlertContainerElement = getPrimaryMonitoringLogAlertContainerElement(element);
 
-                    primaryMonitoringLogContainerEl.appendChild(primaryMonitoringLogAlertContainerEl);
+                    primaryMonitoringLogContainerElement.appendChild(primaryMonitoringLogAlertContainerElement);
                 });
 
-                primaryMonitoringLogLoading.classList.add('d-none');
-                primaryMonitoringLogContainerEl.classList.remove('d-none');
+                primaryMonitoringLogLoadingElement.classList.add('d-none');
+                primaryMonitoringLogContainerElement.classList.remove('d-none');
 
-                setUpPaginationButton(data, primaryMonitoringLogPagination, primaryMonitoringLogPaginationUlEl);
+                setUpPaginationButton(data, primaryMonitoringLogPagination, primaryMonitoringLogPaginationUlElement);
             }).catch(error => {
                 console.log(error);
 
-                primaryMonitoringLogLoading.classList.add('d-none');
+                primaryMonitoringLogLoadingElement.classList.add('d-none');
                 primaryMonitoringLog.classList.remove('d-none');
             });
         });
@@ -1359,11 +1216,13 @@ function getcreateMonitoringLogLevelTypeCountChartSeriesData(data) {
     let seriesData = data.map(element => {
         let logLevelDescription;
 
-        switch (element['level']) {
-            case 1:
+        switch (element['level'].toString()) {
+            case essMonitoringLogLevel['warning']:
                 logLevelDescription = '경고(Warning)';
+
                 break;
-            case 2:
+            case essMonitoringLogLevel['danger']:
+
                 logLevelDescription = '보호(Fault)';
                 break;
             default:
@@ -1389,6 +1248,9 @@ function createMonitoringLogLevelTypeCountChart(chartSeries, chartSeriesData, ch
 }
 
 // Create initial monitoring log level type count chart
+let primaryMonitoringLogLevelTypeCountContainer = document.getElementById('primaryMonitoringLogLevelTypeCount');
+let primaryMonitoringLogLevelTypeCountLoadingElement = primaryMonitoringLogLevelTypeCountContainer.querySelector('.spinner-border');
+let primaryMonitoringLogLevelTypeCountChartElement = document.getElementById('primaryMonitoringLogLevelTypeCountChart');
 var primaryMonitoringLogLevelTypeCountChartRoot = am5.Root.new('primaryMonitoringLogLevelTypeCountChart');
 primaryMonitoringLogLevelTypeCountChartRoot.setThemes([am5themes_Animated.new(primaryMonitoringLogLevelTypeCountChartRoot)]);
 
@@ -1424,39 +1286,54 @@ var primaryMonitoringLogLevelTypeCountChartLegend = primaryMonitoringLogLevelTyp
 
 var startTime = DateTime.now().toISODate();
 var endTime = DateTime.now().plus({ days: 1 }).toISODate();
-var requestUrl = new URL(window.location.origin + '/api/ess-feature/protectionmap/operating-sites/1/stats/log-level-count');
+var requestUrl = new URL(`${window.location.origin}/api/ess-feature/protectionmap/operating-sites/1/stats/log-level-count/`);
 requestUrl.searchParams.append('start-time', startTime);
 requestUrl.searchParams.append('end-time', endTime);
 requestUrl.searchParams.append('time-bucket-width', '1days');
 
 fetch(requestUrl).then(response => {
-    return response.json();
+    if (response.ok) {
+        return response.json();
+    }
+
+    throw new Error(response.statusText);
 }).then(data => {
     let seriesData = getcreateMonitoringLogLevelTypeCountChartSeriesData(data);
 
     createMonitoringLogLevelTypeCountChart(primaryMonitoringLogLevelTypeCountChartSeries, seriesData, primaryMonitoringLogLevelTypeCountChartLegend);
+    primaryMonitoringLogLevelTypeCountLoadingElement.classList.add('d-none');
+    primaryMonitoringLogLevelTypeCountChartElement.classList.remove('d-none');
 }).catch(error => {
     console.log(error);
 });
 
 // Monitoring log level type count select event
-var primaryMonitoringLogLevelTypeCountEl = document.getElementById('primaryMonitoringLogLevelTypeCount');
-var primaryMonitoringLogLevelTypeCountSelectEl = primaryMonitoringLogLevelTypeCountEl.querySelector('select');
-primaryMonitoringLogLevelTypeCountSelectEl.addEventListener('change', event => {
-    let operatingSiteId = primaryMonitoringLogLevelTypeCountSelectEl.value;
+var primaryMonitoringLogLevelTypeCountElement = document.getElementById('primaryMonitoringLogLevelTypeCount');
+var primaryMonitoringLogLevelTypeCountSelectElement = primaryMonitoringLogLevelTypeCountElement.querySelector('select');
+primaryMonitoringLogLevelTypeCountSelectElement.addEventListener('change', event => {
+    primaryMonitoringLogLevelTypeCountChartElement.classList.add('d-none');
+    primaryMonitoringLogLevelTypeCountLoadingElement.classList.remove('d-none');
+
+    let operatingSiteId = event.target.value;
     let startTime = DateTime.now().toISODate();
     let endTime = DateTime.now().plus({ days: 1 }).toISODate();
-    let requestUrl = new URL(window.location.origin + '/api/ess-feature/protectionmap/operating-sites/' + operatingSiteId + '/stats/log-level-count');
+    let requestUrl = new URL(`${window.location.origin}/api/ess-feature/protectionmap/operating-sites/${operatingSiteId}/stats/log-level-count/`);
     requestUrl.searchParams.append('start-time', startTime);
     requestUrl.searchParams.append('end-time', endTime);
     requestUrl.searchParams.append('time-bucket-width', '1days');
 
     fetch(requestUrl).then(response => {
-        return response.json();
+        if (response.ok) {
+            return response.json();
+        }
+
+        throw new Error(response.statusText);
     }).then(data => {
         let seriesData = getcreateMonitoringLogLevelTypeCountChartSeriesData(data);
 
         createMonitoringLogLevelTypeCountChart(primaryMonitoringLogLevelTypeCountChartSeries, seriesData, primaryMonitoringLogLevelTypeCountChartLegend);
+        primaryMonitoringLogLevelTypeCountLoadingElement.classList.add('d-none');
+        primaryMonitoringLogLevelTypeCountChartElement.classList.remove('d-none')
     }).catch(error => {
         console.log(error);
     });

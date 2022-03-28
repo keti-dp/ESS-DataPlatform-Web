@@ -34,8 +34,19 @@ class ProtectionMapFeatureView(ListAPIView):
             return queryset
 
         queryset = ProtectionMapFeature.objects.filter(
-            operating_site=operating_site_id, timestamp__gte=start_time_query_param, timestamp__lt=end_time_query_param
+            operating_site=operating_site_id,
+            timestamp__gte=start_time_query_param,
+            timestamp__lt=end_time_query_param,
         ).order_by("-timestamp")
+
+        return queryset
+
+    def filter_queryset(self, queryset):
+        queryset = super().filter_queryset(queryset)
+        message = self.request.query_params.get("message")
+
+        if message is not None:
+            queryset = queryset.filter(error_code__description__icontains=message)
 
         return queryset
 
