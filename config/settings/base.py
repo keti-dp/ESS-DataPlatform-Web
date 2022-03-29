@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "debug_toolbar",
+    "django_filters",
     "django_elasticsearch_dsl",
     "django_elasticsearch_dsl_drf",
     "rest_framework",
@@ -93,7 +94,7 @@ DATABASES = {
             "NAME": os.getenv("DEFAULT_TEST_DB_NAME"),
         },
     },
-    "ess": {
+    "ess1": {
         "ENGINE": os.getenv("ESS_DB_ENGINE"),
         "HOST": os.getenv("ESS_DB_HOST"),
         "PORT": os.getenv("ESS_DB_PORT"),
@@ -103,6 +104,18 @@ DATABASES = {
         "TEST": {
             "DEPENDENCIES": [],
             "NAME": os.getenv("ESS_TEST_DB_NAME"),
+        },
+    },
+    "ess2": {
+        "ENGINE": os.getenv("ESS2_DB_ENGINE"),
+        "HOST": os.getenv("ESS2_DB_HOST"),
+        "PORT": os.getenv("ESS2_DB_PORT"),
+        "NAME": os.getenv("ESS2_DB_NAME"),
+        "USER": os.getenv("ESS2_DB_USER"),
+        "PASSWORD": os.getenv("ESS2_DB_PASSWORD"),
+        "TEST": {
+            "DEPENDENCIES": [],
+            "NAME": os.getenv("ESS2_TEST_DB_NAME"),
         },
     },
     "ess_feature": {

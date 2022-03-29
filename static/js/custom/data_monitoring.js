@@ -1,7 +1,11 @@
 // Luxon alias 'DateTime'
 var DateTime = luxon.DateTime;
-
 const essProtectionMap = JSON.parse(document.getElementById('ess-protection-map').textContent);
+const essMonitoringLogLevel = {
+    'all': '0',
+    'warning': '1',
+    'danger': '2',
+}
 
 async function loadData(requestUrl) {
     let response = await fetch(requestUrl);
@@ -13,11 +17,26 @@ async function loadData(requestUrl) {
     throw new Error(response.status);
 }
 
-function getOperationSiteInfoRows(operationSiteInfoTypeObject) {
+function getOperatingSiteBankTitleRow(bankId) {
+    let rowElement = document.createElement('div');
+    rowElement.setAttribute('class', 'row');
+
+    rowElement.innerHTML = `
+        <div class="col-auto p-r-0"><i class="bi bi-circle-fill text-secondary"></i></div>
+        <div class="col">
+            <h6>Bank ${bankId}</h6>
+        </div>
+        <hr>
+    `;
+
+    return rowElement;
+}
+
+function getOperatingSiteInfoRows(operatingSiteInfoTypeObject) {
     let rows = [];
     let row = [];
 
-    for (const column of Object.keys(operationSiteInfoTypeObject)) {
+    for (const column of Object.keys(operatingSiteInfoTypeObject)) {
         if (row.length >= 3) {
             rows.push(Object.assign([], row));
             row = [];
@@ -33,155 +52,215 @@ function getOperationSiteInfoRows(operationSiteInfoTypeObject) {
     return rows;
 }
 
-function getOperationSiteInfoMonitoringList(operationSiteId, operationSiteInfoType, operationSiteInfoIds) {
-    // 'operationSiteInfoIds' type is Array which have 1~2 elements expected
-    // 'operationSiteInfoIds' first element is 'bank_id'
-    // 'operationSiteInfoIds' second element is 'rack_id'
+function getOperatingSiteInfoMonitoringList(operatingSiteId, operatingSiteInfoType, operatingSiteInfoIds) {
+    // 'operatingSiteInfoIds' type is Array which have 1~2 elements expected
+    // 'operatingSiteInfoIds' first element is 'bank_id'
+    // 'operatingSiteInfoIds' second element is 'rack_id'
 
-    if (!Array.isArray(operationSiteInfoIds) || (operationSiteInfoIds.length == 0 || operationSiteInfoIds.length >= 3)) {
-        console.log('operationSiteInfoIds type is Array which have 1~2 elements expected');
+    if (!Array.isArray(operatingSiteInfoIds) || (operatingSiteInfoIds.length == 0 || operatingSiteInfoIds.length >= 3)) {
+        console.log('operatingSiteInfoIds type is Array which have 1~2 elements expected');
 
         return;
     }
 
-    let operationSiteInfoMonitoringList = document.createElement('div');
-    operationSiteInfoMonitoringList.setAttribute('class', 'row');
+    let operatingSiteInfoMonitoringList = document.createElement('div');
+    operatingSiteInfoMonitoringList.setAttribute('class', 'row');
 
-    var operationSiteInfo = '';
+    var operatingSiteInfo = '';
 
-    // 'operationSiteInfoType' is 'bank'
-    if (operationSiteInfoIds.length == 1) {
-        operationSiteInfo = [operationSiteId, 'bank' + operationSiteInfoIds[0], 'info'].join('-');
-        operationSiteInfoMonitoringList.innerHTML = '<div class="col-auto offset-1 p-r-0"><i class="bi bi-circle-fill text-primary"></i></div>' +
-            '<div class="col"><p>Bank ' + operationSiteInfoIds[0] + ' Info</p></div><hr>';
-    } else if (operationSiteInfoIds.length == 2) { // 'operationSiteInfoType' is 'rack'
-        operationSiteInfo = [operationSiteId, 'bank' + operationSiteInfoIds[0], 'rack' + operationSiteInfoIds[1], 'info'].join('-');
-        operationSiteInfoMonitoringList.innerHTML = '<div class="col-auto offset-1 p-r-0"><i class="bi bi-circle-fill text-primary"></i></div>' +
-            '<div class="col"><p>Rack ' + operationSiteInfoIds[1] + ' Info</p></div><hr>';
+    // 'operatingSiteInfoType' is 'bank'
+    if (operatingSiteInfoIds.length == 1) {
+        operatingSiteInfo = [operatingSiteId, 'bank' + operatingSiteInfoIds[0], 'info'].join('-');
+        operatingSiteInfoMonitoringList.innerHTML = `
+            <div class="col-auto offset-1 p-r-0">
+                <i class="bi bi-circle-fill text-primary"></i>
+            </div>
+            <div class="col">
+                <p>Bank ${operatingSiteInfoIds[0]} Info</p>
+            </div>
+            <hr>
+        `;
+    } else if (operatingSiteInfoIds.length == 2) { // 'operatingSiteInfoType' is 'rack'
+        operatingSiteInfo = [operatingSiteId, 'bank' + operatingSiteInfoIds[0], 'rack' + operatingSiteInfoIds[1], 'info'].join('-');
+        operatingSiteInfoMonitoringList.innerHTML = `
+            <div class="col-auto offset-1 p-r-0">
+                <i class="bi bi-circle-fill text-primary"></i>
+            </div>
+            <div class="col">
+                <p>Rack ${operatingSiteInfoIds[1]} Info</p>
+            </div>
+            <hr>
+        `;
     }
 
-    operationSiteInfoMonitoringList.setAttribute('id', [operationSiteInfo, 'monitoring', 'list'].join('-'));
+    operatingSiteInfoMonitoringList.setAttribute('id', [operatingSiteInfo, 'monitoring', 'list'].join('-'));
 
-    let operationSiteInfoTypeObject = essProtectionMap['dataType'][operationSiteId][operationSiteInfoType];
-    let operationSiteInfoRows = getOperationSiteInfoRows(operationSiteInfoTypeObject);
+    let operatingSiteInfoTypeObject = essProtectionMap['dataType'][operatingSiteId][operatingSiteInfoType];
+    let operatingSiteInfoRows = getOperatingSiteInfoRows(operatingSiteInfoTypeObject);
 
-    for (const operationSiteInfoRow of operationSiteInfoRows) {
+    for (const operatingSiteInfoRow of operatingSiteInfoRows) {
         let row = document.createElement('div');
         row.setAttribute('class', 'row');
 
-        for (const operationSiteInfoColumn of operationSiteInfoRow) {
+        for (const operatingSiteInfoColumn of operatingSiteInfoRow) {
             var column = document.createElement('div');
             column.setAttribute('class', 'col-xl-4 col-md-12');
-            column.setAttribute('id', [operationSiteInfo, operationSiteInfoColumn, 'column'].join('-'));
+            column.setAttribute('id', [operatingSiteInfo, operatingSiteInfoColumn, 'column'].join('-'));
             column.setAttribute('data-bs-toggle', 'tooltip');
             column.setAttribute('data-bs-placement', 'top');
-            column.setAttribute('title', operationSiteInfoColumn);
+            column.setAttribute('title', operatingSiteInfoColumn);
 
-            let operationSiteIdNum = operationSiteId.replace('operationSite', '');
+            let operatingSiteIdNum = operatingSiteId.replace('operatingSite', '');
 
-            // 'operationSiteInfoType' is 'bank'
-            if (operationSiteInfoIds.length == 1) {
-                column.innerHTML = '<div class="row"><div class="col-auto p-r-0"><i class="bi bi-circle-fill text-primary"></i></div>' +
-                    '<div class="col text-truncate" data-bs-toggle="modal" data-bs-target="#monitoringListItemModal" data-operation-site-info-type="' + operationSiteInfoType +
-                    '" data-operation-site-id="' + operationSiteIdNum + '" data-operation-site-bank-id="' + operationSiteInfoIds[0] + '" data-operation-site-info-column="' + operationSiteInfoColumn.toLowerCase() +
-                    '"><p><small>' + operationSiteInfoColumn + '</small></p></div></div>'
-            } else if (operationSiteInfoIds.length == 2) { // 'operationSiteInfoType' is 'rack'
-                column.innerHTML = '<div class="row"><div class="col-auto p-r-0"><i class="bi bi-circle-fill text-primary"></i></div>' +
-                    '<div class="col text-truncate" data-bs-toggle="modal" data-bs-target="#monitoringListItemModal" data-operation-site-info-type="' + operationSiteInfoType +
-                    '" data-operation-site-id="' + operationSiteIdNum + '" data-operation-site-bank-id="' + operationSiteInfoIds[0] + '" data-operation-site-info-column="' + operationSiteInfoColumn.toLowerCase() +
-                    '" data-operation-site-rack-id="' + operationSiteInfoIds[1] + '"><p><small>' + operationSiteInfoColumn + '</small></p></div></div>'
+            // 'operatingSiteInfoType' is 'bank'
+            if (operatingSiteInfoIds.length == 1) {
+                column.innerHTML = `
+                    <div class="row">
+                        <div class="col-auto p-r-0">
+                            <i class="bi bi-circle-fill text-primary"></i>
+                        </div>
+                        <div class="col text-truncate" data-bs-toggle="modal" data-bs-target="#monitoringListItemModal" data-operating-site-info-type="${operatingSiteInfoType}" data-operating-site-id="${operatingSiteIdNum}" data-operating-site-bank-id="${operatingSiteInfoIds[0]}" data-operating-site-info-column="${operatingSiteInfoColumn.toLowerCase()}">
+                            <p><small>${operatingSiteInfoColumn}</small></p>
+                        </div>
+                    </div>
+                `;
+            } else if (operatingSiteInfoIds.length == 2) { // 'operatingSiteInfoType' is 'rack'
+                column.innerHTML = `
+                    <div class="row">
+                        <div class="col-auto p-r-0">
+                            <i class="bi bi-circle-fill text-primary"></i>
+                        </div>
+                        <div class="col text-truncate" data-bs-toggle="modal" data-bs-target="#monitoringListItemModal" data-operating-site-info-type="${operatingSiteInfoType}" data-operating-site-id="${operatingSiteIdNum}" data-operating-site-bank-id="${operatingSiteInfoIds[0]}" data-operating-site-info-column="${operatingSiteInfoColumn.toLowerCase()}" data-operating-site-rack-id="${operatingSiteInfoIds[1]}">
+                            <p><small>${operatingSiteInfoColumn}</small></p>
+                        </div>
+                    </div>
+                `;
+
             }
 
             row.appendChild(column);
         }
 
-        operationSiteInfoMonitoringList.appendChild(row);
+        operatingSiteInfoMonitoringList.appendChild(row);
     }
 
-    return operationSiteInfoMonitoringList;
+    return operatingSiteInfoMonitoringList;
 }
 
-function drawMonitoringListAndGetOperationSiteInfoWarningFlag(operationSiteId, operationSiteInfoType, operationSiteInfoIds, data) {
-    // 'operationSiteInfoIds' type is Array which have 1~2 elements expected
-    // 'operationSiteInfoIds' first element is 'bank_id'
-    // 'operationSiteInfoIds' second element is 'rack_id'
+function drawMonitoringListAndGetoperatingSiteInfoWarningFlag(operatingSiteId, operatingSiteInfoType, operatingSiteInfoIds, data) {
+    // 'operatingSiteInfoIds' type is Array which have 1~2 elements expected
+    // 'operatingSiteInfoIds' first element is 'bank_id'
+    // 'operatingSiteInfoIds' second element is 'rack_id'
 
-    if (!Array.isArray(operationSiteInfoIds) || (operationSiteInfoIds.length == 0 || operationSiteInfoIds.length >= 3)) {
-        console.log('operationSiteInfoIds type is Array which have 1~2 elements expected');
+    if (!Array.isArray(operatingSiteInfoIds) || (operatingSiteInfoIds.length == 0 || operatingSiteInfoIds.length >= 3)) {
+        console.log('operatingSiteInfoIds type is Array which have 1~2 elements expected');
 
         return;
     }
 
-    let isWarningOfOperationSiteInfo = false;
-    let operationSiteInfo = '';
+    let isWarningOfoperatingSiteInfo = false;
+    let operatingSiteInfo = '';
 
-    if (operationSiteInfoIds.length == 1) {
-        operationSiteInfo = [operationSiteId, 'bank' + operationSiteInfoIds[0], 'info'].join('-');
-    } else if (operationSiteInfoIds.length == 2) {
-        operationSiteInfo = [operationSiteId, 'bank' + operationSiteInfoIds[0], 'rack' + operationSiteInfoIds[1], 'info'].join('-');
+    if (operatingSiteInfoIds.length == 1) {
+        operatingSiteInfo = [operatingSiteId, 'bank' + operatingSiteInfoIds[0], 'info'].join('-');
+    } else if (operatingSiteInfoIds.length == 2) {
+        operatingSiteInfo = [operatingSiteId, 'bank' + operatingSiteInfoIds[0], 'rack' + operatingSiteInfoIds[1], 'info'].join('-');
     }
 
 
-    let operationSiteInfoMonitoringList = document.getElementById([operationSiteInfo, 'monitoring', 'list'].join('-'));
-    let operationSiteInfoMonitoringListIcon = operationSiteInfoMonitoringList.querySelector('i');
-    let operationSiteInfoTypeObject = essProtectionMap['dataType'][operationSiteId][operationSiteInfoType];
+    let operatingSiteInfoMonitoringList = document.getElementById([operatingSiteInfo, 'monitoring', 'list'].join('-'));
+    let operatingSiteInfoMonitoringListIcon = operatingSiteInfoMonitoringList.querySelector('i');
+    let operatingSiteInfoTypeObject = essProtectionMap['dataType'][operatingSiteId][operatingSiteInfoType];
 
-    for (const column of Object.keys(operationSiteInfoTypeObject)) {
+    for (const column of Object.keys(operatingSiteInfoTypeObject)) {
         let lowerCaseColumn = column.toLowerCase();
-        let operationSiteInfoColumn = document.getElementById([operationSiteInfo, column, 'column'].join('-'));
-        let operationSiteInfoColumnIcon = operationSiteInfoColumn.querySelector('i');
+        let operatingSiteInfoColumn = document.getElementById([operatingSiteInfo, column, 'column'].join('-'));
+        let operatingSiteInfoColumnIcon = operatingSiteInfoColumn.querySelector('i');
 
-        switch (operationSiteInfoTypeObject[column]['type']) {
+        switch (operatingSiteInfoTypeObject[column]['type']) {
             case 'number':
-                let splitedOperationSiteInfoTypeObjectColumnValue = operationSiteInfoTypeObject[column]['value'].split('~');
+                let splitedoperatingSiteInfoTypeObjectColumnValue = operatingSiteInfoTypeObject[column]['value'].split('~');
 
-                if (splitedOperationSiteInfoTypeObjectColumnValue.length == 1 && splitedOperationSiteInfoTypeObjectColumnValue[0] != '-') {
-                    if (data[lowerCaseColumn] >= Number(splitedOperationSiteInfoTypeObjectColumnValue[0])) {
-                        isWarningOfOperationSiteInfo = true;
-                        operationSiteInfoColumnIcon.classList.remove('text-primary', 'text-secondary');
-                        operationSiteInfoColumnIcon.classList.add('text-danger');
+                if (splitedoperatingSiteInfoTypeObjectColumnValue.length == 1 && splitedoperatingSiteInfoTypeObjectColumnValue[0] != '-') {
+                    if (data[lowerCaseColumn] >= Number(splitedoperatingSiteInfoTypeObjectColumnValue[0])) {
+                        isWarningOfoperatingSiteInfo = true;
+                        operatingSiteInfoColumnIcon.classList.remove('text-primary', 'text-secondary');
+                        operatingSiteInfoColumnIcon.classList.add('text-danger');
                     } else {
-                        operationSiteInfoColumnIcon.classList.remove('text-primary', 'text-danger');
-                        operationSiteInfoColumnIcon.classList.add('text-secondary');
+                        operatingSiteInfoColumnIcon.classList.remove('text-primary', 'text-danger');
+                        operatingSiteInfoColumnIcon.classList.add('text-secondary');
                     }
-                } else if (splitedOperationSiteInfoTypeObjectColumnValue.length == 2) {
-                    if ((data[lowerCaseColumn] <= Number(splitedOperationSiteInfoTypeObjectColumnValue[0])) || (data[lowerCaseColumn] >= Number(splitedOperationSiteInfoTypeObjectColumnValue[1]))) {
-                        isWarningOfOperationSiteInfo = true;
-                        operationSiteInfoColumnIcon.classList.remove('text-primary', 'text-secondary');
-                        operationSiteInfoColumnIcon.classList.add('text-danger');
+                } else if (splitedoperatingSiteInfoTypeObjectColumnValue.length == 2) {
+                    if ((data[lowerCaseColumn] <= Number(splitedoperatingSiteInfoTypeObjectColumnValue[0])) || (data[lowerCaseColumn] >= Number(splitedoperatingSiteInfoTypeObjectColumnValue[1]))) {
+                        isWarningOfoperatingSiteInfo = true;
+                        operatingSiteInfoColumnIcon.classList.remove('text-primary', 'text-secondary');
+                        operatingSiteInfoColumnIcon.classList.add('text-danger');
                     } else {
-                        operationSiteInfoColumnIcon.classList.remove('text-primary', 'text-danger');
-                        operationSiteInfoColumnIcon.classList.add('text-secondary');
+                        operatingSiteInfoColumnIcon.classList.remove('text-primary', 'text-danger');
+                        operatingSiteInfoColumnIcon.classList.add('text-secondary');
                     }
                 }
 
                 break;
             case 'boolean':
                 if (data[lowerCaseColumn] == 1) {
-                    isWarningOfOperationSiteInfo = true;
-                    operationSiteInfoColumnIcon.classList.remove('text-primary', 'text-secondary');
-                    operationSiteInfoColumnIcon.classList.add('text-danger');
+                    isWarningOfoperatingSiteInfo = true;
+                    operatingSiteInfoColumnIcon.classList.remove('text-primary', 'text-secondary');
+                    operatingSiteInfoColumnIcon.classList.add('text-danger');
                 } else {
-                    operationSiteInfoColumnIcon.classList.remove('text-primary', 'text-danger');
-                    operationSiteInfoColumnIcon.classList.add('text-secondary');
+                    operatingSiteInfoColumnIcon.classList.remove('text-primary', 'text-danger');
+                    operatingSiteInfoColumnIcon.classList.add('text-secondary');
                 }
 
                 break;
             default:
-                console.log('operationSiteInfoTypeObjectColumn is invalid type');
+                console.log('operatingSiteInfoTypeObjectColumn is invalid type');
                 break;
         }
     }
 
-    if (isWarningOfOperationSiteInfo) {
-        operationSiteInfoMonitoringListIcon.classList.remove('text-primary', 'text-secondary');
-        operationSiteInfoMonitoringListIcon.classList.add('text-danger');
+    if (isWarningOfoperatingSiteInfo) {
+        operatingSiteInfoMonitoringListIcon.classList.remove('text-primary', 'text-secondary');
+        operatingSiteInfoMonitoringListIcon.classList.add('text-danger');
     } else {
-        operationSiteInfoMonitoringListIcon.classList.remove('text-primary', 'text-danger');
-        operationSiteInfoMonitoringListIcon.classList.add('text-secondary');
+        operatingSiteInfoMonitoringListIcon.classList.remove('text-primary', 'text-danger');
+        operatingSiteInfoMonitoringListIcon.classList.add('text-secondary');
     }
 
-    return isWarningOfOperationSiteInfo;
+    return isWarningOfoperatingSiteInfo;
+}
+
+function getMonitoringLogAlertElement(data) {
+    let monitoringLogAlertElement = document.createElement('div');
+    let alertClass;
+
+    switch (data['level']['id']) {
+        case 1:
+            alertClass = 'alert-warning'
+
+            break;
+        case 2:
+            alertClass = 'alert-danger'
+
+            break;
+        default:
+            alertClass = 'alert-primary'
+
+            break;
+    }
+
+    monitoringLogAlertElement.setAttribute('class', `alert ${alertClass} m-b-5 p-l-10 p-t-0 p-b-0`);
+    monitoringLogAlertElement.setAttribute('role', 'alert');
+    monitoringLogAlertElement.innerHTML = `
+        <p class="text-truncate m-t-0 m-b-0">
+            <small>${DateTime.fromISO(data['timestamp']).toFormat('HH:mm:ss')}</small>
+        </p>
+        <p class="text-truncate m-t-0 m-b-0">
+            <small>${data['error_code']['description']}</small>
+        </p>
+    `;
+
+    return monitoringLogAlertElement;
 }
 
 function getLineChart(elementId, data, option = {}) {
@@ -256,52 +335,91 @@ function getLineChart(elementId, data, option = {}) {
 
 /* Initial task */
 // - Create monitoring list
-var opertaionSiteMonitoringListColumn = document.getElementById('operationSite1-monitoring-list-column');
-opertaionSiteMonitoringListColumn.appendChild(getOperationSiteInfoMonitoringList('operationSite1', 'bank', [1]));
+var operatingSiteMonitoringListColumnIds = ['operatingSite1MonitoringListColumn', 'operatingSite2MonitoringListColumn'];
+operatingSiteMonitoringListColumnIds.forEach((operatingSiteMonitoringListColumnId, operatingSiteMonitoringListColumnIdIndex) => {
+    let operatingSite = operatingSiteMonitoringListColumnId.replace('MonitoringListColumn', '');
+    let operatingSiteId = operatingSiteMonitoringListColumnIdIndex + 1;
+    let rackCount = essProtectionMap['info']['rackCount'][operatingSite];
+    let operatingSiteMonitoringListColumnElement = document.getElementById(operatingSiteMonitoringListColumnId);
 
-for (i = 1; i <= 8; i++) {
-    opertaionSiteMonitoringListColumn.appendChild(getOperationSiteInfoMonitoringList('operationSite1', 'rack', [1, i]));
-}
+    Object.keys(rackCount).forEach((operatingSiteBank, operatingSiteBankIndex) => {
+        // Create initial monitoring list(only column)
+        let number = operatingSiteBankIndex + 1;
+        operatingSiteMonitoringListColumnElement.appendChild(getOperatingSiteBankTitleRow(number));
+        operatingSiteMonitoringListColumnElement.appendChild(getOperatingSiteInfoMonitoringList(operatingSite, 'bank', [number]));
 
-setInterval(async () => {
-    let operationSiteWarningFlagList = [];
+        let rackCountOfBank = essProtectionMap['info']['rackCount'][operatingSite][operatingSiteBank];
 
-    // Bank info draw monitoring list
-    let readLatestBankRequestUrl = new URL(window.location.origin + '/api/ess/operation-sites/1/banks/1/latest/');
+        for (i = 1; i <= rackCountOfBank; i++) {
+            operatingSiteMonitoringListColumnElement.appendChild(getOperatingSiteInfoMonitoringList(operatingSite, 'rack', [number, i]));
+        }
 
-    await loadData(readLatestBankRequestUrl)
-        .then(data => {
-            let operationSiteWarningFlag = drawMonitoringListAndGetOperationSiteInfoWarningFlag('operationSite1', 'bank', [1], data);
-            operationSiteWarningFlagList.push(operationSiteWarningFlag);
-        }).catch(error => {
-            console.log(error);
-        });
+        // - Create room sensor of bank header in monitoring list
+        setInterval(() => {
+            let requestUrl = new URL(`${window.location.origin}/api/ess/operating-sites/${operatingSiteId}/etc/latest/`);
 
-    // Rack info draw monitoring list
-    for (let i = 1; i <= 8; i++) {
-        var readLatestRackRequestUrl = new URL(window.location.origin + '/api/ess/operation-sites/1/banks/1/racks/' + i + '/latest/');
+            fetch(requestUrl).then(response => {
+                return response.json();
+            }).then(data => {
+                let header = document.querySelector(`#${operatingSiteMonitoringListColumnId} > div:nth-child(1) > div.col > h6`);
+                let oldSmall = header.querySelector('small');
 
-        await loadData(readLatestRackRequestUrl)
-            .then(data => {
-                let operationSiteWarningFlag = drawMonitoringListAndGetOperationSiteInfoWarningFlag('operationSite1', 'rack', [1, i], data);
-                operationSiteWarningFlagList.push(operationSiteWarningFlag);
+                if (oldSmall) {
+                    header.removeChild(oldSmall);
+                }
+
+                let newSmall = document.createElement('small');
+                // Degree Celsius HTML Code '&#8451;'
+                newSmall.innerHTML = ` <span class="material-icons-two-tone">thermostat</span>${data['sensor1_temperature'] + '&#8451;'} <span class="material-icons-two-tone">water_drop</span> ${data['sensor1_humidity'] + '%'}`;
+
+                header.appendChild(newSmall);
             }).catch(error => {
                 console.log(error);
             });
-    }
+        }, 1000);
 
-    // Bank draw monitoring list
-    var isWarningOfOperationSite = operationSiteWarningFlagList.some(element => element);
-    var operationSiteMonitoringListBankIcon = document.getElementById('operationSite1-bank1-info-monitoring-list').previousElementSibling.querySelector('i');
+        // - Draw monitoring list(icon signal)
+        setInterval(async () => {
+            let operatingSiteWarningFlagList = [];
 
-    if (isWarningOfOperationSite) {
-        operationSiteMonitoringListBankIcon.classList.remove('text-primary', 'text-secondary');
-        operationSiteMonitoringListBankIcon.classList.add('text-danger');
-    } else {
-        operationSiteMonitoringListBankIcon.classList.remove('text-primary', 'text-danger');
-        operationSiteMonitoringListBankIcon.classList.add('text-secondary');
-    }
-}, 1000);
+            // Bank info draw monitoring list
+            let readLatestBankRequestUrl = new URL(`${window.location.origin}/api/ess/operating-sites/${operatingSiteId}/banks/${number}/latest/`);
+
+            await loadData(readLatestBankRequestUrl)
+                .then(data => {
+                    let operatingSiteWarningFlag = drawMonitoringListAndGetoperatingSiteInfoWarningFlag(operatingSite, 'bank', [number], data);
+                    operatingSiteWarningFlagList.push(operatingSiteWarningFlag);
+                }).catch(error => {
+                    console.log(error);
+                });
+
+            // Rack info draw monitoring list
+            for (let i = 1; i <= rackCountOfBank; i++) {
+                let readLatestRackRequestUrl = new URL(`${window.location.origin}/api/ess/operating-sites/${operatingSiteId}/banks/${number}/racks/${i}/latest/`);
+
+                await loadData(readLatestRackRequestUrl)
+                    .then(data => {
+                        let operatingSiteWarningFlag = drawMonitoringListAndGetoperatingSiteInfoWarningFlag(operatingSite, 'rack', [number, i], data);
+                        operatingSiteWarningFlagList.push(operatingSiteWarningFlag);
+                    }).catch(error => {
+                        console.log(error);
+                    });
+            }
+
+            // Bank draw monitoring list
+            let isWarningOfoperatingSite = operatingSiteWarningFlagList.some(element => element);
+            let operatingSiteMonitoringListBankIcon = document.getElementById(`${operatingSite}-bank${number}-info-monitoring-list`).previousElementSibling.querySelector('i');
+
+            if (isWarningOfoperatingSite) {
+                operatingSiteMonitoringListBankIcon.classList.remove('text-primary', 'text-secondary');
+                operatingSiteMonitoringListBankIcon.classList.add('text-danger');
+            } else {
+                operatingSiteMonitoringListBankIcon.classList.remove('text-primary', 'text-danger');
+                operatingSiteMonitoringListBankIcon.classList.add('text-secondary');
+            }
+        }, 1000);
+    });
+});
 
 // - Create monitoring list item chart
 var monitoringListItemChart;
@@ -315,19 +433,21 @@ monitoringListItemModalTriggerList.forEach(element => {
         chart.classList.add('d-none');
         loader.classList.remove('d-none');
 
-        let operationSiteInfoType = element.dataset.operationSiteInfoType;
-        let operationSiteId = element.dataset.operationSiteId;
-        let operationSiteBankId = element.dataset.operationSiteBankId;
-        let operationSiteInfoColumn = element.dataset.operationSiteInfoColumn;
+        let operatingSiteInfoType = element.dataset.operatingSiteInfoType;
+        let operatingSiteId = element.dataset.operatingSiteId;
+        let operatingSiteBankId = element.dataset.operatingSiteBankId;
+        let operatingSiteInfoColumn = element.dataset.operatingSiteInfoColumn;
         let requestUrl;
 
-        switch (operationSiteInfoType) {
+        switch (operatingSiteInfoType) {
             case 'bank':
-                requestUrl = new URL(window.location.origin + '/api/ess/operation-sites/' + operationSiteId + '/banks/' + operationSiteBankId + '/');
+                requestUrl = new URL(`${window.location.origin}/api/ess/operating-sites/${operatingSiteId}/banks/${operatingSiteBankId}/`);
+
                 break;
             case 'rack':
-                let operationSiteRackId = element.dataset.operationSiteRackId;
-                requestUrl = new URL(window.location.origin + '/api/ess/operation-sites/' + operationSiteId + '/banks/' + operationSiteBankId + '/racks/' + operationSiteRackId + '/');
+                let operatingSiteRackId = element.dataset.operatingSiteRackId;
+                requestUrl = new URL(`${window.location.origin}/api/ess/operating-sites/${operatingSiteId}/banks/${operatingSiteBankId}/racks/${operatingSiteRackId}/`);
+
                 break;
             default:
                 break;
@@ -337,22 +457,24 @@ monitoringListItemModalTriggerList.forEach(element => {
         var currentDate = currentDateTime.toISODate();
 
         let monitoringListItemModalTitleEl = document.getElementById('monitoringListItemModalLabel');
-        monitoringListItemModalTitleEl.innerHTML = operationSiteInfoColumn + ' 시간별 모니터링 차트 <span class="material-icons-two-tone">watch_later</span> ' + currentDate;
+        monitoringListItemModalTitleEl.innerHTML = `${operatingSiteInfoColumn} 시간별 모니터링 차트 <span class="material-icons-two-tone">watch_later</span> ${currentDate}`;
 
         requestUrl.searchParams.append('date', currentDate);
-        requestUrl.searchParams.append('fields', ['timestamp', operationSiteInfoColumn].join(','));
+        requestUrl.searchParams.append('fields', `timestamp,${operatingSiteInfoColumn}`);
         requestUrl.searchParams.append('no_page', '');
 
         fetch(requestUrl).then(response => {
-            return response.json();
+            if (response.ok) {
+                return response.json();
+            }
+
+            throw new Error(response.statusText);
         }).then(responseData => {
-            let data = [];
-
-            responseData.forEach(element => {
+            let data = responseData.map(element => {
                 let date = new Date(element['timestamp']).getTime();
-                let value = element[operationSiteInfoColumn];
+                let value = element[operatingSiteInfoColumn];
 
-                data.push({ date: date, value: value });
+                return { date: date, value: value };
             });
 
             if (monitoringListItemChart && 'data' in monitoringListItemChart) {
@@ -369,119 +491,71 @@ monitoringListItemModalTriggerList.forEach(element => {
     });
 });
 
-// - Create room sensor of bank header in monitoring list
-setInterval(() => {
-    let requestUrl = new URL(window.location.origin + '/api/ess/operation-sites/1/banks/1/etc/latest/');
-
-    fetch(requestUrl).then(response => {
-        return response.json();
-    }).then(data => {
-        let header = document.querySelector('#operationSite1-monitoring-list-column > div:nth-child(1) > div.col > h6');
-        let oldSmall = header.querySelector('small');
-
-        if (oldSmall) {
-            header.removeChild(oldSmall);
-        }
-
-        let newSmall = document.createElement('small');
-        // Degree Celsius HTML Code '&#8451;'
-        newSmall.innerHTML = ' <span class="material-icons-two-tone">thermostat</span>' + data['sensor1_temperature'] + '&#8451;' + ' <span class="material-icons-two-tone">water_drop</span>' + data['sensor1_humidity'] + '%';
-
-        header.appendChild(newSmall);
-    }).catch(error => {
-        console.log(error);
-    });
-}, 1000);
-
 // - Create monitoring log
-let operationSite1MonitoringLogColumn = document.getElementById('operationSite1-monitoring-log-column');
-var monitoringLogContainerElement = operationSite1MonitoringLogColumn.querySelector('div');
-var requestUrl = new URL(window.location.origin + '/api/ess/search/data-monitoring-logs/');
-requestUrl.searchParams.append('operation_site', 'operation1_local');
-requestUrl.searchParams.append('time_gte', DateTime.utc().toFormat('yyyy-MM-dd').toString());
-requestUrl.searchParams.append('time_lte', DateTime.utc().plus({ days: 1 }).toFormat('yyyy-MM-dd').toString());
+let initialMonitoringLogLoadInterval = {};
 
-function getMonitoringLogAlertEl(data) {
-    let monitoringLogAlertEl = document.createElement('div');
-    let alertClass;
+var operatingSiteMonitoringLogColumnIds = ['operatingSite1MonitoringLogColumn', 'operatingSite2MonitoringLogColumn'];
+operatingSiteMonitoringLogColumnIds.forEach(async (operatingSiteMonitoringLogColumnId, index) => {
+    let operatingSiteId = index + 1;
+    let operatingSiteMonitoringLogColumnElement = document.getElementById(operatingSiteMonitoringLogColumnId);
+    let monitoringLogContainerElement = document.getElementById(`${operatingSiteMonitoringLogColumnId}LogContainer`);
+    let monitoringLogLoadingElement = operatingSiteMonitoringLogColumnElement.querySelector('.spinner-border');
+    let requestUrl = new URL(`${window.location.origin}/api/ess-feature/protectionmap/operating-sites/${operatingSiteId}/`);
+    requestUrl.searchParams.append('start-time', DateTime.utc().toFormat('yyyy-MM-dd').toString());
+    requestUrl.searchParams.append('end-time', DateTime.utc().plus({ days: 1 }).toFormat('yyyy-MM-dd').toString());
 
-    switch (data['log_level']) {
-        case 'info':
-            alertClass = 'alert-info';
-            break;
-        case 'warning':
-            alertClass = 'alert-warning'
-            break;
-        case 'critical':
-            alertClass = 'alert-danger'
-            break;
-        case 'error':
-            alertClass = 'alert-primary'
-            break;
-        default:
-            alertClass = 'alert-primary'
-            console.log('', data['log_level']);
-            break;
-    }
-
-    monitoringLogAlertEl.setAttribute('class', 'alert ' + alertClass + ' m-b-5 p-l-10 p-t-0 p-b-0');
-    monitoringLogAlertEl.setAttribute('role', 'alert');
-    monitoringLogAlertEl.innerHTML = '<p class="text-truncate m-t-0 m-b-0"><small>' + data['message'] + '</small></p>' +
-        '<p class="text-truncate m-t-0 m-b-0"><small>' + DateTime.fromISO(data['time']).toFormat('HH:mm:ss') + '</small></p>';
-
-    return monitoringLogAlertEl;
-}
-
-fetch(requestUrl).then(response => {
-    return response.json();
-}).then(responseData => {
-    for (const data of responseData['results']) {
-        var alertElement = getMonitoringLogAlertEl(data);
+    let protectionmapLogData = await loadData(requestUrl);
+    protectionmapLogData['results'].forEach(result => {
+        let alertElement = getMonitoringLogAlertElement(result);
 
         monitoringLogContainerElement.appendChild(alertElement);
-    }
-}).catch(error => {
-    console.log(error);
-});
-
-let initialMonitoringLogLoadInterval = setInterval(() => {
-    // After wait for save time of monitoring log data, lazy request
-    var time = DateTime.utc().minus({ seconds: 2 }).toFormat('yyyy-MM-dd HH:mm:ss').toString().replace(' ', 'T');
-    let requestUrl = new URL(window.location.origin + '/api/ess/search/data-monitoring-logs/');
-    requestUrl.searchParams.append('operation_site', 'operation1_local');
-    requestUrl.searchParams.append('time', time);
-
-    fetch(requestUrl).then(response => {
-        return response.json();
-    }).then(responseData => {
-        let data = responseData['results'];
-
-        data.forEach(element => {
-            let alertElement = getMonitoringLogAlertEl(element);
-
-            if (monitoringLogContainerElement.firstElementChild) {
-                monitoringLogContainerElement.firstElementChild.before(alertElement);
-            } else {
-                monitoringLogContainerElement.appendChild(alertElement);
-            }
-        });
-    }).catch(error => {
-        console.log(error);
     });
-}, 1000);
 
-// - Download operation data
-// Trigger the contents of the modal depending on which button was clicked
-var operationDataDownloadModal = document.getElementById('operationDataDownloadModal');
-operationDataDownloadModal.addEventListener('show.bs.modal', function (event) {
-    let button = event.relatedTarget;
-    let operationSiteId = button.getAttribute('data-operation-site-id');
-    let downloadButton = operationDataDownloadModal.querySelector('.btn-primary');
-    downloadButton.setAttribute('data-operation-site-id', operationSiteId);
+    monitoringLogLoadingElement.classList.add('d-none');
+
+    initialMonitoringLogLoadInterval[operatingSiteMonitoringLogColumnId] = setInterval(() => {
+        // After wait for save time of monitoring log data, lazy request
+        let time = DateTime.now().minus({ seconds: 2 }).toFormat('yyyy-MM-dd HH:mm:ss').toString().replace(' ', 'T');
+        let requestUrl = new URL(`${window.location.origin}/api/ess-feature/protectionmap/operating-sites/${operatingSiteId}/`);
+        requestUrl.searchParams.append('time', time);
+
+        fetch(requestUrl).then(response => {
+            if (response.ok) {
+                return response.json();
+
+            }
+
+            throw new Error(response.statusText);
+        }).then(responseData => {
+            let data = responseData['results'];
+
+            data.forEach(element => {
+                let alertElement = getMonitoringLogAlertElement(element);
+
+                if (monitoringLogContainerElement.firstElementChild) {
+                    monitoringLogContainerElement.firstElementChild.before(alertElement);
+                } else {
+                    monitoringLogContainerElement.appendChild(alertElement);
+                }
+            });
+        }).catch(error => {
+            console.log(error);
+        });
+    }, 1000);
 });
 
-const operationDataDownloadModalStartDateTimePickerElement = document.getElementById('operationDataDownloadModalStartDateTimePicker');
-const operationDataDownloadModalStartDateTimeTempusDominus = new tempusDominus.TempusDominus(operationDataDownloadModalStartDateTimePickerElement, {
+// - Download operating data
+// Trigger the contents of the modal depending on which button was clicked
+var operatingDataDownloadModal = document.getElementById('operatingDataDownloadModal');
+operatingDataDownloadModal.addEventListener('show.bs.modal', function (event) {
+    let button = event.relatedTarget;
+    let operatingSiteId = button.getAttribute('data-operating-site-id');
+    let downloadButton = operatingDataDownloadModal.querySelector('.btn-primary');
+    downloadButton.setAttribute('data-operating-site-id', operatingSiteId);
+});
+
+const operatingDataDownloadModalStartDateTimePickerElement = document.getElementById('operatingDataDownloadModalStartDateTimePicker');
+const operatingDataDownloadModalStartDateTimeTempusDominus = new tempusDominus.TempusDominus(operatingDataDownloadModalStartDateTimePickerElement, {
     display: {
         components: {
             seconds: true
@@ -492,7 +566,7 @@ const operationDataDownloadModalStartDateTimeTempusDominus = new tempusDominus.T
         inputFormat: (context, date) => { return DateTime.fromISO(date.toISOString()).toFormat('yyyy-MM-dd HH:mm:ss') }
     }
 });
-const operationDataDownloadModalEndDateTimeTempusDominus = new tempusDominus.TempusDominus(document.getElementById('operationDataDownloadModalEndDateTimePicker'), {
+const operatingDataDownloadModalEndDateTimeTempusDominus = new tempusDominus.TempusDominus(document.getElementById('operatingDataDownloadModalEndDateTimePicker'), {
     display: {
         components: {
             seconds: true
@@ -506,8 +580,8 @@ const operationDataDownloadModalEndDateTimeTempusDominus = new tempusDominus.Tem
 });
 
 // Using event listeners
-operationDataDownloadModalStartDateTimePickerElement.addEventListener(tempusDominus.Namespace.events.change, (e) => {
-    operationDataDownloadModalEndDateTimeTempusDominus.updateOptions({
+operatingDataDownloadModalStartDateTimePickerElement.addEventListener(tempusDominus.Namespace.events.change, (e) => {
+    operatingDataDownloadModalEndDateTimeTempusDominus.updateOptions({
         restrictions: {
             minDate: e.detail.date
         },
@@ -515,22 +589,22 @@ operationDataDownloadModalStartDateTimePickerElement.addEventListener(tempusDomi
 });
 
 // Using subscribe method
-const operationDataDownloadModalEndDateTimeTempusDominusSubscription = operationDataDownloadModalEndDateTimeTempusDominus.subscribe(tempusDominus.Namespace.events.change, (e) => {
-    operationDataDownloadModalStartDateTimeTempusDominus.updateOptions({
+const operatingDataDownloadModalEndDateTimeTempusDominusSubscription = operatingDataDownloadModalEndDateTimeTempusDominus.subscribe(tempusDominus.Namespace.events.change, (e) => {
+    operatingDataDownloadModalStartDateTimeTempusDominus.updateOptions({
         restrictions: {
             maxDate: e.date
         }
     });
 });
 
-// Validate operation data download modal form
-const operationDataDownloadModalFormValidation = new JustValidate('#operationDataDownloadModalForm', {
+// Validate operating data download modal form
+const operatingDataDownloadModalFormValidation = new JustValidate('#operatingDataDownloadModalForm', {
     errorFieldCssClass: 'is-invalid',
     tootip: {
         position: 'bottom'
     }
 });
-operationDataDownloadModalFormValidation.addField('#operationDataDownloadModalStartDateTimeInput', [
+operatingDataDownloadModalFormValidation.addField('#operatingDataDownloadModalStartDateTimeInput', [
     {
         plugin: JustValidatePluginDate(fields => ({
             required: true,
@@ -538,7 +612,7 @@ operationDataDownloadModalFormValidation.addField('#operationDataDownloadModalSt
         })),
         errorMessage: '날짜를 선택하세요.'
     },
-]).addField('#operationDataDownloadModalEndDateTimeInput', [
+]).addField('#operatingDataDownloadModalEndDateTimeInput', [
     {
         plugin: JustValidatePluginDate(fields => ({
             required: true,
@@ -547,16 +621,16 @@ operationDataDownloadModalFormValidation.addField('#operationDataDownloadModalSt
         errorMessage: '날짜를 선택하세요.'
     },
 ]).addRequiredGroup(
-    '#operationDataDownloadModalDataTypeCheckboxGroup',
+    '#operatingDataDownloadModalDataTypeCheckboxGroup',
     '1가지 이상의 데이터 타입을 선택하세요.'
 ).onSuccess(event => {
-    let checkedBoxElements = document.querySelectorAll('#operationDataDownloadModalDataTypeCheckboxGroup input:checked');
+    let checkedBoxElements = document.querySelectorAll('#operatingDataDownloadModalDataTypeCheckboxGroup input:checked');
     checkedBoxElements.forEach(element => {
-        let operationSiteId = document.querySelector('#operationDataDownloadModalForm button[type=submit]').getAttribute('data-operation-site-id');
+        let operatingSiteId = document.querySelector('#operatingDataDownloadModalForm button[type=submit]').getAttribute('data-operating-site-id');
         let dataType = element.value;
-        let startTime = document.getElementById('operationDataDownloadModalStartDateTimeInput').value.replace(' ', 'T');
-        let endTime = document.getElementById('operationDataDownloadModalEndDateTimeInput').value.replace(' ', 'T');
-        let requestUrl = new URL(window.location.origin + '/api/ess/download/operation-sites/' + operationSiteId + '/' + dataType + '/');
+        let startTime = document.getElementById('operatingDataDownloadModalStartDateTimeInput').value.replace(' ', 'T');
+        let endTime = document.getElementById('operatingDataDownloadModalEndDateTimeInput').value.replace(' ', 'T');
+        let requestUrl = new URL(window.location.origin + '/api/ess/download/operating-sites/' + operatingSiteId + '/' + dataType + '/');
         requestUrl.searchParams.append('start-time', startTime);
         requestUrl.searchParams.append('end-time', endTime);
 
@@ -573,173 +647,171 @@ operationDataDownloadModalFormValidation.addField('#operationDataDownloadModalSt
     });
 });
 
-// - Tagging monitoring log message search input
-var monitoringLogColumnInput = operationSite1MonitoringLogColumn.querySelector('input');
-new Tagify(monitoringLogColumnInput, {
-    originalInputValueFormat: valuesArr => valuesArr.map(item => item.value).join(',')
-});;
-
 /* Event task */
-// - Monitoring log level select event
-var monitoringLogLoadInterval;
-var monitoringLogColumnSelectElement = document.querySelector('#operationSite1-monitoring-log-column select');
-monitoringLogColumnSelectElement.addEventListener('change', event => {
-    monitoringLogContainerElement.innerHTML = '';
+let monitoringLogLoadInterval = {};
 
-    // Clear initial monitoring log load interval
-    if (initialMonitoringLogLoadInterval) {
-        clearInterval(initialMonitoringLogLoadInterval);
-    }
+operatingSiteMonitoringLogColumnIds.forEach((operatingSiteMonitoringLogColumnId, index) => {
+    let operatingSiteId = index + 1;
+    let operatingSiteMonitoringLogColumnElement = document.getElementById(operatingSiteMonitoringLogColumnId);
+    let monitoringLogColumnInputElement = operatingSiteMonitoringLogColumnElement.querySelector('input');
+    let monitoringLogContainerElement = document.getElementById(`${operatingSiteMonitoringLogColumnId}LogContainer`);
+    let monitoringLogLoadingElement = operatingSiteMonitoringLogColumnElement.querySelector('.spinner-border');
 
-    // Clear previous monitoring log load interval
-    if (monitoringLogLoadInterval) {
-        clearInterval(monitoringLogLoadInterval);
-    }
+    // - Tagging monitoring log message search input
+    new Tagify(monitoringLogColumnInputElement, {
+        originalInputValueFormat: valuesArr => valuesArr.map(item => item.value).join(',')
+    });;
 
-    let logLevel = event.target.value;
-    let logMessage = monitoringLogColumnInput.value;
-    let requestUrl = new URL(window.location.origin + '/api/ess/search/data-monitoring-logs/');
-    requestUrl.searchParams.append('operation_site', 'operation1_local');
-    requestUrl.searchParams.append('time_gte', DateTime.utc().toFormat('yyyy-MM-dd').toString());
-    requestUrl.searchParams.append('time_lte', DateTime.utc().plus({ days: 1 }).toFormat('yyyy-MM-dd').toString());
+    // - Monitoring log level select event
+    let monitoringLogColumnSelectElement = operatingSiteMonitoringLogColumnElement.querySelector('select');
+    monitoringLogColumnSelectElement.addEventListener('change', async (event) => {
+        monitoringLogContainerElement.innerHTML = '';
+        monitoringLogLoadingElement.classList.remove('d-none');
 
-    if (logLevel !== 'all') {
-        requestUrl.searchParams.append('log_level', logLevel);
-    }
-
-    if (logMessage) {
-        logMessage.split(',').forEach(element => {
-            requestUrl.searchParams.append('message', element);
-        });
-    }
-
-    fetch(requestUrl).then(response => {
-        return response.json();
-    }).then(responseData => {
-        for (const data of responseData['results']) {
-            var alertElement = getMonitoringLogAlertEl(data);
-
-            monitoringLogContainerElement.appendChild(alertElement);
+        // Clear initial monitoring log load interval
+        if (initialMonitoringLogLoadInterval[operatingSiteMonitoringLogColumnId]) {
+            clearInterval(initialMonitoringLogLoadInterval[operatingSiteMonitoringLogColumnId]);
         }
-    }).catch(error => {
-        console.log(error);
-    });
 
-    monitoringLogLoadInterval = setInterval(() => {
-        // After wait for save time of monitoring log data, lazy request
-        let time = DateTime.utc().minus({ seconds: 2 }).toFormat('yyyy-MM-dd HH:mm:ss').toString().replace(' ', 'T');
-        let requestUrl = new URL(window.location.origin + '/api/ess/search/data-monitoring-logs/');
-        requestUrl.searchParams.append('operation_site', 'operation1_local');
-        requestUrl.searchParams.append('time', time);
+        // Clear previous monitoring log load interval
+        if (monitoringLogLoadInterval[operatingSiteMonitoringLogColumnId]) {
+            clearInterval(monitoringLogLoadInterval[operatingSiteMonitoringLogColumnId]);
+        }
 
-        if (logLevel !== 'all') {
-            requestUrl.searchParams.append('log_level', logLevel);
+        let logLevel = event.target.value;
+        let logMessage = monitoringLogColumnInputElement.value;
+        let requestUrl = new URL(`${window.location.origin}/api/ess-feature/protectionmap/operating-sites/${operatingSiteId}/`);
+        requestUrl.searchParams.append('start-time', DateTime.utc().toFormat('yyyy-MM-dd').toString());
+        requestUrl.searchParams.append('end-time', DateTime.utc().plus({ days: 1 }).toFormat('yyyy-MM-dd').toString());
+
+        if (logLevel !== essMonitoringLogLevel['all']) {
+            requestUrl.searchParams.append('level', logLevel);
         }
 
         if (logMessage) {
-            logMessage.split(',').forEach(element => {
-                requestUrl.searchParams.append('message', element);
-            });
+            requestUrl.searchParams.append('message', logMessage);
         }
 
-        fetch(requestUrl).then(response => {
-            return response.json();
-        }).then(responseData => {
-            let data = responseData['results'];
-
-            data.forEach(element => {
-                let alertElement = getMonitoringLogAlertEl(element);
-
-                if (monitoringLogContainerElement.firstElementChild) {
-                    monitoringLogContainerElement.firstElementChild.before(alertElement);
-                } else {
-                    monitoringLogContainerElement.appendChild(alertElement);
-                }
-            });
-        }).catch(error => {
-            console.log(error);
-        });
-    }, 1000);
-});
-
-// - Monitoring log message search input event
-monitoringLogColumnInput.addEventListener('change', event => {
-    monitoringLogContainerElement.innerHTML = '';
-
-    // Clear initial monitoring log load interval
-    if (initialMonitoringLogLoadInterval) {
-        clearInterval(initialMonitoringLogLoadInterval);
-    }
-
-    // Clear previous monitoring log load interval
-    if (monitoringLogLoadInterval) {
-        clearInterval(monitoringLogLoadInterval);
-    }
-
-    let logLevel = operationSite1MonitoringLogColumn.querySelector('select').value;
-    let logMessage = event.target.value;
-    let requestUrl = new URL(window.location.origin + '/api/ess/search/data-monitoring-logs/');
-    requestUrl.searchParams.append('operation_site', 'operation1_local');
-    requestUrl.searchParams.append('time_gte', DateTime.utc().toFormat('yyyy-MM-dd').toString());
-    requestUrl.searchParams.append('time_lte', DateTime.utc().plus({ days: 1 }).toFormat('yyyy-MM-dd').toString());
-
-    if (logLevel !== 'all') {
-        requestUrl.searchParams.append('log_level', logLevel);
-    }
-
-    if (logMessage) {
-        logMessage.split(',').forEach(element => {
-            requestUrl.searchParams.append('message', element);
-        });
-    }
-
-    fetch(requestUrl).then(response => {
-        return response.json();
-    }).then(responseData => {
-        for (const data of responseData['results']) {
-            var alertElement = getMonitoringLogAlertEl(data);
+        let monitoringLogData = await loadData(requestUrl);
+        monitoringLogData['results'].forEach(element => {
+            var alertElement = getMonitoringLogAlertElement(element);
 
             monitoringLogContainerElement.appendChild(alertElement);
-        }
-    }).catch(error => {
-        console.log(error);
+        });
+
+        monitoringLogLoadingElement.classList.add('d-none');
+
+        monitoringLogLoadInterval[operatingSiteMonitoringLogColumnId] = setInterval(() => {
+            // After wait for save time of monitoring log data, lazy request
+            let time = DateTime.utc().minus({ seconds: 2 }).toFormat('yyyy-MM-dd HH:mm:ss').toString().replace(' ', 'T');
+            let requestUrl = new URL(`${window.location.origin}/api/ess-feature/protectionmap/operating-sites/${operatingSiteId}/`);
+            requestUrl.searchParams.append('time', time);
+
+            if (logLevel !== essMonitoringLogLevel['all']) {
+                requestUrl.searchParams.append('level', logLevel);
+            }
+
+            if (logMessage) {
+                requestUrl.searchParams.append('message', logMessage);
+            }
+
+            fetch(requestUrl).then(response => {
+                if (response.ok) {
+                    return response.json();
+                }
+
+                throw new Error(response.statusText);
+            }).then(responseData => {
+                let data = responseData['results'];
+                data.forEach(element => {
+                    let alertElement = getMonitoringLogAlertElement(element);
+
+                    if (monitoringLogContainerElement.firstElementChild) {
+                        monitoringLogContainerElement.firstElementChild.before(alertElement);
+                    } else {
+                        monitoringLogContainerElement.appendChild(alertElement);
+                    }
+                });
+            }).catch(error => {
+                console.log(error);
+            });
+        }, 1000);
     });
 
-    monitoringLogLoadInterval = setInterval(() => {
-        // After wait for save time of monitoring log data, lazy request
-        let time = DateTime.utc().minus({ seconds: 2 }).toFormat('yyyy-MM-dd HH:mm:ss').toString().replace(' ', 'T');
-        let requestUrl = new URL(window.location.origin + '/api/ess/search/data-monitoring-logs/');
-        requestUrl.searchParams.append('operation_site', 'operation1_local');
-        requestUrl.searchParams.append('time', time);
+    // - Monitoring log message search input event
+    monitoringLogColumnInputElement.addEventListener('change', async (event) => {
+        monitoringLogContainerElement.innerHTML = '';
+        monitoringLogLoadingElement.classList.remove('d-none');
 
-        if (logLevel !== 'all') {
-            requestUrl.searchParams.append('log_level', logLevel);
+        // Clear initial monitoring log load interval
+        if (initialMonitoringLogLoadInterval[operatingSiteMonitoringLogColumnId]) {
+            clearInterval(initialMonitoringLogLoadInterval[operatingSiteMonitoringLogColumnId]);
+        }
+
+        // Clear previous monitoring log load interval
+        if (monitoringLogLoadInterval[operatingSiteMonitoringLogColumnId]) {
+            clearInterval(monitoringLogLoadInterval[operatingSiteMonitoringLogColumnId]);
+        }
+
+        let logLevel = operatingSiteMonitoringLogColumnElement.querySelector('select').value;
+        let logMessage = event.target.value;
+        let requestUrl = new URL(`${window.location.origin}/api/ess-feature/protectionmap/operating-sites/${operatingSiteId}/`);
+        requestUrl.searchParams.append('start-time', DateTime.utc().toFormat('yyyy-MM-dd').toString());
+        requestUrl.searchParams.append('end-time', DateTime.utc().plus({ days: 1 }).toFormat('yyyy-MM-dd').toString());
+
+        if (logLevel !== essMonitoringLogLevel['all']) {
+            requestUrl.searchParams.append('level', logLevel);
         }
 
         if (logMessage) {
-            logMessage.split(',').forEach(element => {
-                requestUrl.searchParams.append('message', element);
-            });
+            requestUrl.searchParams.append('message', logMessage);
         }
 
-        fetch(requestUrl).then(response => {
-            return response.json();
-        }).then(responseData => {
-            let data = responseData['results'];
+        let monitoringLogData = await loadData(requestUrl);
+        monitoringLogData['results'].forEach(element => {
+            var alertElement = getMonitoringLogAlertElement(element);
 
-            data.forEach(element => {
-                let alertElement = getMonitoringLogAlertEl(element);
-
-                if (monitoringLogContainerElement.firstElementChild) {
-                    monitoringLogContainerElement.firstElementChild.before(alertElement);
-                } else {
-                    monitoringLogContainerElement.appendChild(alertElement);
-                }
-            });
-        }).catch(error => {
-            console.log(error);
+            monitoringLogContainerElement.appendChild(alertElement);
         });
-    }, 1000);
+
+        monitoringLogLoadingElement.classList.add('d-none');
+
+        monitoringLogLoadInterval[operatingSiteMonitoringLogColumnId] = setInterval(() => {
+            // After wait for save time of monitoring log data, lazy request
+            let time = DateTime.utc().minus({ seconds: 2 }).toFormat('yyyy-MM-dd HH:mm:ss').toString().replace(' ', 'T');
+            let requestUrl = new URL(`${window.location.origin}/api/ess-feature/protectionmap/operating-sites/${operatingSiteId}/`);
+            requestUrl.searchParams.append('time', time);
+
+            if (logLevel !== essMonitoringLogLevel['all']) {
+                requestUrl.searchParams.append('level', logLevel);
+            }
+
+            if (logMessage) {
+                requestUrl.searchParams.append('message', logMessage);
+            }
+
+            fetch(requestUrl).then(response => {
+                if (response.ok) {
+                    return response.json();
+                }
+
+                throw new Error(response.statusText);
+            }).then(responseData => {
+                let data = responseData['results'];
+                data.forEach(element => {
+                    let alertElement = getMonitoringLogAlertElement(element);
+
+                    if (monitoringLogContainerElement.firstElementChild) {
+                        monitoringLogContainerElement.firstElementChild.before(alertElement);
+                    } else {
+                        monitoringLogContainerElement.appendChild(alertElement);
+                    }
+                });
+            }).catch(error => {
+                console.log(error);
+            });
+        }, 1000);
+    });
 });
 
 // Old monitoring log view event
@@ -795,7 +867,7 @@ const monitoringLogViewModalEndDateTimeTempusDominusSubscription = monitoringLog
     });
 });
 
-// Validate operation data download modal form
+// Validate operating data download modal form
 const monitoringLogViewModalFormValidation = new JustValidate('#monitoringLogViewModalForm', {
     errorFieldCssClass: 'is-invalid',
     tootip: {
@@ -831,18 +903,27 @@ monitoringLogViewModalFormValidation.addField('#monitoringLogViewModalStartDateT
 
     let operatingSiteId = document.querySelector('#monitoringLogViewModalForm button').getAttribute('data-operating-site-id');
 
-    let requestUrl = new URL(window.location.origin + '/api/ess-feature/protectionmap/operating-sites/' + operatingSiteId + '/');
+    let requestUrl = new URL(`${window.location.origin}/api/ess-feature/protectionmap/operating-sites/${operatingSiteId}/`);
     requestUrl.searchParams.append('start-time', document.getElementById('monitoringLogViewModalStartDateTimeInput').value.replace(' ', 'T'));
     requestUrl.searchParams.append('end-time', document.getElementById('monitoringLogViewModalEndDateTimeInput').value.replace(' ', 'T'));
 
     fetch(requestUrl).then(response => {
-        return response.json();
-    }).then(data => {
-        let columns = Object.keys(data['results'][0]).map(element => {
-            return { field: element };
-        });
+        if (response.ok) {
+            return response.json();
+        }
 
-        let rows = data['results'].map(element => {
+        throw new Error(response.statusText);
+    }).then(responseData => {
+        let data = responseData['results'];
+        let columns;
+
+        if (Array.isArray(data) && data.length > 0) {
+            columns = Object.keys(responseData['results'][0]).map(element => {
+                return { field: element };
+            });
+        }
+
+        let rows = responseData['results'].map(element => {
             let row = {};
 
             for (const key of Object.keys(element)) {
@@ -873,21 +954,21 @@ monitoringLogViewModalFormValidation.addField('#monitoringLogViewModalStartDateT
 
         if (data['previous'] || data['next']) {
             monitoringLogViewModalGridPagination.classList.remove('d-none');
-            previousButtonEl = monitoringLogViewModalGridPaginationUlElement.firstElementChild;
-            nextButtonEl = monitoringLogViewModalGridPaginationUlElement.lastElementChild;
+            previousButtonElement = monitoringLogViewModalGridPaginationUlElement.firstElementChild;
+            nextButtonElement = monitoringLogViewModalGridPaginationUlElement.lastElementChild;
 
             if (data['previous']) {
-                previousButtonEl.classList.remove('disabled');
-                previousButtonEl.firstElementChild.setAttribute('data-link', data['previous']);
+                previousButtonElement.classList.remove('disabled');
+                previousButtonElement.firstElementChild.setAttribute('data-link', data['previous']);
             } else {
-                previousButtonEl.classList.add('disabled');
+                previousButtonElement.classList.add('disabled');
             }
 
             if (data['next']) {
-                nextButtonEl.classList.remove('disabled');
-                nextButtonEl.firstElementChild.setAttribute('data-link', data['next']);
+                nextButtonElement.classList.remove('disabled');
+                nextButtonElement.firstElementChild.setAttribute('data-link', data['next']);
             } else {
-                nextButtonEl.classList.add('disabled');
+                nextButtonElement.classList.add('disabled');
             }
         }
 
@@ -939,21 +1020,21 @@ monitoringLogViewModalFormValidation.addField('#monitoringLogViewModalStartDateT
 
                     if (data['previous'] || data['next']) {
                         monitoringLogViewModalGridPagination.classList.remove('d-none');
-                        previousButtonEl = monitoringLogViewModalGridPaginationUlElement.firstElementChild;
-                        nextButtonEl = monitoringLogViewModalGridPaginationUlElement.lastElementChild;
+                        previousButtonElement = monitoringLogViewModalGridPaginationUlElement.firstElementChild;
+                        nextButtonElement = monitoringLogViewModalGridPaginationUlElement.lastElementChild;
 
                         if (data['previous']) {
-                            previousButtonEl.classList.remove('disabled');
-                            previousButtonEl.firstElementChild.setAttribute('data-link', data['previous']);
+                            previousButtonElement.classList.remove('disabled');
+                            previousButtonElement.firstElementChild.setAttribute('data-link', data['previous']);
                         } else {
-                            previousButtonEl.classList.add('disabled');
+                            previousButtonElement.classList.add('disabled');
                         }
 
                         if (data['next']) {
-                            nextButtonEl.classList.remove('disabled');
-                            nextButtonEl.firstElementChild.setAttribute('data-link', data['next']);
+                            nextButtonElement.classList.remove('disabled');
+                            nextButtonElement.firstElementChild.setAttribute('data-link', data['next']);
                         } else {
-                            nextButtonEl.classList.add('disabled');
+                            nextButtonElement.classList.add('disabled');
                         }
                     }
                 }).catch(error => {
@@ -974,98 +1055,108 @@ monitoringLogViewModalFormValidation.addField('#monitoringLogViewModalStartDateT
 
 // Primary monitoring
 // - Monitoring log
-var primaryMonitoringLogEl = document.getElementById('primaryMonitoringLog');
-var primaryMonitoringLogLoading = primaryMonitoringLogEl.querySelector('div').firstElementChild;
-var primaryMonitoringLogPagination = primaryMonitoringLogEl.querySelector('nav');
-var primaryMonitoringLogPaginationUlEl = primaryMonitoringLogPagination.firstElementChild;
-var primaryMonitoringLogContainerEl = primaryMonitoringLogPagination.previousElementSibling;
+var primaryMonitoringLogElement = document.getElementById('primaryMonitoringLog');
+var primaryMonitoringLogLoadingElement = primaryMonitoringLogElement.querySelector('.spinner-border');
+var primaryMonitoringLogPagination = primaryMonitoringLogElement.querySelector('nav');
+var primaryMonitoringLogPaginationUlElement = primaryMonitoringLogPagination.firstElementChild;
+var primaryMonitoringLogContainerElement = primaryMonitoringLogPagination.previousElementSibling;
 
-function getPrimaryMonitoringLogAlertContainerEl(data) {
-    let primaryMonitoringLogAlertContainerEl = document.createElement('div');
-    let primaryMonitoringLogAlertTimeEl = document.createElement('p');
-    let primaryMonitoringLogAlertEl = document.createElement('div');
-
-    let alertMessage = '운영 사이트 ' + data['operating_site'] + ' Bank ' + data['bank_id'] + '의 Rack ' + data['rack_id'] + '에서 ' + data['error_code']['description'] + ' 발생';
+function getPrimaryMonitoringLogAlertContainerElement(data) {
+    let primaryMonitoringLogAlertContainerElement = document.createElement('div');
+    let alertMessage = `운영 사이트 ${data['operating_site']} Bank ${data['bank_id']}의 Rack ${data['rack_id']}에서 ${data['error_code']['description']} 발생`;
     let alertLevel;
 
-    switch (data['level']['id']) {
-        case 1:
+    switch (data['level']['id'].toString()) {
+        case essMonitoringLogLevel['warning']:
             alertLevel = 'warning';
+
             break;
-        case 2:
+        case essMonitoringLogLevel['danger']:
             alertLevel = 'danger';
+
+            break;
         default:
+            alertLevel = 'primary';
+
             break;
     }
 
-    primaryMonitoringLogAlertTimeEl.setAttribute('class', 'm-b-0');
-    primaryMonitoringLogAlertTimeEl.innerHTML = '<small>' + DateTime.fromISO(data['timestamp']).toFormat('yyyy-MM-dd HH:mm:ss') + '</small>';
-    primaryMonitoringLogAlertEl.setAttribute('class', 'alert alert-' + alertLevel + ' p-l-10 p-t-0 p-b-0');
-    primaryMonitoringLogAlertEl.innerHTML = '<p class="m-t-0 m-b-0"><small>' + alertMessage + '</small></p>';
+    let primaryMonitoringLogAlert = `
+        <p class="m-b-0"><small>${DateTime.fromISO(data['timestamp']).toFormat('yyyy-MM-dd HH:mm:ss')}</small></p>
+        <div class="alert alert-${alertLevel} p-l-10 p-t-0 p-b-0">
+            <p class="m-t-0 m-b-0"><small> ${alertMessage} </small></p>
+        </div>
+    `;
+    primaryMonitoringLogAlertContainerElement.innerHTML = primaryMonitoringLogAlert;
 
-    primaryMonitoringLogAlertContainerEl.appendChild(primaryMonitoringLogAlertTimeEl);
-    primaryMonitoringLogAlertContainerEl.appendChild(primaryMonitoringLogAlertEl);
-
-    return primaryMonitoringLogAlertContainerEl;
+    return primaryMonitoringLogAlertContainerElement;
 }
 
 function setUpPaginationButton(data, paginationEl, paginationUlEl) {
     if (data['previous'] || data['next']) {
         paginationEl.classList.remove('d-none');
-        previousButtonEl = paginationUlEl.firstElementChild;
-        nextButtonEl = paginationUlEl.lastElementChild;
+        previousButtonElement = paginationUlEl.firstElementChild;
+        nextButtonElement = paginationUlEl.lastElementChild;
 
         if (data['previous']) {
-            previousButtonEl.classList.remove('disabled');
-            previousButtonEl.firstElementChild.setAttribute('data-link', data['previous']);
+            previousButtonElement.classList.remove('disabled');
+            previousButtonElement.firstElementChild.setAttribute('data-link', data['previous']);
         } else {
-            previousButtonEl.classList.add('disabled');
+            previousButtonElement.classList.add('disabled');
         }
 
         if (data['next']) {
-            nextButtonEl.classList.remove('disabled');
-            nextButtonEl.firstElementChild.setAttribute('data-link', data['next']);
+            nextButtonElement.classList.remove('disabled');
+            nextButtonElement.firstElementChild.setAttribute('data-link', data['next']);
         } else {
-            nextButtonEl.classList.add('disabled');
+            nextButtonElement.classList.add('disabled');
         }
     }
 }
 
 var startTime = DateTime.now().toISODate();
 var endTime = DateTime.now().plus({ days: 1 }).toISODate();
-var requestUrl = new URL(window.location.origin + '/api/ess-feature/protectionmap');
+var requestUrl = new URL(`${window.location.origin}/api/ess-feature/protectionmap/`);
 requestUrl.searchParams.append('start-time', startTime);
 requestUrl.searchParams.append('end-time', endTime);
 
 fetch(requestUrl).then(response => {
-    return response.json();
+    if (response.ok) {
+        return response.json();
+    }
+
+    throw new Error(response.statusText);
 }).then(data => {
     data['results'].forEach(element => {
-        let primaryMonitoringLogAlertContainerEl = getPrimaryMonitoringLogAlertContainerEl(element);
+        let primaryMonitoringLogAlertContainerElement = getPrimaryMonitoringLogAlertContainerElement(element);
 
-        primaryMonitoringLogContainerEl.appendChild(primaryMonitoringLogAlertContainerEl);
+        primaryMonitoringLogContainerElement.appendChild(primaryMonitoringLogAlertContainerElement);
     });
 
-    primaryMonitoringLogLoading.classList.add('d-none');
-    primaryMonitoringLogContainerEl.classList.remove('d-none');
+    primaryMonitoringLogLoadingElement.classList.add('d-none');
+    primaryMonitoringLogContainerElement.classList.remove('d-none');
 
-    setUpPaginationButton(data, primaryMonitoringLogPagination, primaryMonitoringLogPaginationUlEl);
+    setUpPaginationButton(data, primaryMonitoringLogPagination, primaryMonitoringLogPaginationUlElement);
 
     function loadLatestProtectionMapFeature() {
         let time = DateTime.now().minus({ seconds: 2 }).toFormat('yyyy-MM-dd HH:mm:ss').replace(' ', 'T');
-        let requestUrl = new URL(window.location.origin + '/api/ess-feature/protectionmap/');
+        let requestUrl = new URL(`${window.location.origin}/api/ess-feature/protectionmap/`);
         requestUrl.searchParams.append('time', time);
 
         fetch(requestUrl).then(response => {
-            return response.json();
+            if (response.ok) {
+                return response.json();
+            }
+
+            throw new Error(response.statusText);
         }).then(data => {
             data['results'].forEach(element => {
-                let primaryMonitoringLogAlertContainerEl = getPrimaryMonitoringLogAlertContainerEl(element);
+                let primaryMonitoringLogAlertContainerElement = getPrimaryMonitoringLogAlertContainerElement(element);
 
-                if (primaryMonitoringLogContainerEl.firstElementChild) {
-                    primaryMonitoringLogContainerEl.firstElementChild.before(primaryMonitoringLogAlertContainerEl);
+                if (primaryMonitoringLogContainerElement.firstElementChild) {
+                    primaryMonitoringLogContainerElement.firstElementChild.before(primaryMonitoringLogAlertContainerElement);
                 } else {
-                    primaryMonitoringLogContainerEl.appendChild(primaryMonitoringLogAlertContainerEl);
+                    primaryMonitoringLogContainerElement.appendChild(primaryMonitoringLogAlertContainerElement);
                 }
             });
         }).catch(error => {
@@ -1077,12 +1168,12 @@ fetch(requestUrl).then(response => {
     let primaryMonitoringLogInterval = setInterval(loadLatestProtectionMapFeature, 1000);
 
     // Pagination event
-    primaryMonitoringLogPaginationUlEl.querySelectorAll('a').forEach(element => {
+    primaryMonitoringLogPaginationUlElement.querySelectorAll('a').forEach(element => {
         element.addEventListener('click', event => {
-            primaryMonitoringLogContainerEl.innerHTML = '';
-            primaryMonitoringLogContainerEl.classList.add('d-none');
+            primaryMonitoringLogContainerElement.innerHTML = '';
+            primaryMonitoringLogContainerElement.classList.add('d-none');
             primaryMonitoringLogPagination.classList.add('d-none');
-            primaryMonitoringLogLoading.classList.remove('d-none');
+            primaryMonitoringLogLoadingElement.classList.remove('d-none');
 
             let requestUrl = new URL(element.getAttribute('data-link'));
 
@@ -1099,19 +1190,19 @@ fetch(requestUrl).then(response => {
                 return response.json();
             }).then(data => {
                 data['results'].forEach(element => {
-                    let primaryMonitoringLogAlertContainerEl = getPrimaryMonitoringLogAlertContainerEl(element);
+                    let primaryMonitoringLogAlertContainerElement = getPrimaryMonitoringLogAlertContainerElement(element);
 
-                    primaryMonitoringLogContainerEl.appendChild(primaryMonitoringLogAlertContainerEl);
+                    primaryMonitoringLogContainerElement.appendChild(primaryMonitoringLogAlertContainerElement);
                 });
 
-                primaryMonitoringLogLoading.classList.add('d-none');
-                primaryMonitoringLogContainerEl.classList.remove('d-none');
+                primaryMonitoringLogLoadingElement.classList.add('d-none');
+                primaryMonitoringLogContainerElement.classList.remove('d-none');
 
-                setUpPaginationButton(data, primaryMonitoringLogPagination, primaryMonitoringLogPaginationUlEl);
+                setUpPaginationButton(data, primaryMonitoringLogPagination, primaryMonitoringLogPaginationUlElement);
             }).catch(error => {
                 console.log(error);
 
-                primaryMonitoringLogLoading.classList.add('d-none');
+                primaryMonitoringLogLoadingElement.classList.add('d-none');
                 primaryMonitoringLog.classList.remove('d-none');
             });
         });
@@ -1125,11 +1216,13 @@ function getcreateMonitoringLogLevelTypeCountChartSeriesData(data) {
     let seriesData = data.map(element => {
         let logLevelDescription;
 
-        switch (element['level']) {
-            case 1:
+        switch (element['level'].toString()) {
+            case essMonitoringLogLevel['warning']:
                 logLevelDescription = '경고(Warning)';
+
                 break;
-            case 2:
+            case essMonitoringLogLevel['danger']:
+
                 logLevelDescription = '보호(Fault)';
                 break;
             default:
@@ -1155,6 +1248,9 @@ function createMonitoringLogLevelTypeCountChart(chartSeries, chartSeriesData, ch
 }
 
 // Create initial monitoring log level type count chart
+let primaryMonitoringLogLevelTypeCountContainer = document.getElementById('primaryMonitoringLogLevelTypeCount');
+let primaryMonitoringLogLevelTypeCountLoadingElement = primaryMonitoringLogLevelTypeCountContainer.querySelector('.spinner-border');
+let primaryMonitoringLogLevelTypeCountChartElement = document.getElementById('primaryMonitoringLogLevelTypeCountChart');
 var primaryMonitoringLogLevelTypeCountChartRoot = am5.Root.new('primaryMonitoringLogLevelTypeCountChart');
 primaryMonitoringLogLevelTypeCountChartRoot.setThemes([am5themes_Animated.new(primaryMonitoringLogLevelTypeCountChartRoot)]);
 
@@ -1190,39 +1286,54 @@ var primaryMonitoringLogLevelTypeCountChartLegend = primaryMonitoringLogLevelTyp
 
 var startTime = DateTime.now().toISODate();
 var endTime = DateTime.now().plus({ days: 1 }).toISODate();
-var requestUrl = new URL(window.location.origin + '/api/ess-feature/protectionmap/operating-sites/1/stats/log-level-count');
+var requestUrl = new URL(`${window.location.origin}/api/ess-feature/protectionmap/operating-sites/1/stats/log-level-count/`);
 requestUrl.searchParams.append('start-time', startTime);
 requestUrl.searchParams.append('end-time', endTime);
 requestUrl.searchParams.append('time-bucket-width', '1days');
 
 fetch(requestUrl).then(response => {
-    return response.json();
+    if (response.ok) {
+        return response.json();
+    }
+
+    throw new Error(response.statusText);
 }).then(data => {
     let seriesData = getcreateMonitoringLogLevelTypeCountChartSeriesData(data);
 
     createMonitoringLogLevelTypeCountChart(primaryMonitoringLogLevelTypeCountChartSeries, seriesData, primaryMonitoringLogLevelTypeCountChartLegend);
+    primaryMonitoringLogLevelTypeCountLoadingElement.classList.add('d-none');
+    primaryMonitoringLogLevelTypeCountChartElement.classList.remove('d-none');
 }).catch(error => {
     console.log(error);
 });
 
 // Monitoring log level type count select event
-var primaryMonitoringLogLevelTypeCountEl = document.getElementById('primaryMonitoringLogLevelTypeCount');
-var primaryMonitoringLogLevelTypeCountSelectEl = primaryMonitoringLogLevelTypeCountEl.querySelector('select');
-primaryMonitoringLogLevelTypeCountSelectEl.addEventListener('change', event => {
-    let operatingSiteId = primaryMonitoringLogLevelTypeCountSelectEl.value;
+var primaryMonitoringLogLevelTypeCountElement = document.getElementById('primaryMonitoringLogLevelTypeCount');
+var primaryMonitoringLogLevelTypeCountSelectElement = primaryMonitoringLogLevelTypeCountElement.querySelector('select');
+primaryMonitoringLogLevelTypeCountSelectElement.addEventListener('change', event => {
+    primaryMonitoringLogLevelTypeCountChartElement.classList.add('d-none');
+    primaryMonitoringLogLevelTypeCountLoadingElement.classList.remove('d-none');
+
+    let operatingSiteId = event.target.value;
     let startTime = DateTime.now().toISODate();
     let endTime = DateTime.now().plus({ days: 1 }).toISODate();
-    let requestUrl = new URL(window.location.origin + '/api/ess-feature/protectionmap/operating-sites/' + operatingSiteId + '/stats/log-level-count');
+    let requestUrl = new URL(`${window.location.origin}/api/ess-feature/protectionmap/operating-sites/${operatingSiteId}/stats/log-level-count/`);
     requestUrl.searchParams.append('start-time', startTime);
     requestUrl.searchParams.append('end-time', endTime);
     requestUrl.searchParams.append('time-bucket-width', '1days');
 
     fetch(requestUrl).then(response => {
-        return response.json();
+        if (response.ok) {
+            return response.json();
+        }
+
+        throw new Error(response.statusText);
     }).then(data => {
         let seriesData = getcreateMonitoringLogLevelTypeCountChartSeriesData(data);
 
         createMonitoringLogLevelTypeCountChart(primaryMonitoringLogLevelTypeCountChartSeries, seriesData, primaryMonitoringLogLevelTypeCountChartLegend);
+        primaryMonitoringLogLevelTypeCountLoadingElement.classList.add('d-none');
+        primaryMonitoringLogLevelTypeCountChartElement.classList.remove('d-none')
     }).catch(error => {
         console.log(error);
     });
