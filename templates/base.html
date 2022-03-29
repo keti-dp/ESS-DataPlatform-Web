@@ -224,10 +224,10 @@
                     <li class="dropdown pc-h-item">
                         <a class="pc-head-link dropdown-toggle arrow-none mr-0" data-toggle="dropdown" href="#"
                             role="button" aria-haspopup="false" aria-expanded="false">
-                            <img src="{% static 'images/user/avatar-2.jpg' %}" alt="user-image" class="user-avtar">
+                            <img src="{% static 'images/user/profile.png' %}" alt="user-image" class="user-avtar">
                             <span>
-                                <span class="user-name">Joseph William</span>
-                                <span class="user-desc">Administrator</span>
+                                <span class="user-name"></span>
+                                <!-- <span class="user-desc">Administrator</span> -->
                             </span>
                         </a>
                         <div class="dropdown-menu dropdown-menu-right pc-h-dropdown">
@@ -266,6 +266,9 @@
     <!-- <script src="{% static 'js/plugins/bootstrap.min.js' %}"></script> -->
     <script src="{% static 'js/plugins/feather.min.js' %}"></script>
     <script src="{% static 'js/pcoded.min.js' %}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.1/dist/js.cookie.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jwt-decode@3.1.2/build/jwt-decode.min.js"></script>
+    <script src="{% static 'js/custom/base.js' %}"></script>
     {% block js %} {% endblock %}
 </body>
 
