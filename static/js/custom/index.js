@@ -1,3 +1,7 @@
+// Main scrollspy
+let scrollSpy = new bootstrap.ScrollSpy(document.body, {
+    target: '#mainContentNavbar'
+});
 
 function getLineChart(elementId, data, option = {}) {
     let root = am5.Root.new(elementId);
