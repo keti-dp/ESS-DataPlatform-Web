@@ -30,7 +30,10 @@ class IndexView(APIView):
         return self.custom_exception_handler
 
     def get(self, request):
-        return Response({"view": "index"})
+        with open("ess_protection_map.json", encoding="utf-8") as f:
+            ess_protection_map = json.load(f)
+
+        return Response({"view": "index", "ess_protection_map": ess_protection_map})
 
 
 class DataMonitoringView(APIView):
