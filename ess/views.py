@@ -46,6 +46,8 @@ from .ess_collections import (
     ESS_ETC_SERIALIZER,
 )
 
+TIME_BUCKET_TIMEZONE = "Asia/Seoul"
+
 
 class Echo:
     """An object that implements just the write method of the file-like interface."""
@@ -356,22 +358,25 @@ class AvgESSBankSoCListView(ListAPIView):
             database = "ess" + str(operating_site_id)
             bank_id = kwargs["bank_id"]
             time_bucket_width = request.query_params.get("time-bucket-width")
-            start_date = request.query_params.get("date")
-            end_date = datetime.strptime(start_date, "%Y-%m-%d") + timedelta(days=1)
+            start_time_query_param = request.query_params.get("start-time")
+            start_time = datetime.strptime(start_time_query_param, "%Y-%m-%dT%H:%M:%S")
+            end_time_query_param = request.query_params.get("end-time")
+            end_time = datetime.strptime(end_time_query_param, "%Y-%m-%dT%H:%M:%S")
 
             with connections[database].cursor() as cursor:
                 query = """
-                    SELECT time_bucket(%(time_bucket_width)s, "TIMESTAMP") "time", AVG("BANK_SOC") avg_bank_soc 
+                    SELECT time_bucket(%(time_bucket_width)s, "TIMESTAMP" AT TIME ZONE %(time_bucket_timezone)s) "time", AVG("BANK_SOC") avg_bank_soc 
                     FROM bank 
-                    WHERE "BANK_ID" = %(bank_id)s AND "TIMESTAMP" BETWEEN %(start_date)s AND %(end_date)s 
+                    WHERE "BANK_ID" = %(bank_id)s AND "TIMESTAMP" BETWEEN %(start_time)s AND %(end_time)s 
                     GROUP BY "time" ORDER BY "time" 
                 """
 
                 params = {
-                    "bank_id": bank_id,
+                    "time_bucket_timezone": TIME_BUCKET_TIMEZONE,
                     "time_bucket_width": time_bucket_width,
-                    "start_date": start_date,
-                    "end_date": end_date,
+                    "bank_id": bank_id,
+                    "start_time": start_time,
+                    "end_time": end_time,
                 }
 
                 cursor.execute(query, params)
@@ -384,17 +389,30 @@ class AvgESSBankSoCListView(ListAPIView):
                 return Response(serializer.data)
 
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        except ValueError:
-            return Response(
-                {"code": "400", "exception type": "Value Error", "message": "올바른 요청 파라미터를 입력하세요.(date)"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
         except DataError:
             return Response(
                 {
                     "code": "400",
                     "exception type": "Data Error",
                     "message": "올바른 요청 파라미터를 입력하세요.(time-bucket-width)",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except ValueError:
+            return Response(
+                {
+                    "code": "400",
+                    "exception type": "Value Error",
+                    "message": "올바른 요청 파라미터를 입력하세요.(time 형식은 'YYYY-MM-DDThh:mm:ss' 입니다.)",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except TypeError:
+            return Response(
+                {
+                    "code": "400",
+                    "exception type": "Type Error",
+                    "message": "필수 요청 파라미터를 입력하세요.(time-bucket-width, start-time, end-time)",
                 },
                 status=status.HTTP_400_BAD_REQUEST,
             )
@@ -411,23 +429,26 @@ class AvgESSRackSoCListView(ListAPIView):
             bank_id = kwargs["bank_id"]
             rack_id = kwargs["rack_id"]
             time_bucket_width = request.query_params.get("time-bucket-width")
-            start_date = request.query_params.get("date")
-            end_date = datetime.strptime(start_date, "%Y-%m-%d") + timedelta(days=1)
+            start_time_query_param = request.query_params.get("start-time")
+            start_time = datetime.strptime(start_time_query_param, "%Y-%m-%dT%H:%M:%S")
+            end_time_query_param = request.query_params.get("end-time")
+            end_time = datetime.strptime(end_time_query_param, "%Y-%m-%dT%H:%M:%S")
 
             with connections[database].cursor() as cursor:
                 query = """
-                    SELECT time_bucket(%(time_bucket_width)s, "TIMESTAMP") "time", AVG("RACK_SOC") avg_rack_soc 
+                    SELECT time_bucket(%(time_bucket_width)s, "TIMESTAMP" AT TIME ZONE %(time_bucket_timezone)s) "time", AVG("RACK_SOC") avg_rack_soc 
                     FROM rack
-                    WHERE ("BANK_ID" = %(bank_id)s AND "RACK_ID" = %(rack_id)s) AND "TIMESTAMP" BETWEEN %(start_date)s AND %(end_date)s 
+                    WHERE ("BANK_ID" = %(bank_id)s AND "RACK_ID" = %(rack_id)s) AND "TIMESTAMP" BETWEEN %(start_time)s AND %(end_time)s 
                     GROUP BY "time" ORDER BY "time" 
                 """
 
                 params = {
+                    "time_bucket_timezone": TIME_BUCKET_TIMEZONE,
+                    "time_bucket_width": time_bucket_width,
                     "bank_id": bank_id,
                     "rack_id": rack_id,
-                    "time_bucket_width": time_bucket_width,
-                    "start_date": start_date,
-                    "end_date": end_date,
+                    "start_time": start_time,
+                    "end_time": end_time,
                 }
 
                 cursor.execute(query, params)
@@ -440,17 +461,30 @@ class AvgESSRackSoCListView(ListAPIView):
                 return Response(serializer.data)
 
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        except ValueError:
-            return Response(
-                {"code": "400", "exception type": "Value Error", "message": "올바른 요청 파라미터를 입력하세요.(date)"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
         except DataError:
             return Response(
                 {
                     "code": "400",
                     "exception type": "Data Error",
                     "message": "올바른 요청 파라미터를 입력하세요.(time-bucket-width)",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except ValueError:
+            return Response(
+                {
+                    "code": "400",
+                    "exception type": "Value Error",
+                    "message": "올바른 요청 파라미터를 입력하세요.(time 형식은 'YYYY-MM-DDThh:mm:ss' 입니다.)",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except TypeError:
+            return Response(
+                {
+                    "code": "400",
+                    "exception type": "Type Error",
+                    "message": "필수 요청 파라미터를 입력하세요.(time-bucket-width, start-time, end-time)",
                 },
                 status=status.HTTP_400_BAD_REQUEST,
             )
@@ -466,22 +500,25 @@ class AvgESSBankSoHListView(ListAPIView):
             database = "ess" + str(operating_site_id)
             bank_id = kwargs["bank_id"]
             time_bucket_width = request.query_params.get("time-bucket-width")
-            start_date = request.query_params.get("date")
-            end_date = datetime.strptime(start_date, "%Y-%m-%d") + timedelta(days=1)
+            start_time_query_param = request.query_params.get("start-time")
+            start_time = datetime.strptime(start_time_query_param, "%Y-%m-%dT%H:%M:%S")
+            end_time_query_param = request.query_params.get("end-time")
+            end_time = datetime.strptime(end_time_query_param, "%Y-%m-%dT%H:%M:%S")
 
             with connections[database].cursor() as cursor:
                 query = """
-                    SELECT time_bucket(%(time_bucket_width)s, "TIMESTAMP") "time", AVG("BANK_SOH") avg_bank_soh 
+                    SELECT time_bucket(%(time_bucket_width)s, "TIMESTAMP" AT TIME ZONE %(time_bucket_timezone)s) "time", AVG("BANK_SOH") avg_bank_soh 
                     FROM bank 
-                    WHERE "BANK_ID" = %(bank_id)s AND "TIMESTAMP" BETWEEN %(start_date)s AND %(end_date)s 
+                    WHERE "BANK_ID" = %(bank_id)s AND "TIMESTAMP" BETWEEN %(start_time)s AND %(end_time)s 
                     GROUP BY "time" ORDER BY "time"
                 """
 
                 params = {
-                    "bank_id": bank_id,
+                    "time_bucket_timezone": TIME_BUCKET_TIMEZONE,
                     "time_bucket_width": time_bucket_width,
-                    "start_date": start_date,
-                    "end_date": end_date,
+                    "bank_id": bank_id,
+                    "start_time": start_time,
+                    "end_time": end_time,
                 }
 
                 cursor.execute(query, params)
@@ -494,17 +531,30 @@ class AvgESSBankSoHListView(ListAPIView):
                 return Response(serializer.data)
 
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        except ValueError:
-            return Response(
-                {"code": "400", "exception type": "Value Error", "message": "올바른 요청 파라미터를 입력하세요.(date)"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
         except DataError:
             return Response(
                 {
                     "code": "400",
                     "exception type": "Data Error",
                     "message": "올바른 요청 파라미터를 입력하세요.(time-bucket-width)",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except ValueError:
+            return Response(
+                {
+                    "code": "400",
+                    "exception type": "Value Error",
+                    "message": "올바른 요청 파라미터를 입력하세요.(time 형식은 'YYYY-MM-DDThh:mm:ss' 입니다.)",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except TypeError:
+            return Response(
+                {
+                    "code": "400",
+                    "exception type": "Type Error",
+                    "message": "필수 요청 파라미터를 입력하세요.(time-bucket-width, start-time, end-time)",
                 },
                 status=status.HTTP_400_BAD_REQUEST,
             )
@@ -521,23 +571,26 @@ class AvgESSRackSoHListView(ListAPIView):
             bank_id = kwargs["bank_id"]
             rack_id = kwargs["rack_id"]
             time_bucket_width = request.query_params.get("time-bucket-width")
-            start_date = request.query_params.get("date")
-            end_date = datetime.strptime(start_date, "%Y-%m-%d") + timedelta(days=1)
+            start_time_query_param = request.query_params.get("start-time")
+            start_time = datetime.strptime(start_time_query_param, "%Y-%m-%dT%H:%M:%S")
+            end_time_query_param = request.query_params.get("end-time")
+            end_time = datetime.strptime(end_time_query_param, "%Y-%m-%dT%H:%M:%S")
 
             with connections[database].cursor() as cursor:
                 query = """
-                    SELECT time_bucket(%(time_bucket_width)s, "TIMESTAMP") "time", AVG("RACK_SOH") avg_rack_soh 
+                    SELECT time_bucket(%(time_bucket_width)s, "TIMESTAMP" AT TIME ZONE %(time_bucket_timezone)s) "time", AVG("RACK_SOH") avg_rack_soh 
                     FROM rack
-                    WHERE ("BANK_ID" = %(bank_id)s AND "RACK_ID" = %(rack_id)s) AND "TIMESTAMP" BETWEEN %(start_date)s AND %(end_date)s 
+                    WHERE ("BANK_ID" = %(bank_id)s AND "RACK_ID" = %(rack_id)s) AND "TIMESTAMP" BETWEEN %(start_time)s AND %(end_time)s 
                     GROUP BY "time" ORDER BY "time" 
                 """
 
                 params = {
+                    "time_bucket_timezone": TIME_BUCKET_TIMEZONE,
+                    "time_bucket_width": time_bucket_width,
                     "bank_id": bank_id,
                     "rack_id": rack_id,
-                    "time_bucket_width": time_bucket_width,
-                    "start_date": start_date,
-                    "end_date": end_date,
+                    "start_time": start_time,
+                    "end_time": end_time,
                 }
 
                 cursor.execute(query, params)
@@ -550,17 +603,30 @@ class AvgESSRackSoHListView(ListAPIView):
                 return Response(serializer.data)
 
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        except ValueError:
-            return Response(
-                {"code": "400", "exception type": "Value Error", "message": "올바른 요청 파라미터를 입력하세요.(date)"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
         except DataError:
             return Response(
                 {
                     "code": "400",
                     "exception type": "Data Error",
                     "message": "올바른 요청 파라미터를 입력하세요.(time-bucket-width)",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except ValueError:
+            return Response(
+                {
+                    "code": "400",
+                    "exception type": "Value Error",
+                    "message": "올바른 요청 파라미터를 입력하세요.(time 형식은 'YYYY-MM-DDThh:mm:ss' 입니다.)",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except TypeError:
+            return Response(
+                {
+                    "code": "400",
+                    "exception type": "Type Error",
+                    "message": "필수 요청 파라미터를 입력하세요.(time-bucket-width, start-time, end-time)",
                 },
                 status=status.HTTP_400_BAD_REQUEST,
             )
@@ -576,22 +642,25 @@ class AvgESSBankPowerListView(ListAPIView):
             database = "ess" + str(operating_site_id)
             bank_id = kwargs["bank_id"]
             time_bucket_width = request.query_params.get("time-bucket-width")
-            start_date = request.query_params.get("date")
-            end_date = datetime.strptime(start_date, "%Y-%m-%d") + timedelta(days=1)
+            start_time_query_param = request.query_params.get("start-time")
+            start_time = datetime.strptime(start_time_query_param, "%Y-%m-%dT%H:%M:%S")
+            end_time_query_param = request.query_params.get("end-time")
+            end_time = datetime.strptime(end_time_query_param, "%Y-%m-%dT%H:%M:%S")
 
             with connections[database].cursor() as cursor:
                 query = """
-                    SELECT time_bucket(%(time_bucket_width)s, "TIMESTAMP") "time", AVG("BANK_POWER") avg_bank_power 
+                    SELECT time_bucket(%(time_bucket_width)s, "TIMESTAMP" AT TIME ZONE %(time_bucket_timezone)s) "time", AVG("BANK_POWER") avg_bank_power 
                     FROM bank
-                    WHERE "BANK_ID" = %(bank_id)s AND "TIMESTAMP" BETWEEN %(start_date)s AND %(end_date)s 
+                    WHERE "BANK_ID" = %(bank_id)s AND "TIMESTAMP" BETWEEN %(start_time)s AND %(end_time)s 
                     GROUP BY "time" ORDER BY "time"
                 """
 
                 params = {
-                    "bank_id": bank_id,
+                    "time_bucket_timezone": TIME_BUCKET_TIMEZONE,
                     "time_bucket_width": time_bucket_width,
-                    "start_date": start_date,
-                    "end_date": end_date,
+                    "bank_id": bank_id,
+                    "start_time": start_time,
+                    "end_time": end_time,
                 }
 
                 cursor.execute(query, params)
@@ -604,17 +673,30 @@ class AvgESSBankPowerListView(ListAPIView):
                 return Response(serializer.data)
 
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        except ValueError:
-            return Response(
-                {"code": "400", "exception type": "Value Error", "message": "올바른 요청 파라미터를 입력하세요.(date)"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
         except DataError:
             return Response(
                 {
                     "code": "400",
                     "exception type": "Data Error",
                     "message": "올바른 요청 파라미터를 입력하세요.(time-bucket-width)",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except ValueError:
+            return Response(
+                {
+                    "code": "400",
+                    "exception type": "Value Error",
+                    "message": "올바른 요청 파라미터를 입력하세요.(time 형식은 'YYYY-MM-DDThh:mm:ss' 입니다.)",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except TypeError:
+            return Response(
+                {
+                    "code": "400",
+                    "exception type": "Type Error",
+                    "message": "필수 요청 파라미터를 입력하세요.(time-bucket-width, start-time, end-time)",
                 },
                 status=status.HTTP_400_BAD_REQUEST,
             )
