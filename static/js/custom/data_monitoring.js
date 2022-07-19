@@ -22,7 +22,7 @@ function getOperatingSiteBankTitleRow(bankId) {
     rowElement.setAttribute('class', 'row');
 
     rowElement.innerHTML = `
-        <div class="col-auto p-r-0"><i class="bi bi-circle-fill text-secondary"></i></div>
+        <div class="col-auto p-r-0"><i class="bi bi-circle-fill text-success"></i></div>
         <div class="col">
             <h6>Bank ${bankId}</h6>
         </div>
@@ -184,20 +184,20 @@ function drawMonitoringListAndGetoperatingSiteInfoWarningFlag(operatingSiteId, o
                 if (splitedoperatingSiteInfoTypeObjectColumnValue.length == 1 && splitedoperatingSiteInfoTypeObjectColumnValue[0] != '-') {
                     if (data[lowerCaseColumn] >= Number(splitedoperatingSiteInfoTypeObjectColumnValue[0])) {
                         isWarningOfoperatingSiteInfo = true;
-                        operatingSiteInfoColumnIcon.classList.remove('text-primary', 'text-secondary');
+                        operatingSiteInfoColumnIcon.classList.remove('text-primary', 'text-success');
                         operatingSiteInfoColumnIcon.classList.add('text-danger');
                     } else {
                         operatingSiteInfoColumnIcon.classList.remove('text-primary', 'text-danger');
-                        operatingSiteInfoColumnIcon.classList.add('text-secondary');
+                        operatingSiteInfoColumnIcon.classList.add('text-success');
                     }
                 } else if (splitedoperatingSiteInfoTypeObjectColumnValue.length == 2) {
                     if ((data[lowerCaseColumn] <= Number(splitedoperatingSiteInfoTypeObjectColumnValue[0])) || (data[lowerCaseColumn] >= Number(splitedoperatingSiteInfoTypeObjectColumnValue[1]))) {
                         isWarningOfoperatingSiteInfo = true;
-                        operatingSiteInfoColumnIcon.classList.remove('text-primary', 'text-secondary');
+                        operatingSiteInfoColumnIcon.classList.remove('text-primary', 'text-success');
                         operatingSiteInfoColumnIcon.classList.add('text-danger');
                     } else {
                         operatingSiteInfoColumnIcon.classList.remove('text-primary', 'text-danger');
-                        operatingSiteInfoColumnIcon.classList.add('text-secondary');
+                        operatingSiteInfoColumnIcon.classList.add('text-success');
                     }
                 }
 
@@ -205,11 +205,11 @@ function drawMonitoringListAndGetoperatingSiteInfoWarningFlag(operatingSiteId, o
             case 'boolean':
                 if (data[lowerCaseColumn] == 1) {
                     isWarningOfoperatingSiteInfo = true;
-                    operatingSiteInfoColumnIcon.classList.remove('text-primary', 'text-secondary');
+                    operatingSiteInfoColumnIcon.classList.remove('text-primary', 'text-success');
                     operatingSiteInfoColumnIcon.classList.add('text-danger');
                 } else {
                     operatingSiteInfoColumnIcon.classList.remove('text-primary', 'text-danger');
-                    operatingSiteInfoColumnIcon.classList.add('text-secondary');
+                    operatingSiteInfoColumnIcon.classList.add('text-success');
                 }
 
                 break;
@@ -220,11 +220,11 @@ function drawMonitoringListAndGetoperatingSiteInfoWarningFlag(operatingSiteId, o
     }
 
     if (isWarningOfoperatingSiteInfo) {
-        operatingSiteInfoMonitoringListIcon.classList.remove('text-primary', 'text-secondary');
+        operatingSiteInfoMonitoringListIcon.classList.remove('text-primary', 'text-success');
         operatingSiteInfoMonitoringListIcon.classList.add('text-danger');
     } else {
         operatingSiteInfoMonitoringListIcon.classList.remove('text-primary', 'text-danger');
-        operatingSiteInfoMonitoringListIcon.classList.add('text-secondary');
+        operatingSiteInfoMonitoringListIcon.classList.add('text-success');
     }
 
     return isWarningOfoperatingSiteInfo;
@@ -411,11 +411,11 @@ operatingSiteMonitoringListColumnIds.forEach((operatingSiteMonitoringListColumnI
             let operatingSiteMonitoringListBankIcon = document.getElementById(`${operatingSite}-bank${number}-info-monitoring-list`).previousElementSibling.querySelector('i');
 
             if (isWarningOfoperatingSite) {
-                operatingSiteMonitoringListBankIcon.classList.remove('text-primary', 'text-secondary');
+                operatingSiteMonitoringListBankIcon.classList.remove('text-primary', 'text-success');
                 operatingSiteMonitoringListBankIcon.classList.add('text-danger');
             } else {
                 operatingSiteMonitoringListBankIcon.classList.remove('text-primary', 'text-danger');
-                operatingSiteMonitoringListBankIcon.classList.add('text-secondary');
+                operatingSiteMonitoringListBankIcon.classList.add('text-success');
             }
         }, 1000);
     });
