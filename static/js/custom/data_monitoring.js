@@ -73,7 +73,7 @@ function getOperatingSiteInfoMonitoringList(operatingSiteId, operatingSiteInfoTy
         operatingSiteInfo = [operatingSiteId, 'bank' + operatingSiteInfoIds[0], 'info'].join('-');
         operatingSiteInfoMonitoringList.innerHTML = `
             <div class="col-auto offset-1 p-r-0">
-                <i class="bi bi-circle-fill text-primary"></i>
+                <i class="bi bi-circle-fill text-secondary"></i>
             </div>
             <div class="col">
                 <p>Bank ${operatingSiteInfoIds[0]} Info</p>
@@ -84,7 +84,7 @@ function getOperatingSiteInfoMonitoringList(operatingSiteId, operatingSiteInfoTy
         operatingSiteInfo = [operatingSiteId, 'bank' + operatingSiteInfoIds[0], 'rack' + operatingSiteInfoIds[1], 'info'].join('-');
         operatingSiteInfoMonitoringList.innerHTML = `
             <div class="col-auto offset-1 p-r-0">
-                <i class="bi bi-circle-fill text-primary"></i>
+                <i class="bi bi-circle-fill text-secondary"></i>
             </div>
             <div class="col">
                 <p>Rack ${operatingSiteInfoIds[1]} Info</p>
@@ -117,7 +117,7 @@ function getOperatingSiteInfoMonitoringList(operatingSiteId, operatingSiteInfoTy
                 column.innerHTML = `
                     <div class="row">
                         <div class="col-auto p-r-0">
-                            <i class="bi bi-circle-fill text-primary"></i>
+                            <i class="bi bi-circle-fill text-secondary"></i>
                         </div>
                         <div class="col text-truncate" data-bs-toggle="modal" data-bs-target="#monitoringListItemModal" data-operating-site-info-type="${operatingSiteInfoType}" data-operating-site-id="${operatingSiteIdNum}" data-operating-site-bank-id="${operatingSiteInfoIds[0]}" data-operating-site-info-column="${operatingSiteInfoColumn.toLowerCase()}">
                             <p><small>${operatingSiteInfoColumn}</small></p>
@@ -128,7 +128,7 @@ function getOperatingSiteInfoMonitoringList(operatingSiteId, operatingSiteInfoTy
                 column.innerHTML = `
                     <div class="row">
                         <div class="col-auto p-r-0">
-                            <i class="bi bi-circle-fill text-primary"></i>
+                            <i class="bi bi-circle-fill text-secondary"></i>
                         </div>
                         <div class="col text-truncate" data-bs-toggle="modal" data-bs-target="#monitoringListItemModal" data-operating-site-info-type="${operatingSiteInfoType}" data-operating-site-id="${operatingSiteIdNum}" data-operating-site-bank-id="${operatingSiteInfoIds[0]}" data-operating-site-info-column="${operatingSiteInfoColumn.toLowerCase()}" data-operating-site-rack-id="${operatingSiteInfoIds[1]}">
                             <p><small>${operatingSiteInfoColumn}</small></p>
@@ -184,19 +184,19 @@ function drawMonitoringListAndGetoperatingSiteInfoWarningFlag(operatingSiteId, o
                 if (splitedoperatingSiteInfoTypeObjectColumnValue.length == 1 && splitedoperatingSiteInfoTypeObjectColumnValue[0] != '-') {
                     if (data[lowerCaseColumn] >= Number(splitedoperatingSiteInfoTypeObjectColumnValue[0])) {
                         isWarningOfoperatingSiteInfo = true;
-                        operatingSiteInfoColumnIcon.classList.remove('text-primary', 'text-success');
+                        operatingSiteInfoColumnIcon.classList.remove('text-secondary', 'text-success');
                         operatingSiteInfoColumnIcon.classList.add('text-danger');
                     } else {
-                        operatingSiteInfoColumnIcon.classList.remove('text-primary', 'text-danger');
+                        operatingSiteInfoColumnIcon.classList.remove('text-secondary', 'text-danger');
                         operatingSiteInfoColumnIcon.classList.add('text-success');
                     }
                 } else if (splitedoperatingSiteInfoTypeObjectColumnValue.length == 2) {
                     if ((data[lowerCaseColumn] <= Number(splitedoperatingSiteInfoTypeObjectColumnValue[0])) || (data[lowerCaseColumn] >= Number(splitedoperatingSiteInfoTypeObjectColumnValue[1]))) {
                         isWarningOfoperatingSiteInfo = true;
-                        operatingSiteInfoColumnIcon.classList.remove('text-primary', 'text-success');
+                        operatingSiteInfoColumnIcon.classList.remove('text-secondary', 'text-success');
                         operatingSiteInfoColumnIcon.classList.add('text-danger');
                     } else {
-                        operatingSiteInfoColumnIcon.classList.remove('text-primary', 'text-danger');
+                        operatingSiteInfoColumnIcon.classList.remove('text-secondary', 'text-danger');
                         operatingSiteInfoColumnIcon.classList.add('text-success');
                     }
                 }
@@ -205,10 +205,10 @@ function drawMonitoringListAndGetoperatingSiteInfoWarningFlag(operatingSiteId, o
             case 'boolean':
                 if (data[lowerCaseColumn] == 1) {
                     isWarningOfoperatingSiteInfo = true;
-                    operatingSiteInfoColumnIcon.classList.remove('text-primary', 'text-success');
+                    operatingSiteInfoColumnIcon.classList.remove('text-secondary', 'text-success');
                     operatingSiteInfoColumnIcon.classList.add('text-danger');
                 } else {
-                    operatingSiteInfoColumnIcon.classList.remove('text-primary', 'text-danger');
+                    operatingSiteInfoColumnIcon.classList.remove('text-secondary', 'text-danger');
                     operatingSiteInfoColumnIcon.classList.add('text-success');
                 }
 
@@ -220,10 +220,10 @@ function drawMonitoringListAndGetoperatingSiteInfoWarningFlag(operatingSiteId, o
     }
 
     if (isWarningOfoperatingSiteInfo) {
-        operatingSiteInfoMonitoringListIcon.classList.remove('text-primary', 'text-success');
+        operatingSiteInfoMonitoringListIcon.classList.remove('text-secondary', 'text-success');
         operatingSiteInfoMonitoringListIcon.classList.add('text-danger');
     } else {
-        operatingSiteInfoMonitoringListIcon.classList.remove('text-primary', 'text-danger');
+        operatingSiteInfoMonitoringListIcon.classList.remove('text-secondary', 'text-danger');
         operatingSiteInfoMonitoringListIcon.classList.add('text-success');
     }
 
@@ -411,10 +411,10 @@ operatingSiteMonitoringListColumnIds.forEach((operatingSiteMonitoringListColumnI
             let operatingSiteMonitoringListBankIcon = document.getElementById(`${operatingSite}-bank${number}-info-monitoring-list`).previousElementSibling.querySelector('i');
 
             if (isWarningOfoperatingSite) {
-                operatingSiteMonitoringListBankIcon.classList.remove('text-primary', 'text-success');
+                operatingSiteMonitoringListBankIcon.classList.remove('text-secondary', 'text-success');
                 operatingSiteMonitoringListBankIcon.classList.add('text-danger');
             } else {
-                operatingSiteMonitoringListBankIcon.classList.remove('text-primary', 'text-danger');
+                operatingSiteMonitoringListBankIcon.classList.remove('text-secondary', 'text-danger');
                 operatingSiteMonitoringListBankIcon.classList.add('text-success');
             }
         }, 1000);
