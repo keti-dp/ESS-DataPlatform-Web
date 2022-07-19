@@ -154,10 +154,6 @@
                     "type": "boolean",
                     "value": "0,1"
                 },
-                "BATTERY_STATUS_FOR_RUN": {
-                    "type": "boolean",
-                    "value": "0,1"
-                },
                 "BATTERY_STATUS_FOR_FAULT": {
                     "type": "boolean",
                     "value": "0,1"
@@ -219,14 +215,6 @@
                 "RACK_CELL_TEMPERATURE_AVERAGE": {
                     "type": "number",
                     "value": "0~50"
-                },
-                "RACK_DISCHARGE_RELAY_MINUS_STATUS": {
-                    "type": "boolean",
-                    "value": "0,1"
-                },
-                "RACK_CHARGE_RELAY_PLUS_STATUS": {
-                    "type": "boolean",
-                    "value": "0,1"
                 },
                 "RACK_TEMPERATURE_IMBALANCE_WARNING": {
                     "type": "boolean",
@@ -478,18 +466,6 @@
                     "type": "boolean",
                     "value": "0,1"
                 },
-                "BATTERY_STATUS_FOR_STANDBY": {
-                    "type": "boolean",
-                    "value": "0,1"
-                },
-                "BATTERY_STATUS_FOR_CHARGE": {
-                    "type": "boolean",
-                    "value": "0,1"
-                },
-                "BATTERY_STATUS_FOR_DISCHARGE": {
-                    "type": "boolean",
-                    "value": "0,1"
-                },
                 "BATTERY_STATUS_FOR_FAULT": {
                     "type": "boolean",
                     "value": "0,1"
@@ -515,10 +491,6 @@
                     "value": "0,1"
                 },
                 "TVOC_STATUS": {
-                    "type": "boolean",
-                    "value": "0,1"
-                },
-                "BATTERY_STATUS_FOR_RUN": {
                     "type": "boolean",
                     "value": "0,1"
                 },
@@ -587,14 +559,6 @@
                 "RACK_MIN_MODULE_HUMIDITY": {
                     "type": "number",
                     "value": "-"
-                },
-                "RACK_DISCHARGE_RELAY_MINUS_STATUS": {
-                    "type": "boolean",
-                    "value": "0,1"
-                },
-                "RACK_CHARGE_RELAY_PLUS_STATUS": {
-                    "type": "boolean",
-                    "value": "0,1"
                 },
                 "RACK_TEMPERATURE_IMBALANCE_WARNING": {
                     "type": "boolean",
