@@ -1338,4 +1338,3 @@ primaryMonitoringLogLevelTypeCountSelectElement.addEventListener('change', event
         console.log(error);
     });
 });
-
