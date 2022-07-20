@@ -5,9 +5,10 @@
 {% block title %}메인{% endblock %}
 
 {% block html_head %}
-<!-- bootstrap-datepicker css -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
+<!-- Tempus Dominus Styles -->
 <link rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker3.min.css">
+    href="https://cdn.jsdelivr.net/npm/@eonasdan/tempus-dominus@6.0.0-beta1/dist/css/tempus-dominus.css">
 
 <style type="text/css">
     .visualization-chart {
@@ -34,129 +35,394 @@
         </div>
         <!-- [ breadcrumb ] end -->
         <!-- [ Main Content ] start -->
-        <div class="row">
-            <div class="col-xl-6 col-md-12">
-                <div class="card">
-                    <div class="card-header">
-                        <h5>운영사이트1의 Bank의 기간별 배터리 시간당 평균 SoC</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-3 offset-md-9">
-                                <input type="text" id="avg-bank-soc-date-input" class="form-control"
-                                    placeholder="날짜를 선택해주세요">
-                            </div>
-                        </div>
-                        <div id="avg-bank-soc-chart" class="visualization-chart"></div>
-                    </div>
-                </div>
+        <div class="row" style="position: relative;">
+            <div class="col-2">
+                <nav id="mainContentNavbar" class="navbar navbar-light bg-light flex-column align-items-stretch p-3">
+                    <a class="navbar-brand" href="#">메인</a>
+                    <nav class="nav nav-pills flex-column">
+                        <a class="nav-link" href="#itemSafetyDiagnosticIndicator">안전 진단 지표</a>
+                        <nav class="nav nav-pills flex-column">
+                            <a class="nav-link ml-3 my-1" href="#itemSoc">SoC</a>
+                            <a class="nav-link ml-3 my-1" href="#itemSoh">SoH</a>
+                        </nav>
+                        <a class="nav-link" href="#itemEtc">기타</a>
+                        <nav class="nav nav-pills flex-column">
+                            <a class="nav-link ml-3 my-1" href="#itemPower">전력</a>
+                        </nav>
+                    </nav>
+                </nav>
             </div>
-            <div class="col-xl-6 col-md-12">
-                <div class="card">
-                    <div class="card-header">
-                        <h5>운영사이트1의 Rack의 기간별 배터리 시간당 평균 SoC</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-3 offset-md-6">
-                                <select id='avg-rack-soc-select' class="form-select"
-                                    aria-label="Default select example">
-                                    <option value='' selected disabled>Rack을 선택해주세요</option>
-                                    <option value="1">1</option>
-                                    <option value="2">2</option>
-                                    <option value="3">3</option>
-                                    <option value="4">4</option>
-                                    <option value="5">5</option>
-                                    <option value="6">6</option>
-                                    <option value="7">7</option>
-                                    <option value="8">8</option>
-                                </select>
-                            </div>
-                            <div class="col-md-3">
-                                <input type="text" id="avg-rack-soc-date-input" class="form-control"
-                                    placeholder="날짜를 선택해주세요">
+            <div class="col-10 vh-100">
+                <div data-bs-spy="scroll" data-bs-target="#mainContentNavbar" data-bs-offset="0" tabindex="0"
+                    style="height: 100%; overflow-x: hidden; overflow-y: scroll;">
+                    <h4 id="itemSafetyDiagnosticIndicator"><u>안전 진단 지표</u></h4>
+                    <p>배터리의 다양한 안전 상태 지표를 나타냅니다.</p>
+                    <h5 id="itemSoc">SoC <i class="bi bi-info-circle" data-bs-toggle="tooltip" data-bs-placement="top"
+                            title=""
+                            data-bs-original-title="배터리의 연료량을 표시하는 척도 - SoC가 100%일 때 연료량이 가득찬 상태, 0%일 때 연료량을 모두 소모한 상태"></i>
+                    </h5>
+                    <div class="row">
+                        <div class="col-xl-6 col-md-12">
+                            <div id="avgBankSocCard" class="card mx-2">
+                                <div class="card-header">
+                                    <div class="row">
+                                        <div class="col-8 my-auto">
+                                            <h5>Bank 배터리 시간당 평균 SoC</h5>
+                                        </div>
+                                        <div class="col-4 text-right">
+                                            <button class="btn btn-sm" type="button" data-bs-toggle="modal"
+                                                data-bs-target="#essBankVisualizationSearchModal"
+                                                data-visualization-type="avg-bank-soc">
+                                                <span class="material-icons-two-tone">
+                                                    search
+                                                </span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <!-- Loading -->
+                                    <div class="row">
+                                        <div class="text-center">
+                                            <div class="spinner-border" role="status">
+                                                <span class="visually-hidden">Loading...</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row d-none">
+                                        <p>시온유 태양광 / Bank 1</p>
+                                        <div id="avgBankSocChart" class="visualization-chart"></div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <div id="avg-rack-soc-chart" class="visualization-chart"></div>
+                        <div class="col-xl-6 col-md-12">
+                            <div id="avgRackSocCard" class="card mx-2">
+                                <div class="card-header">
+                                    <div class="row">
+                                        <div class="col-8 my-auto">
+                                            <h5>Rack 배터리 시간당 평균 SoC</h5>
+                                        </div>
+                                        <div class="col-4 text-right">
+                                            <button class="btn btn-sm" type="button" data-bs-toggle="modal"
+                                                data-bs-target="#essRackVisualizationSearchModal"
+                                                data-visualization-type="avg-rack-soc">
+                                                <span class="material-icons-two-tone">
+                                                    search
+                                                </span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <!-- Loading -->
+                                    <div class="row">
+                                        <div class="text-center">
+                                            <div class="spinner-border" role="status">
+                                                <span class="visually-hidden">Loading...</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row d-none">
+                                        <p>시온유 태양광 / Bank 1 / Rack 1</p>
+                                        <div id="avgRackSocChart" class="visualization-chart"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <h5 id="itemSoh">SoH <i class="bi bi-info-circle" data-bs-toggle="tooltip" data-bs-placement="top"
+                            title=""
+                            data-bs-original-title="이상적인 조건과 비교한 배터리 상태의 성능 지수 - SoH가 100%일 때 배터리 조건이 배터리 사양과 일치"></i>
+                    </h5>
+                    <div class="row">
+                        <div class="col-xl-6 col-md-12">
+                            <div id="avgBankSohCard" class="card mx-2">
+                                <div class="card-header">
+                                    <div class="row">
+                                        <div class="col-8 my-auto">
+                                            <h5>Bank 배터리 시간당 평균 SoH</h5>
+                                        </div>
+                                        <div class="col-4 text-right">
+                                            <button class="btn btn-sm" type="button" data-bs-toggle="modal"
+                                                data-bs-target="#essBankVisualizationSearchModal"
+                                                data-visualization-type="avg-bank-soh">
+                                                <span class="material-icons-two-tone">
+                                                    search
+                                                </span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <!-- Loading -->
+                                    <div class="row">
+                                        <div class="text-center">
+                                            <div class="spinner-border" role="status">
+                                                <span class="visually-hidden">Loading...</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row d-none">
+                                        <p>시온유 태양광 / Bank 1</p>
+                                        <div id="avgBankSohChart" class="visualization-chart"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xl-6 col-md-12">
+                            <div id="avgRackSohCard" class="card mx-2">
+                                <div class="card-header">
+                                    <div class="row">
+                                        <div class="col-8 my-auto">
+                                            <h5>Rack 배터리 시간당 평균 SoH</h5>
+                                        </div>
+                                        <div class="col-4 text-right">
+                                            <button class="btn btn-sm" type="button" data-bs-toggle="modal"
+                                                data-bs-target="#essRackVisualizationSearchModal"
+                                                data-visualization-type="avg-rack-soh">
+                                                <span class="material-icons-two-tone">
+                                                    search
+                                                </span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <!-- Loading -->
+                                    <div class="row">
+                                        <div class="text-center">
+                                            <div class="spinner-border" role="status">
+                                                <span class="visually-hidden">Loading...</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row d-none">
+                                        <p>시온유 태양광 / Bank 1 / Rack 1</p>
+                                        <div id="avgRackSohChart" class="visualization-chart"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <h4 id="itemEtc"><u>기타</u></h4>
+                    <p>안전 진단 지표 외의 데이터 분석 결과를 나타냅니다.</p>
+                    <h5 id="itemPower">전력</h5>
+                    <div class="row">
+                        <div class="col-xl-6 col-md-12">
+                            <div id="avgBankPowerCard" class="card mx-2">
+                                <div class="card-header">
+                                    <div class="row">
+                                        <div class="col-8 my-auto">
+                                            <h5>Bank 평균 전력</h5>
+                                        </div>
+                                        <div class="col-4 text-right">
+                                            <button class="btn btn-sm" type="button" data-bs-toggle="modal"
+                                                data-bs-target="#essBankVisualizationSearchModal"
+                                                data-visualization-type="avg-bank-power">
+                                                <span class="material-icons-two-tone">
+                                                    search
+                                                </span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <!-- Loading -->
+                                    <div class="row">
+                                        <div class="text-center">
+                                            <div class="spinner-border" role="status">
+                                                <span class="visually-hidden">Loading...</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row d-none">
+                                        <p>시온유 태양광 / Bank 1</p>
+                                        <div id="avgBankPowerChart" class="visualization-chart"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="row">
-            <div class="col-xl-4 col-md-12">
-                <div class="card">
-                    <div class="card-header">
-                        <h5>운영사이트1의 Bank의 기간별 배터리 시간당 평균 SoH</h5>
+        <!-- [ Modal ] start -->
+        <!-- Visualization search modal - type ess bank -->
+        <div class="modal fade" id="essBankVisualizationSearchModal" tabindex="-1"
+            aria-labelledby="essBankVisualizationSearchModalFormLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="essBankVisualizationSearchModalFormLabel">검색</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-4 offset-md-8">
-                                <input type="text" id="avg-bank-soh-date-input" class="form-control"
-                                    placeholder="날짜를 선택해주세요">
+                    <div class="modal-body">
+                        <form action="#" id="essBankVisualizationSearchModalForm" autocomplete="off">
+                            <div class="form-group">
+                                <label class='form-label'>구성:</label>
+                                <div class="input-group m-b-10">
+                                    <select id="essBankVisualizationSearchModalFormOperatingSiteSelect"
+                                        class="form-select">
+                                        <option value="" selected disabled>운영 사이트를 선택해주세요.</option>
+                                        <option value="1">시온유 태양광</option>
+                                        <option value="2">판리 태양광</option>
+                                        <option value="3">3</option>
+                                        <option value="4">4</option>
+                                        <option value="5">5</option>
+                                    </select>
+                                </div>
+                                <div class="input-group m-b-10">
+                                    <select id="essBankVisualizationSearchModalFormBankSelect" class="form-select"
+                                        disabled>
+                                        <option value="" selected disabled>Bank를 선택해주세요.</option>
+                                    </select>
+                                </div>
+                                <label class='form-label'>시간:</label>
+                                <div class='input-group log-event m-b-10'
+                                    id='essBankVisualizationSearchModalFormStartDateTimePicker'
+                                    data-td-target-input='nearest' data-td-target-toggle='nearest'>
+                                    <input id='essBankVisualizationSearchModalFormStartDateTimeInput' type='text'
+                                        class='form-control'
+                                        data-td-target='#essBankVisualizationSearchModalFormStartDateTimePicker'
+                                        placeholder="시작 날짜를 선택해주세요" />
+                                    <span class='input-group-text'
+                                        data-td-target='#essBankVisualizationSearchModalFormStartDateTimePicker'
+                                        data-td-toggle='datetimepicker'>
+                                        <span class='fas fa-calendar'></span>
+                                    </span>
+                                </div>
+                                <div class='input-group log-event'
+                                    id='essBankVisualizationSearchModalFormEndDateTimePicker'
+                                    data-td-target-input='nearest' data-td-target-toggle='nearest'>
+                                    <input id='essBankVisualizationSearchModalFormEndDateTimeInput' type='text'
+                                        class='form-control'
+                                        data-td-target='#essBankVisualizationSearchModalFormEndDateTimePicker'
+                                        placeholder="마지막 날짜를 선택해주세요" />
+                                    <span class='input-group-text'
+                                        data-td-target='#essBankVisualizationSearchModalFormEndDateTimePicker'
+                                        data-td-toggle='datetimepicker'>
+                                        <span class='fas fa-calendar'></span>
+                                    </span>
+                                </div>
                             </div>
-                        </div>
-                        <div id="avg-bank-soh-chart" class="visualization-chart"></div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-xl-4 col-md-12">
-                <div class="card">
-                    <div class="card-header">
-                        <h5>운영사이트1의 Rack의 기간별 배터리 시간당 평균 SoH</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-4 offset-md-4">
-                                <select id='avg-rack-soh-select' class="form-select"
-                                    aria-label="Default select example">
-                                    <option value='' selected disabled>Rack을 선택해주세요</option>
-                                    <option value="1">1</option>
-                                    <option value="2">2</option>
-                                    <option value="3">3</option>
-                                    <option value="4">4</option>
-                                    <option value="5">5</option>
-                                    <option value="6">6</option>
-                                    <option value="7">7</option>
-                                    <option value="8">8</option>
-                                </select>
+                            <div class="form-group">
+                                <button type="submit" class="btn btn-primary">검색</button>
                             </div>
-                            <div class="col-md-4">
-                                <input type="text" id="avg-rack-soh-date-input" class="form-control"
-                                    placeholder="날짜를 선택해주세요">
-                            </div>
-                        </div>
-                        <div id="avg-rack-soh-chart" class="visualization-chart"></div>
+                        </form>
                     </div>
-                </div>
-            </div>
-            <div class="col-xl-4 col-md-12">
-                <div class="card">
-                    <div class="card-header">
-                        <h5>운영사이트1의 Bank의 기간별 평균 전력</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-4 offset-md-8">
-                                <input type="text" id="avg-bank-power-date-input" class="form-control"
-                                    placeholder="날짜를 선택해주세요">
-                            </div>
-                        </div>
-                        <div id="avg-bank-power-chart" class="visualization-chart"></div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                     </div>
                 </div>
             </div>
         </div>
+
+        <!-- Visualization search modal - type ess rack -->
+        <div class="modal fade" id="essRackVisualizationSearchModal" tabindex="-1"
+            aria-labelledby="essRackVisualizationSearchModalFormLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="essRackVisualizationSearchModalFormLabel">검색</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form action="#" id="essRackVisualizationSearchModalForm" autocomplete="off">
+                            <div class="form-group">
+                                <label class='form-label'>구성:</label>
+                                <div class="input-group m-b-10">
+                                    <select id="essRackVisualizationSearchModalFormOperatingSiteSelect"
+                                        class="form-select">
+                                        <option value="" selected disabled>운영 사이트를 선택해주세요.</option>
+                                        <option value="1">시온유 태양광</option>
+                                        <option value="2">판리 태양광</option>
+                                        <option value="3">3</option>
+                                        <option value="4">4</option>
+                                        <option value="5">5</option>
+                                    </select>
+                                </div>
+                                <div class="input-group m-b-10">
+                                    <select name="" id="essRackVisualizationSearchModalFormBankSelect"
+                                        class="form-select" disabled>
+                                        <option value="" selected disabled>Bank를 선택해주세요.</option>
+                                    </select>
+                                </div>
+                                <div class="input-group m-b-10">
+                                    <select id="essRackVisualizationSearchModalFormRackSelect" class="form-select"
+                                        disabled>
+                                        <option value="" selected disabled>Rack를 선택해주세요.</option>
+                                    </select>
+                                </div>
+                                <label class='form-label'>시간:</label>
+                                <div class='input-group log-event m-b-10'
+                                    id='essRackVisualizationSearchModalFormStartDateTimePicker'
+                                    data-td-target-input='nearest' data-td-target-toggle='nearest'>
+                                    <input id='essRackVisualizationSearchModalFormStartDateTimeInput' type='text'
+                                        class='form-control'
+                                        data-td-target='#essRackVisualizationSearchModalFormStartDateTimePicker'
+                                        placeholder="시작 날짜를 선택해주세요" />
+                                    <span class='input-group-text'
+                                        data-td-target='#essRackVisualizationSearchModalFormStartDateTimePicker'
+                                        data-td-toggle='datetimepicker'>
+                                        <span class='fas fa-calendar'></span>
+                                    </span>
+                                </div>
+                                <div class='input-group log-event'
+                                    id='essRackVisualizationSearchModalFormEndDateTimePicker'
+                                    data-td-target-input='nearest' data-td-target-toggle='nearest'>
+                                    <input id='essRackVisualizationSearchModalFormEndDateTimeInput' type='text'
+                                        class='form-control'
+                                        data-td-target='#essRackVisualizationSearchModalFormEndDateTimePicker'
+                                        placeholder="마지막 날짜를 선택해주세요" />
+                                    <span class='input-group-text'
+                                        data-td-target='#essRackVisualizationSearchModalFormEndDateTimePicker'
+                                        data-td-toggle='datetimepicker'>
+                                        <span class='fas fa-calendar'></span>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <button type="submit" class="btn btn-primary">검색</button>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- [ Modal ] end -->
         <!-- [ Main Content ] end -->
     </div>
 </div>
 {% endblock %}
 
 {% block js %}
+{{ ess_protection_map|json_script:"ess-protection-map" }}
 <script src="https://cdn.jsdelivr.net/npm/luxon@2.1.1/build/global/luxon.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
-
+<!-- Tempus Dominus JavaScript -->
+<script src="https://cdn.jsdelivr.net/npm/@eonasdan/tempus-dominus@6.0.0-beta1/dist/js/tempus-dominus.min.js"></script>
+<!-- JustValidate JavaScript -->
+<script src="https://unpkg.com/just-validate@3.3.1/dist/just-validate.production.min.js"></script>
+<script
+    src="https://cdn.jsdelivr.net/npm/just-validate-plugin-date@1.1.0/dist/just-validate-plugin-date.production.min.js"></script>
+<!-- AmChart Javascript -->
 <script src="https://cdn.amcharts.com/lib/5/index.js"></script>
 <script src="https://cdn.amcharts.com/lib/5/xy.js"></script>
 <script src="https://cdn.amcharts.com/lib/5/themes/Animated.js"></script>
 <script src="{% static 'js/custom/index.js' %}"></script>
+<script>
+    // Tooltip
+    let tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    let tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+
+    // Scrollspy
+    let scrollSpy = new bootstrap.ScrollSpy(document.body, {
+        target: '#mainContentNavbar'
+    });
+</script>
 {% endblock %}

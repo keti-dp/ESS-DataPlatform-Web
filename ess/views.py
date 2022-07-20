@@ -23,21 +23,30 @@ from django.http import StreamingHttpResponse
 from rest_framework import status
 from rest_framework.views import Response
 from rest_framework.generics import ListAPIView, RetrieveAPIView
-from .models import Bank, Etc, Pcs, Rack
 from .documents import EssMonitoringLogDocument
 from .paginations import LargeResultsSetPagination
 from .serializer import (
-    BankSerializer,
-    EtcSerializer,
-    PcsSerializer,
-    RackSerializer,
-    BankAvgSoCSerializer,
-    RackAvgSoCSerializer,
-    BankAvgSoHSerializer,
-    RackAvgSoHSerializer,
-    AvgBankPowerSerializer,
+    AvgESSBankSoCSerializer,
+    AvgESSRackSoCSerializer,
+    AvgESSBankSoHSerializer,
+    AvgESSRackSoHSerializer,
+    AvgESSBankPowerSerializer,
     EssMonitoringLogDocumentSerializer,
 )
+
+# This custom module have dynamic ess models, serializers, data_dates
+from .ess_collections import (
+    ESS_BANK,
+    ESS_RACK,
+    ESS_PCS,
+    ESS_ETC,
+    ESS_BANK_SERIALIZER,
+    ESS_RACK_SERIALIZER,
+    ESS_PCS_SERIALIZER,
+    ESS_ETC_SERIALIZER,
+)
+
+TIME_BUCKET_TIMEZONE = "Asia/Seoul"
 
 
 class Echo:
@@ -62,135 +71,324 @@ def get_csv_items(rows, pseudo_buffer, fieldnames):
         yield writer.writerow(row)
 
 
-class BankListView(ListAPIView):
-    serializer_class = BankSerializer
+# General ESS model list view
+
+
+class ESSBankListView(ListAPIView):
     pagination_class = LargeResultsSetPagination
 
+    def get_serializer_class(self):
+        operating_site_id = self.kwargs["operating_site_id"]
+        database = "ess" + str(operating_site_id)
+
+        return ESS_BANK_SERIALIZER[database]
+
     def get_queryset(self):
-        operation_num = self.kwargs["operation_num"]
+        operating_site_id = self.kwargs["operating_site_id"]
+        database = "ess" + str(operating_site_id)
         bank_id = self.kwargs["bank_id"]
-        date = self.request.query_params.get("date")
+        start_date = self.request.query_params.get("date")
 
-        queryset = Bank.objects.filter(bank_id=bank_id).order_by("timestamp")
-
-        if date is not None:
-            new_date = datetime.strptime(date, "%Y-%m-%d") + timedelta(days=1)
-            queryset = queryset.filter(bank_id=bank_id, timestamp__gte=date, timestamp__lt=new_date)
+        if start_date is not None:
+            end_date = datetime.strptime(start_date, "%Y-%m-%d") + timedelta(days=1)
+            queryset = (
+                ESS_BANK[database]
+                .objects.using(database)
+                .filter(bank_id=bank_id, timestamp__gte=start_date, timestamp__lt=end_date)
+            ).order_by("timestamp")
+        else:
+            queryset = ESS_BANK[database].objects.using(database).filter(bank_id=bank_id).order_by("timestamp")
 
         return queryset
 
+    def get(self, request, *args, **kwargs):
+        try:
+            queryset = self.get_queryset()
+            page = self.paginate_queryset(queryset)
 
-class EtcListView(ListAPIView):
-    serializer_class = EtcSerializer
+            if page is not None:
+                serializer = self.get_serializer(page, many=True)
+
+                return self.get_paginated_response(serializer.data)
+
+            serializer = self.get_serializer(queryset, many=True)
+
+            return Response(serializer.data)
+        except KeyError:
+            return Response(
+                {"code": "400", "exception type": "Key Error", "message": "올바른 요청 URL을 입력하세요.(operating_site_id)"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except ValueError:
+            return Response(
+                {"code": "400", "exception type": "Value Error", "message": "올바른 요청 파라미터를 입력하세요.(date)"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+
+class ESSRackListView(ListAPIView):
     pagination_class = LargeResultsSetPagination
 
+    def get_serializer_class(self):
+        operating_site_id = self.kwargs["operating_site_id"]
+        database = "ess" + str(operating_site_id)
+
+        return ESS_RACK_SERIALIZER[database]
+
     def get_queryset(self):
-        operation_num = self.kwargs["operation_num"]
+        operating_site_id = self.kwargs["operating_site_id"]
+        database = "ess" + str(operating_site_id)
         bank_id = self.kwargs["bank_id"]
-        date = self.request.query_params.get("date")
+        start_date = self.request.query_params.get("date")
 
-        queryset = Etc.objects.filter(bank_id=bank_id).order_by("timestamp")
-
-        if date is not None:
-            new_date = datetime.strptime(date, "%Y-%m-%d") + timedelta(days=1)
-            queryset = queryset.filter(bank_id=bank_id, timestamp__gte=date, timestamp__lt=new_date)
+        if start_date is not None:
+            end_date = datetime.strptime(start_date, "%Y-%m-%d") + timedelta(days=1)
+            queryset = (
+                ESS_RACK[database]
+                .objects.using(database)
+                .filter(bank_id=bank_id, timestamp__gte=start_date, timestamp__lt=end_date)
+                .order_by("timestamp")
+            )
+        else:
+            queryset = ESS_RACK[database].objects.using(database).filter(bank_id=bank_id).order_by("timestamp")
 
         return queryset
 
+    def get(self, request, *args, **kwargs):
+        try:
+            queryset = self.get_queryset()
+            page = self.paginate_queryset(queryset)
 
-class PcsListView(ListAPIView):
-    serializer_class = PcsSerializer
+            if page is not None:
+                serializer = self.get_serializer(page, many=True)
+
+                return self.get_paginated_response(serializer.data)
+
+            serializer = self.get_serializer(queryset, many=True)
+
+            return Response(serializer.data)
+        except KeyError:
+            return Response(
+                {"code": "400", "exception type": "Key Error", "message": "올바른 요청 URL을 입력하세요.(operating_site_id)"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except ValueError:
+            return Response(
+                {"code": "400", "exception type": "Value Error", "message": "올바른 요청 파라미터를 입력하세요.(date)"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+
+class ESSPcsListView(ListAPIView):
     pagination_class = LargeResultsSetPagination
 
+    def get_serializer_class(self):
+        operating_site_id = self.kwargs["operating_site_id"]
+        database = "ess" + str(operating_site_id)
+
+        return ESS_PCS_SERIALIZER[database]
+
     def get_queryset(self):
-        operation_num = self.kwargs["operation_num"]
-        bank_id = self.kwargs["bank_id"]
-        date = self.request.query_params.get("date")
+        operating_site_id = self.kwargs["operating_site_id"]
+        database = "ess" + str(operating_site_id)
+        start_date = self.request.query_params.get("date")
 
-        queryset = Pcs.objects.filter(bank_id=bank_id).order_by("timestamp")
-
-        if date is not None:
-            new_date = datetime.strptime(date, "%Y-%m-%d") + timedelta(days=1)
-            queryset = queryset.filter(bank_id=bank_id, timestamp__gte=date, timestamp__lt=new_date)
+        if start_date is not None:
+            end_date = datetime.strptime(start_date, "%Y-%m-%d") + timedelta(days=1)
+            queryset = (
+                ESS_PCS[database]
+                .objects.using(database)
+                .filter(timestamp__gte=start_date, timestamp__lt=end_date)
+                .order_by("timestamp")
+            )
+        else:
+            queryset = ESS_PCS[database].objects.using(database).all().order_by("timestamp")
 
         return queryset
 
+    def get(self, request, *args, **kwargs):
+        try:
+            queryset = self.get_queryset()
+            page = self.paginate_queryset(queryset)
 
-class RackListView(ListAPIView):
-    serializer_class = RackSerializer
+            if page is not None:
+                serializer = self.get_serializer(page, many=True)
+
+                return self.get_paginated_response(serializer.data)
+
+            serializer = self.get_serializer(queryset, many=True)
+
+            return Response(serializer.data)
+        except KeyError:
+            return Response(
+                {"code": "400", "exception type": "Key Error", "message": "올바른 요청 URL을 입력하세요.(operating_site_id)"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except ValueError:
+            return Response(
+                {"code": "400", "exception type": "Value Error", "message": "올바른 요청 파라미터를 입력하세요.(date)"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+
+class ESSEtcListView(ListAPIView):
     pagination_class = LargeResultsSetPagination
 
+    def get_serializer_class(self):
+        operating_site_id = self.kwargs["operating_site_id"]
+        database = "ess" + str(operating_site_id)
+
+        return ESS_ETC_SERIALIZER[database]
+
     def get_queryset(self):
-        operation_num = self.kwargs["operation_num"]
-        bank_id = self.kwargs["bank_id"]
-        date = self.request.query_params.get("date")
+        operating_site_id = self.kwargs["operating_site_id"]
+        database = "ess" + str(operating_site_id)
+        start_date = self.request.query_params.get("date")
 
-        queryset = Rack.objects.filter(bank_id=bank_id).order_by("timestamp")
-
-        if date is not None:
-            new_date = datetime.strptime(date, "%Y-%m-%d") + timedelta(days=1)
-            queryset = queryset.filter(bank_id=bank_id, timestamp__gte=date, timestamp__lt=new_date)
+        if start_date is not None:
+            end_date = datetime.strptime(start_date, "%Y-%m-%d") + timedelta(days=1)
+            queryset = (
+                ESS_ETC[database]
+                .objects.using(database)
+                .filter(timestamp__gte=start_date, timestamp__lt=end_date)
+                .order_by("timestamp")
+            )
+        else:
+            queryset = ESS_ETC[database].objects.using(database).all().order_by("timestamp")
 
         return queryset
 
+    def get(self, request, *args, **kwargs):
+        try:
+            queryset = self.get_queryset()
+            page = self.paginate_queryset(queryset)
 
-class RackDetailListView(ListAPIView):
-    serializer_class = RackSerializer
+            if page is not None:
+                serializer = self.get_serializer(page, many=True)
+
+                return self.get_paginated_response(serializer.data)
+
+            serializer = self.get_serializer(queryset, many=True)
+
+            return Response(serializer.data)
+        except KeyError:
+            return Response(
+                {"code": "400", "exception type": "Key Error", "message": "올바른 요청 URL을 입력하세요.(operating_site_id)"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except ValueError:
+            return Response(
+                {"code": "400", "exception type": "Value Error", "message": "올바른 요청 파라미터를 입력하세요.(date)"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+
+# General ESS model detail list view
+
+
+class ESSRackDetailListView(ListAPIView):
     pagination_class = LargeResultsSetPagination
 
+    def get_serializer_class(self):
+        operating_site_id = self.kwargs["operating_site_id"]
+        database = "ess" + str(operating_site_id)
+
+        return ESS_RACK_SERIALIZER[database]
+
     def get_queryset(self):
-        operation_site_num = self.kwargs["operation_site_num"]
+        operating_site_id = self.kwargs["operating_site_id"]
+        database = "ess" + str(operating_site_id)
         bank_id = self.kwargs["bank_id"]
         rack_id = self.kwargs["rack_id"]
-        date = self.request.query_params.get("date")
+        start_date = self.request.query_params.get("date")
 
-        queryset = Rack.objects.filter(bank_id=bank_id, rack_id=rack_id).order_by("timestamp")
-
-        if date is not None:
-            end_date = datetime.strptime(date, "%Y-%m-%d") + timedelta(days=1)
-            queryset = queryset.filter(bank_id=bank_id, rack_id=rack_id, timestamp__gte=date, timestamp__lt=end_date)
+        if start_date is not None:
+            end_date = datetime.strptime(start_date, "%Y-%m-%d") + timedelta(days=1)
+            queryset = (
+                ESS_RACK[database]
+                .objects.using(database)
+                .filter(bank_id=bank_id, rack_id=rack_id, timestamp__gte=start_date, timestamp__lt=end_date)
+                .order_by("timestamp")
+            )
+        else:
+            queryset = (
+                ESS_RACK[database]
+                .objects.using(database)
+                .filter(bank_id=bank_id, rack_id=rack_id)
+                .order_by("timestamp")
+            )
 
         return queryset
 
-
-class BankAvgSoCListView(ListAPIView):
     def get(self, request, *args, **kwargs):
         try:
-            time_bucket_width = request.query_params.get("time-bucket-width")
-            bank_id = self.kwargs["bank_id"]
-            start_date = request.query_params.get("date")
-            end_date = datetime.strptime(start_date, "%Y-%m-%d") + timedelta(days=1)
+            queryset = self.get_queryset()
+            page = self.paginate_queryset(queryset)
 
-            with connections["ess"].cursor() as cursor:
+            if page is not None:
+                serializer = self.get_serializer(page, many=True)
+
+                return self.get_paginated_response(serializer.data)
+
+            serializer = self.get_serializer(queryset, many=True)
+
+            return Response(serializer.data)
+        except KeyError:
+            return Response(
+                {"code": "400", "exception type": "Key Error", "message": "올바른 요청 URL을 입력하세요.(operating_site_id)"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except ValueError:
+            return Response(
+                {"code": "400", "exception type": "Value Error", "message": "올바른 요청 파라미터를 입력하세요.(date)"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+
+# Data analytics results list view
+
+
+class AvgESSBankSoCListView(ListAPIView):
+    def get_queryset(self):
+        return None
+
+    def get(self, request, *args, **kwargs):
+        try:
+            operating_site_id = kwargs["operating_site_id"]
+            database = "ess" + str(operating_site_id)
+            bank_id = kwargs["bank_id"]
+            time_bucket_width = request.query_params.get("time-bucket-width")
+            start_time_query_param = request.query_params.get("start-time")
+            start_time = datetime.strptime(start_time_query_param, "%Y-%m-%dT%H:%M:%S")
+            end_time_query_param = request.query_params.get("end-time")
+            end_time = datetime.strptime(end_time_query_param, "%Y-%m-%dT%H:%M:%S")
+
+            with connections[database].cursor() as cursor:
                 query = """
-                    SELECT time_bucket(%(time_bucket_width)s, "TIMESTAMP") "time", AVG("BANK_SOC") avg_bank_soc 
+                    SELECT time_bucket(%(time_bucket_width)s, "TIMESTAMP" AT TIME ZONE %(time_bucket_timezone)s) "time", AVG("BANK_SOC") avg_bank_soc 
                     FROM bank 
-                    WHERE "BANK_ID" = %(bank_id)s AND "TIMESTAMP" BETWEEN %(start_date)s AND %(end_date)s 
+                    WHERE "BANK_ID" = %(bank_id)s AND "TIMESTAMP" BETWEEN %(start_time)s AND %(end_time)s 
                     GROUP BY "time" ORDER BY "time" 
                 """
 
                 params = {
+                    "time_bucket_timezone": TIME_BUCKET_TIMEZONE,
                     "time_bucket_width": time_bucket_width,
                     "bank_id": bank_id,
-                    "start_date": start_date,
-                    "end_date": end_date,
+                    "start_time": start_time,
+                    "end_time": end_time,
                 }
 
                 cursor.execute(query, params)
 
                 data = dictfetchall(cursor)
 
-            serializer = BankAvgSoCSerializer(data=data, many=True)
+            serializer = AvgESSBankSoCSerializer(data=data, many=True)
 
             if serializer.is_valid():
                 return Response(serializer.data)
 
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        except ValueError:
-            return Response(
-                {"code": "400", "exception type": "Value Error", "message": "올바른 요청 파라미터를 입력하세요.(date)"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
         except DataError:
             return Response(
                 {
@@ -200,48 +398,69 @@ class BankAvgSoCListView(ListAPIView):
                 },
                 status=status.HTTP_400_BAD_REQUEST,
             )
+        except ValueError:
+            return Response(
+                {
+                    "code": "400",
+                    "exception type": "Value Error",
+                    "message": "올바른 요청 파라미터를 입력하세요.(time 형식은 'YYYY-MM-DDThh:mm:ss' 입니다.)",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except TypeError:
+            return Response(
+                {
+                    "code": "400",
+                    "exception type": "Type Error",
+                    "message": "필수 요청 파라미터를 입력하세요.(time-bucket-width, start-time, end-time)",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
 
-class RackAvgSoCListView(ListAPIView):
+class AvgESSRackSoCListView(ListAPIView):
+    def get_queryset(self):
+        return None
+
     def get(self, request, *args, **kwargs):
         try:
+            operating_site_id = kwargs["operating_site_id"]
+            database = "ess" + str(operating_site_id)
+            bank_id = kwargs["bank_id"]
+            rack_id = kwargs["rack_id"]
             time_bucket_width = request.query_params.get("time-bucket-width")
-            bank_id = self.kwargs["bank_id"]
-            rack_id = self.kwargs["rack_id"]
-            start_date = request.query_params.get("date")
-            end_date = datetime.strptime(start_date, "%Y-%m-%d") + timedelta(days=1)
+            start_time_query_param = request.query_params.get("start-time")
+            start_time = datetime.strptime(start_time_query_param, "%Y-%m-%dT%H:%M:%S")
+            end_time_query_param = request.query_params.get("end-time")
+            end_time = datetime.strptime(end_time_query_param, "%Y-%m-%dT%H:%M:%S")
 
-            with connections["ess"].cursor() as cursor:
+            with connections[database].cursor() as cursor:
                 query = """
-                    SELECT time_bucket(%(time_bucket_width)s, "TIMESTAMP") "time", AVG("RACK_SOC") avg_rack_soc 
+                    SELECT time_bucket(%(time_bucket_width)s, "TIMESTAMP" AT TIME ZONE %(time_bucket_timezone)s) "time", AVG("RACK_SOC") avg_rack_soc 
                     FROM rack
-                    WHERE ("BANK_ID" = %(bank_id)s AND "RACK_ID" = %(rack_id)s) AND "TIMESTAMP" BETWEEN %(start_date)s AND %(end_date)s 
+                    WHERE ("BANK_ID" = %(bank_id)s AND "RACK_ID" = %(rack_id)s) AND "TIMESTAMP" BETWEEN %(start_time)s AND %(end_time)s 
                     GROUP BY "time" ORDER BY "time" 
                 """
 
                 params = {
+                    "time_bucket_timezone": TIME_BUCKET_TIMEZONE,
                     "time_bucket_width": time_bucket_width,
                     "bank_id": bank_id,
                     "rack_id": rack_id,
-                    "start_date": start_date,
-                    "end_date": end_date,
+                    "start_time": start_time,
+                    "end_time": end_time,
                 }
 
                 cursor.execute(query, params)
 
                 data = dictfetchall(cursor)
 
-            serializer = RackAvgSoCSerializer(data=data, many=True)
+            serializer = AvgESSRackSoCSerializer(data=data, many=True)
 
             if serializer.is_valid():
                 return Response(serializer.data)
 
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        except ValueError:
-            return Response(
-                {"code": "400", "exception type": "Value Error", "message": "올바른 요청 파라미터를 입력하세요.(date)"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
         except DataError:
             return Response(
                 {
@@ -251,46 +470,67 @@ class RackAvgSoCListView(ListAPIView):
                 },
                 status=status.HTTP_400_BAD_REQUEST,
             )
+        except ValueError:
+            return Response(
+                {
+                    "code": "400",
+                    "exception type": "Value Error",
+                    "message": "올바른 요청 파라미터를 입력하세요.(time 형식은 'YYYY-MM-DDThh:mm:ss' 입니다.)",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except TypeError:
+            return Response(
+                {
+                    "code": "400",
+                    "exception type": "Type Error",
+                    "message": "필수 요청 파라미터를 입력하세요.(time-bucket-width, start-time, end-time)",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
 
-class BankAvgSoHListView(ListAPIView):
+class AvgESSBankSoHListView(ListAPIView):
+    def get_queryset(self):
+        return None
+
     def get(self, request, *args, **kwargs):
         try:
+            operating_site_id = kwargs["operating_site_id"]
+            database = "ess" + str(operating_site_id)
+            bank_id = kwargs["bank_id"]
             time_bucket_width = request.query_params.get("time-bucket-width")
-            bank_id = self.kwargs["bank_id"]
-            start_date = request.query_params.get("date")
-            end_date = datetime.strptime(start_date, "%Y-%m-%d") + timedelta(days=1)
+            start_time_query_param = request.query_params.get("start-time")
+            start_time = datetime.strptime(start_time_query_param, "%Y-%m-%dT%H:%M:%S")
+            end_time_query_param = request.query_params.get("end-time")
+            end_time = datetime.strptime(end_time_query_param, "%Y-%m-%dT%H:%M:%S")
 
-            with connections["ess"].cursor() as cursor:
+            with connections[database].cursor() as cursor:
                 query = """
-                    SELECT time_bucket(%(time_bucket_width)s, "TIMESTAMP") "time", AVG("BANK_SOH") avg_bank_soh 
+                    SELECT time_bucket(%(time_bucket_width)s, "TIMESTAMP" AT TIME ZONE %(time_bucket_timezone)s) "time", AVG("BANK_SOH") avg_bank_soh 
                     FROM bank 
-                    WHERE "BANK_ID" = %(bank_id)s AND "TIMESTAMP" BETWEEN %(start_date)s AND %(end_date)s 
+                    WHERE "BANK_ID" = %(bank_id)s AND "TIMESTAMP" BETWEEN %(start_time)s AND %(end_time)s 
                     GROUP BY "time" ORDER BY "time"
                 """
 
                 params = {
+                    "time_bucket_timezone": TIME_BUCKET_TIMEZONE,
                     "time_bucket_width": time_bucket_width,
                     "bank_id": bank_id,
-                    "start_date": start_date,
-                    "end_date": end_date,
+                    "start_time": start_time,
+                    "end_time": end_time,
                 }
 
                 cursor.execute(query, params)
 
                 data = dictfetchall(cursor)
 
-            serializer = BankAvgSoHSerializer(data=data, many=True)
+            serializer = AvgESSBankSoHSerializer(data=data, many=True)
 
             if serializer.is_valid():
                 return Response(serializer.data)
 
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        except ValueError:
-            return Response(
-                {"code": "400", "exception type": "Value Error", "message": "올바른 요청 파라미터를 입력하세요.(date)"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
         except DataError:
             return Response(
                 {
@@ -300,48 +540,69 @@ class BankAvgSoHListView(ListAPIView):
                 },
                 status=status.HTTP_400_BAD_REQUEST,
             )
+        except ValueError:
+            return Response(
+                {
+                    "code": "400",
+                    "exception type": "Value Error",
+                    "message": "올바른 요청 파라미터를 입력하세요.(time 형식은 'YYYY-MM-DDThh:mm:ss' 입니다.)",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except TypeError:
+            return Response(
+                {
+                    "code": "400",
+                    "exception type": "Type Error",
+                    "message": "필수 요청 파라미터를 입력하세요.(time-bucket-width, start-time, end-time)",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
 
-class RackAvgSoHListView(ListAPIView):
+class AvgESSRackSoHListView(ListAPIView):
+    def get_queryset(self):
+        return None
+
     def get(self, request, *args, **kwargs):
         try:
+            operating_site_id = kwargs["operating_site_id"]
+            database = "ess" + str(operating_site_id)
+            bank_id = kwargs["bank_id"]
+            rack_id = kwargs["rack_id"]
             time_bucket_width = request.query_params.get("time-bucket-width")
-            bank_id = self.kwargs["bank_id"]
-            rack_id = self.kwargs["rack_id"]
-            start_date = request.query_params.get("date")
-            end_date = datetime.strptime(start_date, "%Y-%m-%d") + timedelta(days=1)
+            start_time_query_param = request.query_params.get("start-time")
+            start_time = datetime.strptime(start_time_query_param, "%Y-%m-%dT%H:%M:%S")
+            end_time_query_param = request.query_params.get("end-time")
+            end_time = datetime.strptime(end_time_query_param, "%Y-%m-%dT%H:%M:%S")
 
-            with connections["ess"].cursor() as cursor:
+            with connections[database].cursor() as cursor:
                 query = """
-                    SELECT time_bucket(%(time_bucket_width)s, "TIMESTAMP") "time", AVG("RACK_SOH") avg_rack_soh 
+                    SELECT time_bucket(%(time_bucket_width)s, "TIMESTAMP" AT TIME ZONE %(time_bucket_timezone)s) "time", AVG("RACK_SOH") avg_rack_soh 
                     FROM rack
-                    WHERE ("BANK_ID" = %(bank_id)s AND "RACK_ID" = %(rack_id)s) AND "TIMESTAMP" BETWEEN %(start_date)s AND %(end_date)s 
+                    WHERE ("BANK_ID" = %(bank_id)s AND "RACK_ID" = %(rack_id)s) AND "TIMESTAMP" BETWEEN %(start_time)s AND %(end_time)s 
                     GROUP BY "time" ORDER BY "time" 
                 """
 
                 params = {
+                    "time_bucket_timezone": TIME_BUCKET_TIMEZONE,
                     "time_bucket_width": time_bucket_width,
                     "bank_id": bank_id,
                     "rack_id": rack_id,
-                    "start_date": start_date,
-                    "end_date": end_date,
+                    "start_time": start_time,
+                    "end_time": end_time,
                 }
 
                 cursor.execute(query, params)
 
                 data = dictfetchall(cursor)
 
-            serializer = RackAvgSoHSerializer(data=data, many=True)
+            serializer = AvgESSRackSoHSerializer(data=data, many=True)
 
             if serializer.is_valid():
                 return Response(serializer.data)
 
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        except ValueError:
-            return Response(
-                {"code": "400", "exception type": "Value Error", "message": "올바른 요청 파라미터를 입력하세요.(date)"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
         except DataError:
             return Response(
                 {
@@ -351,48 +612,67 @@ class RackAvgSoHListView(ListAPIView):
                 },
                 status=status.HTTP_400_BAD_REQUEST,
             )
+        except ValueError:
+            return Response(
+                {
+                    "code": "400",
+                    "exception type": "Value Error",
+                    "message": "올바른 요청 파라미터를 입력하세요.(time 형식은 'YYYY-MM-DDThh:mm:ss' 입니다.)",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except TypeError:
+            return Response(
+                {
+                    "code": "400",
+                    "exception type": "Type Error",
+                    "message": "필수 요청 파라미터를 입력하세요.(time-bucket-width, start-time, end-time)",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
 
-class AvgBankPowerListView(ListAPIView):
+class AvgESSBankPowerListView(ListAPIView):
+    def get_queryset(self):
+        return None
+
     def get(self, request, *args, **kwargs):
         try:
-            operation_site_num = self.kwargs["operation_site_num"]
-            bank_id = self.kwargs["bank_id"]
-            date = request.query_params.get("date")
-            start_date = date
-            end_date = datetime.strptime(start_date, "%Y-%m-%d") + timedelta(days=1)
+            operating_site_id = kwargs["operating_site_id"]
+            database = "ess" + str(operating_site_id)
+            bank_id = kwargs["bank_id"]
             time_bucket_width = request.query_params.get("time-bucket-width")
+            start_time_query_param = request.query_params.get("start-time")
+            start_time = datetime.strptime(start_time_query_param, "%Y-%m-%dT%H:%M:%S")
+            end_time_query_param = request.query_params.get("end-time")
+            end_time = datetime.strptime(end_time_query_param, "%Y-%m-%dT%H:%M:%S")
 
-            with connections["ess"].cursor() as cursor:
+            with connections[database].cursor() as cursor:
                 query = """
-                    SELECT time_bucket(%(time_bucket_width)s, "TIMESTAMP") "time", AVG("BANK_POWER") avg_bank_power 
+                    SELECT time_bucket(%(time_bucket_width)s, "TIMESTAMP" AT TIME ZONE %(time_bucket_timezone)s) "time", AVG("BANK_POWER") avg_bank_power 
                     FROM bank
-                    WHERE "BANK_ID" = %(bank_id)s AND "TIMESTAMP" BETWEEN %(start_date)s AND %(end_date)s 
+                    WHERE "BANK_ID" = %(bank_id)s AND "TIMESTAMP" BETWEEN %(start_time)s AND %(end_time)s 
                     GROUP BY "time" ORDER BY "time"
                 """
 
                 params = {
+                    "time_bucket_timezone": TIME_BUCKET_TIMEZONE,
                     "time_bucket_width": time_bucket_width,
                     "bank_id": bank_id,
-                    "start_date": start_date,
-                    "end_date": end_date,
+                    "start_time": start_time,
+                    "end_time": end_time,
                 }
 
                 cursor.execute(query, params)
 
                 data = dictfetchall(cursor)
 
-            serializer = AvgBankPowerSerializer(data=data, many=True)
+            serializer = AvgESSBankPowerSerializer(data=data, many=True)
 
             if serializer.is_valid():
                 return Response(serializer.data)
 
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        except ValueError:
-            return Response(
-                {"code": "400", "exception type": "Value Error", "message": "올바른 요청 파라미터를 입력하세요.(date)"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
         except DataError:
             return Response(
                 {
@@ -402,6 +682,27 @@ class AvgBankPowerListView(ListAPIView):
                 },
                 status=status.HTTP_400_BAD_REQUEST,
             )
+        except ValueError:
+            return Response(
+                {
+                    "code": "400",
+                    "exception type": "Value Error",
+                    "message": "올바른 요청 파라미터를 입력하세요.(time 형식은 'YYYY-MM-DDThh:mm:ss' 입니다.)",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except TypeError:
+            return Response(
+                {
+                    "code": "400",
+                    "exception type": "Type Error",
+                    "message": "필수 요청 파라미터를 입력하세요.(time-bucket-width, start-time, end-time)",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+
+# ESS monitoring log list view
 
 
 class EssMonitoringLogDocumentView(BaseDocumentViewSet):
@@ -447,69 +748,78 @@ class EssMonitoringLogDocumentView(BaseDocumentViewSet):
         return super().get_queryset()
 
 
-# Get latest operation data
+# Latest ESS model retrieve view
 
 
-class LatestBankView(RetrieveAPIView):
+class LatestESSBankView(RetrieveAPIView):
     def get(self, request, *args, **kwargs):
-        operation_site_num = self.kwargs["operation_site_num"]
-        bank_id = self.kwargs["bank_id"]
-
-        queryset = Bank.objects.filter(bank_id=bank_id).latest("timestamp")
-        serializer = BankSerializer(queryset)
+        operating_site_id = kwargs["operating_site_id"]
+        database = "ess" + str(operating_site_id)
+        bank_id = kwargs["bank_id"]
+        queryset = ESS_BANK[database].objects.using(database).filter(bank_id=bank_id).latest("timestamp")
+        serializer = ESS_BANK_SERIALIZER[database](queryset)
 
         return Response(serializer.data)
 
 
-class LatestRackView(RetrieveAPIView):
+class LatestESSRackView(RetrieveAPIView):
     def get(self, request, *args, **kwargs):
-        operation_site_num = self.kwargs["operation_site_num"]
-        bank_id = self.kwargs["bank_id"]
-        rack_id = self.kwargs["rack_id"]
-
-        queryset = Rack.objects.filter(bank_id=bank_id, rack_id=rack_id).latest("timestamp")
-        serializer = RackSerializer(queryset)
+        operating_site_id = kwargs["operating_site_id"]
+        database = "ess" + str(operating_site_id)
+        bank_id = kwargs["bank_id"]
+        rack_id = kwargs["rack_id"]
+        queryset = (
+            ESS_RACK[database].objects.using(database).filter(bank_id=bank_id, rack_id=rack_id).latest("timestamp")
+        )
+        serializer = ESS_RACK_SERIALIZER[database](queryset)
 
         return Response(serializer.data)
 
 
-class LatestPcsView(RetrieveAPIView):
+class LatestESSPcsView(RetrieveAPIView):
     def get(self, request, *args, **kwargs):
-        operation_site_num = self.kwargs["operation_site_num"]
-        bank_id = self.kwargs["bank_id"]
-
-        queryset = Pcs.objects.filter(bank_id=bank_id).latest("timestamp")
-        serializer = PcsSerializer(queryset)
+        operating_site_id = kwargs["operating_site_id"]
+        database = "ess" + str(operating_site_id)
+        queryset = ESS_PCS[database].objects.using(database).all().latest("timestamp")
+        serializer = ESS_PCS_SERIALIZER[database](queryset)
 
         return Response(serializer.data)
 
 
-class LatestEtcView(RetrieveAPIView):
+class LatestESSEtcView(RetrieveAPIView):
     def get(self, request, *args, **kwargs):
-        operation_site_num = self.kwargs["operation_site_num"]
-        bank_id = self.kwargs["bank_id"]
-
-        queryset = Etc.objects.filter(bank_id=bank_id).latest("timestamp")
-        serializer = EtcSerializer(queryset)
+        operating_site_id = kwargs["operating_site_id"]
+        database = "ess" + str(operating_site_id)
+        queryset = ESS_ETC[database].objects.using(database).all().latest("timestamp")
+        serializer = ESS_ETC_SERIALIZER[database](queryset)
 
         return Response(serializer.data)
 
 
-# Download operation data
-class OperationDataDownloadView(RetrieveAPIView):
+# ESS operating data(ESS model) download view
+
+
+class ESSOperatingDataDownloadView(RetrieveAPIView):
     def get(self, request, *args, **kwargs):
         try:
-            data_type = kwargs["data_type"]
-            data_types = {"bank": Bank, "rack": Rack, "pcs": Pcs, "etc": Etc}
+            operating_site_id = kwargs["operating_site_id"]
+            database = "ess" + str(operating_site_id)
             start_time_query_param = request.query_params.get("start-time")
             start_time = datetime.strptime(start_time_query_param, "%Y-%m-%dT%H:%M:%S")
             end_time_query_param = request.query_params.get("end-time")
             end_time = datetime.strptime(end_time_query_param, "%Y-%m-%dT%H:%M:%S")
-
+            data_types = {
+                "bank": ESS_BANK[database],
+                "rack": ESS_RACK[database],
+                "pcs": ESS_PCS[database],
+                "etc": ESS_ETC[database],
+            }
+            data_type = kwargs["data_type"]
             queryset = (
                 data_types[data_type]
-                .objects.filter(timestamp__gte=start_time, timestamp__lte=end_time)
-                .order_by("-timestamp")
+                .objects.using(database)
+                .filter(timestamp__gte=start_time, timestamp__lte=end_time)
+                .order_by("timestamp")
             )
             fieldnames = list(queryset.values()[0].keys())
 
