@@ -44,6 +44,7 @@
                         <nav class="nav nav-pills flex-column">
                             <a class="nav-link ml-3 my-1" href="#itemSoc">SoC</a>
                             <a class="nav-link ml-3 my-1" href="#itemSoh">SoH</a>
+                            <a class="nav-link ml-3 my-1" href="#itemSoL">SoL</a>
                         </nav>
                         <a class="nav-link" href="#itemEtc">기타</a>
                         <nav class="nav nav-pills flex-column">
@@ -205,6 +206,42 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- [Bank SoL] start -->
+                    <div class="row">
+                        <h5 id="itemSoL">SoL <i class="bi bi-info-circle" data-bs-toggle="tooltip"
+                                data-bs-placement="top" title=""
+                                data-bs-original-title="이상적인 조건과 비교한 배터리 상태의 성능 지수 - SoH가 100%일 때 배터리 조건이 배터리 사양과 일치"></i>
+                        </h5>
+                        <div class="col-xl-6 col-md-12">
+                            <div id="forecastingBankSoLCard" class="card mx-2">
+                                <div class="card-header">
+                                    <div class="row">
+                                        <div class="col-8 my-auto">
+                                            <h5>Bank SoL 예측</h5>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <!-- Loading -->
+                                    <div class="row">
+                                        <div class="text-center">
+                                            <div class="spinner-border" role="status">
+                                                <span class="visually-hidden">Loading...</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row d-none">
+                                        <p>시온유 태양광 / Bank 1</p>
+                                        <div id="forecastingBankSoLChart" class="visualization-chart"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- [Bank SoL] end -->
+
+
                     <h4 id="itemEtc"><u>기타</u></h4>
                     <p>안전 진단 지표 외의 데이터 분석 결과를 나타냅니다.</p>
                     <h5 id="itemPower">전력</h5>

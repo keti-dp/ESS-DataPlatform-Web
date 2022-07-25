@@ -1,4 +1,5 @@
 const essProtectionMap = JSON.parse(document.getElementById('ess-protection-map').textContent);
+const customFullDateFormat = 'yyyy-MM-dd';
 const customFullDateTimeFormat = 'yyyy-MM-dd HH:mm:ss';
 const customTimeDesignatorFullDateTimeFormat = `yyyy-MM-dd'T'HH:mm:ss`;
 
@@ -6,13 +7,27 @@ function getCamelCaseString(text, seperator = '-') {
     return text.split(seperator).map((element, index) => index > 0 ? element.charAt(0).toUpperCase() + element.substr(1) : element).join('');
 }
 
-function getLineChart(elementId, data, option = {}) {
-    let root = am5.Root.new(elementId);
+async function loadData(requestUrl) {
+    let response = await fetch(requestUrl);
 
+    if (response.ok) {
+        return await response.json();
+    }
+
+    throw new Error(response.status);
+}
+
+function getChartRoot(elementId) {
+    let root = am5.Root.new(elementId);
     root.setThemes([
         am5themes_Animated.new(root)
     ]);
 
+    return root;
+}
+
+function getInitialLineChart(chartRoot) {
+    let root = chartRoot;
     let chart = root.container.children.push(
         am5xy.XYChart.new(root, {
             panY: false,
@@ -21,6 +36,16 @@ function getLineChart(elementId, data, option = {}) {
             maxTooltipDistance: 0
         })
     );
+    chart.set("cursor", am5xy.XYCursor.new(root, {
+        behavior: "zoomXY",
+    }));
+
+    return chart;
+}
+
+function getSimpleLineChart(elementId, data, option = {}) {
+    let root = getChartRoot(elementId);
+    let chart = getInitialLineChart(root);
 
     let chartData = data;
 
@@ -67,12 +92,6 @@ function getLineChart(elementId, data, option = {}) {
 
     series.get("tooltip").label.set("text", "[bold]{name}[/]\n{valueX.formatDate('yyyy-MM-dd HH:mm')}: {valueY.formatNumber('#.000')}")
     series.data.setAll(chartData);
-
-    // Add cursor
-    chart.set("cursor", am5xy.XYCursor.new(root, {
-        behavior: "zoomXY",
-        xAxis: xAxis
-    }));
 
     xAxis.set("tooltip", am5.Tooltip.new(root, {
         themeTags: ["axis"]
@@ -151,9 +170,9 @@ visualizationTypes.forEach(visualizationType => {
                 }
             }
 
-            visualizationTypesObjects['chart'][visualizationTypeCamelCaseString] = getLineChart(chartString, data, chartOption);
+            visualizationTypesObjects['chart'][visualizationTypeCamelCaseString] = getSimpleLineChart(chartString, data, chartOption);
         } else {
-            visualizationTypesObjects['chart'][visualizationTypeCamelCaseString] = getLineChart(chartString, data);
+            visualizationTypesObjects['chart'][visualizationTypeCamelCaseString] = getSimpleLineChart(chartString, data);
         }
 
         visualizationTypesObjects['cardElement'][visualizationTypeCamelCaseString].querySelector('.card-body .spinner-border').classList.add('d-none');
@@ -516,3 +535,182 @@ essRackVisualizationSearchModalFormValidation
             visualizationChartElement.parentNode.classList.remove('d-none');
         }).catch(error => console.log(error));
     });
+
+// Create forecasting bank SoL chart
+async function createForecastingBankSoLChart() {
+    let root = getChartRoot('forecastingBankSoLChart');
+    let chart = getInitialLineChart(root);
+
+    let xAxis = chart.xAxes.push(am5xy.DateAxis.new(root, {
+        baseInterval: {
+            timeUnit: 'day',
+            count: 1
+        },
+        renderer: am5xy.AxisRendererX.new(root, {}),
+        tooltip: am5.Tooltip.new(root, {})
+    }));
+
+    let yAxis = chart.yAxes.push(am5xy.ValueAxis.new(root, {
+        min: 0,
+        max: 100,
+        renderer: am5xy.AxisRendererY.new(root, {
+            minGridDistance: 30
+        })
+    }));
+
+    let observedSoLSeries = chart.series.push(am5xy.LineSeries.new(root, {
+        name: 'Observed SoL',
+        xAxis: xAxis,
+        yAxis: yAxis,
+        valueYField: 'observedSoL',
+        valueXField: 'date',
+        tooltip: am5.Tooltip.new(root, {
+            labelText: '[bold]{name}[/]\n{valueX}: {valueY}'
+        })
+    }));
+
+    let forecastingSoLSeries = chart.series.push(am5xy.LineSeries.new(root, {
+        name: 'Forecasting SoL',
+        xAxis: xAxis,
+        yAxis: yAxis,
+        valueYField: 'forecastingSoL',
+        valueXField: 'date',
+        tooltip: am5.Tooltip.new(root, {
+            labelText: `[bold]{name}[/]\n{valueX}: {valueY}\nTop Limit: {forecastingSoLTopLimit}\nBottom Limit: {forecastingSoLBottomLimit}`
+        })
+    }));
+
+    let forecastingSoLTopLimitSeries = chart.series.push(am5xy.LineSeries.new(root, {
+        name: 'Forecasting SoL Top Limit',
+        xAxis: xAxis,
+        yAxis: yAxis,
+        valueYField: 'forecastingSoLTopLimit',
+        openValueYField: 'forecastingSoLBottomLimit',
+        valueXField: 'date',
+    }));
+
+    let forecastingSoLBottomLimitSeries = chart.series.push(am5xy.LineSeries.new(root, {
+        name: 'Forecasting SoL Bottom Limit',
+        xAxis: xAxis,
+        yAxis: yAxis,
+        valueYField: 'forecastingSoLBottomLimit',
+        valueXField: 'date',
+    }));
+
+    observedSoLSeries.strokes.template.setAll({
+        strokeWidth: 3
+    });
+
+    forecastingSoLSeries.strokes.template.setAll({
+        strokeWidth: 3
+    });
+
+    forecastingSoLTopLimitSeries.fills.template.setAll({
+        fillOpacity: 0.3,
+        visible: true
+    });
+    
+    root.dateFormatter.setAll({
+        dateFormat: customFullDateFormat,
+        dateFields: ['valueX']
+    });
+
+    // Save chartData (1. observed SoL + 2. forecasting SoL)
+    let chartData = [];
+
+    // - Save observed SoL
+    let startTime = '2021-10-01T00:00:00';
+    let endTime = currentDateTime.minus({ day: 1}).toFormat(customTimeDesignatorFullDateTimeFormat);
+
+    requestUrl = new URL(`${window.location.origin}/api/ess/operating-sites/1/banks/1/stats/avg-bank-soh/`);
+    requestUrl.searchParams.append('time-bucket-width', '1day');
+    requestUrl.searchParams.append('start-time', startTime);
+    requestUrl.searchParams.append('end-time', endTime);
+
+    let avgBankSoHData = await loadData(requestUrl);
+    avgBankSoHData.forEach(element => {
+        chartData.push({
+            date: DateTime.fromISO(element['time']).toMillis(),
+            observedSoL: (element['avg_bank_soh'] - 80) * 5
+        });
+    });
+
+    // - Save forecasting SoL
+    let startDate = currentDateTime.toFormat(customFullDateFormat);
+    let endDate = '2036-01-01';
+
+    requestUrl = new URL(`${window.location.origin}/api/ess-feature/forecasting-bank-sol/operating-sites/1/banks/1/`);
+    requestUrl.searchParams.append('start-date', startDate);
+    requestUrl.searchParams.append('end-date', endDate);
+
+    let forecastingBankSoLData = await loadData(requestUrl);
+
+    for (const element of forecastingBankSoLData) {
+        let item = {};
+
+        if (element['forecasting_sol'] >= 0) {
+            item.date = DateTime.fromISO(element['date']).toMillis();
+            item.forecastingSoL = Math.round(element['forecasting_sol'] * 10) / 10;
+
+            if (element['forecasting_sol_top_limit'] >= 0) {
+                item.forecastingSoLTopLimit = Math.round(element['forecasting_sol_top_limit'] * 10) / 10;
+            }
+    
+            if (element['forecasting_sol_bottom_limit'] >= 0) {
+                item.forecastingSoLBottomLimit = Math.round(element['forecasting_sol_bottom_limit'] * 10) / 10;
+            }
+
+            chartData.push(item);
+        } else {
+            break;
+        }
+    }
+
+    // Setup chart series
+    observedSoLSeries.data.setAll(chartData);
+    forecastingSoLSeries.data.setAll(chartData);
+    forecastingSoLTopLimitSeries.data.setAll(chartData);
+    forecastingSoLBottomLimitSeries.data.setAll(chartData);
+
+    // Add guide line
+    let rangeDataItem = xAxis.makeDataItem({
+        value: currentDateTime.toMillis()
+    });
+
+    xAxis.createAxisRange(rangeDataItem);
+
+    rangeDataItem.get('grid').setAll({
+        strokeWidth: 3,
+        strokeOpacity: 0.5,
+        strokeDasharray: [3]
+    });
+
+    // Add legend
+    // - Remove legend of forecasting SoL top & bottom limit
+    let seriesValuesCopy = chart.series.values.slice();
+    seriesValuesCopy.pop();
+    seriesValuesCopy.pop();
+
+    let legend = chart.children.push(am5.Legend.new(root, {
+        centerX: am5.percent(50),
+        x: am5.percent(50)
+    }));
+    legend.data.setAll(seriesValuesCopy);
+
+    // Chart animation
+    observedSoLSeries.appear(1000);
+    forecastingSoLSeries.appear(1000);
+    forecastingSoLTopLimitSeries.appear(1000);
+    forecastingSoLBottomLimitSeries.appear(1000);
+    chart.appear(1000, 100);
+
+    // Setup loading UI
+    let forecastingBankSoLCardElement = document.getElementById('forecastingBankSoLCard');
+    forecastingBankSoLCardElement.querySelector('.spinner-border').classList.add('d-none');
+    
+    let forecastingBankSoLChartElement = document.getElementById('forecastingBankSoLChart');
+    forecastingBankSoLChartElement.parentNode.classList.remove('d-none');
+}
+
+createForecastingBankSoLChart();
+
