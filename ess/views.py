@@ -1,4 +1,6 @@
 import csv
+import joblib
+import pandas as pd
 from datetime import datetime
 from datetime import timedelta
 from django.db import connections, DataError
@@ -32,6 +34,7 @@ from .serializer import (
     AvgESSRackSoHSerializer,
     AvgESSBankPowerSerializer,
     EssMonitoringLogDocumentSerializer,
+    ForecastingRackMaxCellVoltageSerializer,
 )
 
 # This custom module have dynamic ess models, serializers, data_dates
@@ -752,12 +755,23 @@ class EssMonitoringLogDocumentView(BaseDocumentViewSet):
 
 
 class LatestESSBankView(RetrieveAPIView):
-    def get(self, request, *args, **kwargs):
-        operating_site_id = kwargs["operating_site_id"]
+    def get_serializer_class(self):
+        operating_site_id = self.kwargs["operating_site_id"]
         database = "ess" + str(operating_site_id)
-        bank_id = kwargs["bank_id"]
+
+        return ESS_BANK_SERIALIZER[database]
+
+    def get_queryset(self):
+        operating_site_id = self.kwargs["operating_site_id"]
+        database = "ess" + str(operating_site_id)
+        bank_id = self.kwargs["bank_id"]
         queryset = ESS_BANK[database].objects.using(database).filter(bank_id=bank_id).latest("timestamp")
-        serializer = ESS_BANK_SERIALIZER[database](queryset)
+
+        return queryset
+
+    def get(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset)
 
         return Response(serializer.data)
 
@@ -851,4 +865,128 @@ class ESSOperatingDataDownloadView(RetrieveAPIView):
             return Response(
                 {"code": "404", "exception type": "Index Error", "message": "해당 데이터를 찾을 수 없습니다."},
                 status=status.HTTP_404_NOT_FOUND,
+            )
+
+
+class ForecastingRackMaxCellVoltageView(ListAPIView):
+    def get_queryset(self):
+        return None
+
+    def get(self, request, *args, **kwargs):
+        try:
+            operating_site_id = kwargs["operating_site_id"]
+            database = "ess" + str(operating_site_id)
+            bank_id = kwargs["bank_id"]
+            rack_id = kwargs["rack_id"]
+            start_time_query_param = request.query_params.get("start-time")
+            start_time = datetime.strptime(start_time_query_param, "%Y-%m-%dT%H:%M:%S")
+            end_time_query_param = request.query_params.get("end-time")
+            end_time = datetime.strptime(end_time_query_param, "%Y-%m-%dT%H:%M:%S")
+            models_query_param = request.query_params.get("models")
+            models_string = models_query_param.split(",")
+
+            with connections[database].cursor() as cursor:
+                query = """
+                    SELECT "TIMESTAMP", date_part('day', "TIMESTAMP") as day, date_part('hour', "TIMESTAMP") as hour, date_part('minute', "TIMESTAMP") as minute, 
+                    "BANK_ID", "RACK_ID", "RACK_SOC", "RACK_VOLTAGE", "RACK_CURRENT", "RACK_MAX_CELL_VOLTAGE", "RACK_MIN_CELL_VOLTAGE", 
+                    "RACK_CELL_VOLTAGE_GAP", "RACK_CELL_VOLTAGE_AVERAGE", "RACK_MAX_CELL_TEMPERATURE", 
+                    "RACK_MIN_CELL_TEMPERATURE", "RACK_CELL_TEMPERATURE_GAP", "RACK_CELL_TEMPERATURE_AVERAGE" 
+                    FROM rack 
+                    WHERE "BANK_ID" = %(bank_id)s and "RACK_ID" = %(rack_id)s and "TIMESTAMP" BETWEEN %(start_time)s AND %(end_time)s 
+                    ORDER BY "TIMESTAMP"
+                """
+
+                params = {
+                    "bank_id": bank_id,
+                    "rack_id": rack_id,
+                    "start_time": start_time,
+                    "end_time": end_time,
+                }
+
+                cursor.execute(query, params)
+
+                response_data = dictfetchall(cursor)
+
+            features = [
+                "day",
+                "hour",
+                "minute",
+                "RACK_SOC",
+                "RACK_VOLTAGE",
+                "RACK_CURRENT",
+                "RACK_MAX_CELL_VOLTAGE",
+                "RACK_MIN_CELL_VOLTAGE",
+                "RACK_CELL_VOLTAGE_GAP",
+                "RACK_CELL_VOLTAGE_AVERAGE",
+                "RACK_MAX_CELL_TEMPERATURE",
+                "RACK_MIN_CELL_TEMPERATURE",
+                "RACK_CELL_TEMPERATURE_GAP",
+                "RACK_CELL_TEMPERATURE_AVERAGE",
+            ]
+
+            models = [
+                {model_string: joblib.load(f"./ml_models/forecasting/rack_max_cell_voltage/{model_string}_model.pkl")}
+                for model_string in models_string
+            ]
+
+            data = []
+
+            for response_data_element in response_data:
+                df_data = {feature: response_data_element[feature] for feature in features}
+                df = pd.DataFrame(data=[df_data.values()], columns=features)
+
+                value = {"observed": df_data["RACK_MAX_CELL_VOLTAGE"]}
+
+                for model_dict in models:
+                    for model_string, model in model_dict.items():
+                        value[model_string] = model.predict(df)[0]
+
+                data.append(
+                    {
+                        "time": response_data_element["TIMESTAMP"],
+                        "value": value,
+                    }
+                )
+
+            serializer = ForecastingRackMaxCellVoltageSerializer(data=data, many=True)
+
+            if serializer.is_valid():
+                return Response(serializer.data)
+
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except TypeError:
+            return Response(
+                {
+                    "code": "400",
+                    "exception_type": "Type Error",
+                    "message": "필수 요청 파라미터를 입력하세요.(models, start-time, end-time)",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except AttributeError:
+            return Response(
+                {
+                    "code": "400",
+                    "exception_type": "AttributeError",
+                    "message": "필수 요청 파라미터를 입력하세요.(models)",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except FileNotFoundError:
+            return Response(
+                {
+                    "code": "400",
+                    "exception type": "File Not Found Error",
+                    "message": "올바른 요청 파라미터를 입력하세요.(model의 종류는 'catboost', 'lightgbm', 'linear', 'xgboost' 입니다.)",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except ValueError:
+            return Response(
+                {
+                    "code": "400",
+                    "exception type": "Value Error",
+                    "message": "올바른 요청 파라미터를 입력하세요.(time 형식은 'YYYY-MM-DDThh:mm:ss' 입니다.)",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
             )
