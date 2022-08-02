@@ -51,7 +51,7 @@ class ProtectionMapFeatureView(ListAPIView):
         message = self.request.query_params.get("message")
 
         if message is not None:
-            queryset = queryset.filter(error_code__description__icontains=message)
+            queryset = queryset.filter(description__icontains=message)
 
         return queryset
 
@@ -111,7 +111,7 @@ class ProtectionMapFeatureLogLevelCountView(ListAPIView):
             with connections["ess_feature"].cursor() as cursor:
                 query = """
                     SELECT time_bucket(%(time_bucket_width)s, "TIMESTAMP" AT TIME ZONE %(time_bucket_timezone)s) "time", "OPERATING_SITE" "operating_site", "LEVEL" "level", count("LEVEL") "level_count" 
-                    FROM protectionmap_feature 
+                    FROM protectionmap_feature_new 
                     WHERE "OPERATING_SITE" = %(operating_site_id)s AND "TIMESTAMP" BETWEEN %(start_time)s AND %(end_time)s 
                     GROUP BY "time", "operating_site", "level" 
                     ORDER BY "time" DESC, "level"

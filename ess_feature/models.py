@@ -24,10 +24,11 @@ class ProtectionMapFeature(models.Model):
     bank_id = models.IntegerField(db_column="BANK_ID")
     rack_id = models.IntegerField(db_column="RACK_ID")
     operating_site = models.IntegerField(db_column="OPERATING_SITE")
+    description = models.CharField(max_length=300, blank=True, null=True, db_column="DESCRIPTION")
 
     class Meta:
         managed = False
-        db_table = "protectionmap_feature"
+        db_table = "protectionmap_feature_new"
 
 
 class ForecastingBankSoL(models.Model):

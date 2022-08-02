@@ -251,12 +251,16 @@ function getMonitoringLogAlertElement(data) {
 
     monitoringLogAlertElement.setAttribute('class', `alert ${alertClass} m-b-5 p-l-10 p-t-0 p-b-0`);
     monitoringLogAlertElement.setAttribute('role', 'alert');
+    monitoringLogAlertElement.setAttribute('title', data['description']);
     monitoringLogAlertElement.innerHTML = `
         <p class="text-truncate m-t-0 m-b-0">
             <small>${DateTime.fromISO(data['timestamp']).toFormat('HH:mm:ss')}</small>
         </p>
         <p class="text-truncate m-t-0 m-b-0">
-            <small>${data['error_code']['description']}</small>
+            <small>Bank ${data['bank_id']} / Rack ${data['rack_id']}</small>
+        </p>
+        <p class="text-truncate m-t-0 m-b-0">
+            <small>${data['description']}</small>
         </p>
     `;
 
@@ -505,6 +509,7 @@ operatingSiteMonitoringLogColumnIds.forEach(async (operatingSiteMonitoringLogCol
     requestUrl.searchParams.append('end-time', DateTime.utc().plus({ days: 1 }).toFormat('yyyy-MM-dd').toString());
 
     let protectionmapLogData = await loadData(requestUrl);
+
     protectionmapLogData['results'].forEach(result => {
         let alertElement = getMonitoringLogAlertElement(result);
 
