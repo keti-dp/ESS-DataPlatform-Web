@@ -33,7 +33,6 @@ function getInitialLineChart(chartRoot) {
             panY: false,
             wheelY: "zoomX",
             layout: root.verticalLayout,
-            maxTooltipDistance: 0
         })
     );
     chart.set("cursor", am5xy.XYCursor.new(root, {
@@ -713,4 +712,161 @@ async function createForecastingBankSoLChart() {
 }
 
 createForecastingBankSoLChart();
+
+// Create forecasting rack max cell voltage
+async function createForecastingRackMaxCellVoltageChart() {
+    let root = getChartRoot('forecastingRackMaxCellVoltageChart');
+    let chart = getInitialLineChart(root);
+
+    // Create axes
+    let xAxis = chart.xAxes.push(am5xy.DateAxis.new(root, {
+        baseInterval: {
+        timeUnit: "second",
+        count: 1
+        },
+        renderer: am5xy.AxisRendererX.new(root, {}),
+        tooltip: am5.Tooltip.new(root, {})
+    }));
+    
+    let yAxis = chart.yAxes.push(am5xy.ValueAxis.new(root, {
+        renderer: am5xy.AxisRendererY.new(root, {}),
+        tooltip: am5.Tooltip.new(root, {})
+    }));
+  
+  
+    // Add series
+    let observedRackMaxCellVoltageSeries = chart.series.push(am5xy.LineSeries.new(root, {
+        name: "Observed Max Cell Voltage",
+        xAxis: xAxis,
+        yAxis: yAxis,
+        valueYField: "observedRackMaxCellVoltage",
+        valueXField: "time",
+        tooltip: am5.Tooltip.new(root, {
+            labelText: "{valueY}",
+            pointerOrientation:"horizontal"
+        })
+    }));
+
+    let forecastingCatBoostRackMaxCellVoltageSeries = chart.series.push(am5xy.LineSeries.new(root, {
+        name: "Forecasting Max Cell Voltage(CatBoost)",
+        xAxis: xAxis,
+        yAxis: yAxis,
+        valueYField: "forecastingCatBoostRackMaxCellVoltage",
+        valueXField: "time",
+        tooltip: am5.Tooltip.new(root, {
+            labelText: "{valueY}",
+            pointerOrientation:"horizontal"
+        })
+    }));
+
+    let forecastingLinearRackMaxCellVoltageSeries = chart.series.push(am5xy.LineSeries.new(root, {
+        name: "Forecasting Max Cell Voltage(Linear)",
+        xAxis: xAxis,
+        yAxis: yAxis,
+        valueYField: "forecastingLinearRackMaxCellVoltage",
+        valueXField: "time",
+    }));
+
+    let forecastingLightGBMRackMaxCellVoltageSeries = chart.series.push(am5xy.LineSeries.new(root, {
+        name: "Forecasting Max Cell Voltage(LightGBM)",
+        xAxis: xAxis,
+        yAxis: yAxis,
+        valueYField: "forecastingLightGBMRackMaxCellVoltage",
+        valueXField: "time",
+        tooltip: am5.Tooltip.new(root, {
+            labelText: "{valueY}",
+            pointerOrientation:"horizontal"
+        })
+    }));
+
+    let forecastingXGBoostRackMaxCellVoltageSeries = chart.series.push(am5xy.LineSeries.new(root, {
+        name: "Forecasting Max Cell Voltage(XGBoost)",
+        xAxis: xAxis,
+        yAxis: yAxis,
+        valueYField: "forecastingXGBoostRackMaxCellVoltage",
+        valueXField: "time",
+        tooltip: am5.Tooltip.new(root, {
+            labelText: "{valueY}",
+            pointerOrientation:"horizontal"
+        })
+    }));
+
+    observedRackMaxCellVoltageSeries.strokes.template.setAll({
+        strokeWidth: 3
+    });
+
+    forecastingCatBoostRackMaxCellVoltageSeries.strokes.template.setAll({
+        strokeDasharray: [2, 2],
+        strokeWidth: 3
+    });
+
+    forecastingLinearRackMaxCellVoltageSeries.strokes.template.setAll({
+        strokeDasharray: [2, 2]
+    });
+
+    forecastingLightGBMRackMaxCellVoltageSeries.strokes.template.setAll({
+        strokeDasharray: [2, 2],
+        strokeWidth: 3
+    });
+
+    forecastingXGBoostRackMaxCellVoltageSeries.strokes.template.setAll({
+        strokeDasharray: [2, 2],
+        strokeWidth: 3
+    });
+  
+    // Set date fields
+    root.dateFormatter.setAll({
+        dateFormat: "yyyy-MM-dd'T'hh:mm:ss",
+        dateFields: ["valueX"]
+    });
+
+    requestUrl = new URL(`${window.location.origin}/api/ess/forecasting-rack-max-cell-voltage/operating-sites/1/banks/1/racks/2/`);
+    requestUrl.searchParams.append('models', 'catboost,linear,lightgbm,xgboost');
+    requestUrl.searchParams.append('start-time', currentDateTime.set({hour: 0, minute: 0, second: 0}).toFormat(customTimeDesignatorFullDateTimeFormat));
+    requestUrl.searchParams.append('end-time', currentDateTime.toFormat(customTimeDesignatorFullDateTimeFormat));
+
+    responseData = await loadData(requestUrl);
+  
+    // Set data
+    let data = responseData.map(element => {
+        return {
+            time: DateTime.fromISO(element['time']).toMillis(),
+            observedRackMaxCellVoltage: element['value']['observed'],
+            forecastingCatBoostRackMaxCellVoltage: element['value']['catboost'],
+            forecastingLinearRackMaxCellVoltage: element['value']['linear'],
+            forecastingLightGBMRackMaxCellVoltage: element['value']['lightgbm'],
+            forecastingXGBoostRackMaxCellVoltage: element['value']['xgboost'],
+        }
+    });
+  
+    observedRackMaxCellVoltageSeries.data.setAll(data);
+    forecastingCatBoostRackMaxCellVoltageSeries.data.setAll(data);
+    forecastingLinearRackMaxCellVoltageSeries.data.setAll(data);
+    forecastingLightGBMRackMaxCellVoltageSeries.data.setAll(data);
+    forecastingXGBoostRackMaxCellVoltageSeries.data.setAll(data);
+
+    let legend = chart.children.push(am5.Legend.new(root, {
+        centerX: am5.percent(50),
+        x: am5.percent(50)
+    }));
+    legend.data.setAll(chart.series.values);
+  
+    // Make stuff animate on load
+    observedRackMaxCellVoltageSeries.appear(1000);
+    forecastingCatBoostRackMaxCellVoltageSeries.appear(1000);
+    forecastingLinearRackMaxCellVoltageSeries.appear(1000);
+    forecastingLightGBMRackMaxCellVoltageSeries.appear(1000);
+    forecastingXGBoostRackMaxCellVoltageSeries.appear(1000);
+
+    // Setup loading UI
+    let forecastingRackMaxCellVoltageCardElement = document.getElementById('forecastingRackMaxCellVoltageCard');
+    forecastingRackMaxCellVoltageCardElement.querySelector('.spinner-border').classList.add('d-none');
+
+    let forecastingRackMaxCellVoltageChartElement = document.getElementById('forecastingRackMaxCellVoltageChart');
+    forecastingRackMaxCellVoltageChartElement.parentNode.classList.remove('d-none');
+  
+  chart.appear(1000, 100);
+}
+
+createForecastingRackMaxCellVoltageChart();
 
