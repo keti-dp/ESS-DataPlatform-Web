@@ -103,6 +103,57 @@ function getSimpleLineChart(elementId, data, option = {}) {
     return series;
 }
 
+function getAvgSoHChartSeries(elementId) {
+    let root = getChartRoot(elementId);
+    let chart = getInitialLineChart(root);
+
+    // Create X-Axis
+    let xAxis = chart.xAxes.push(
+        am5xy.DateAxis.new(root, {
+            baseInterval: { timeUnit: "day", count: 1 },
+            renderer: am5xy.AxisRendererX.new(root, {}),
+            dateFormats: {
+                day: 'yyyy-MM-dd',
+                month: 'yyyy-MM'
+            },
+            periodChangeDateFormats: {
+                month: 'yyyy-MM'
+            }
+        }),
+    );
+    
+    // Create Y-axis
+    let yAxis = chart.yAxes.push(
+        am5xy.ValueAxis.new(root, {
+            min: 80,
+            max: 100,
+            extraTooltipPrecision: 1,
+            renderer: am5xy.AxisRendererY.new(root, {})
+        })
+    );
+    
+    // Create series
+    let series = chart.series.push(
+        am5xy.LineSeries.new(root, {
+            name: "Avg SoH",
+            xAxis: xAxis,
+            yAxis: yAxis,
+            valueYField: "value",
+            valueXField: "time",
+            tooltip: am5.Tooltip.new(root, {
+                labelText: "[bold]{name}[/]\n{valueX.formatDate('yyyy-MM-dd')}: {valueY.formatNumber('#.000')}"
+            })
+        })
+    );
+
+    // Setup series
+    series.strokes.template.setAll({
+        strokeWidth: 3
+    });
+
+    return series
+}
+
 // <!-- Create initial chart -->
 
 // Luxon alias 'DateTime'
@@ -112,7 +163,7 @@ let startTimeObject = currentDateTime.startOf('day');
 let startTime = startTimeObject.toFormat(customTimeDesignatorFullDateTimeFormat);
 let endTime = startTimeObject.plus({ day: 1 }).toFormat(customTimeDesignatorFullDateTimeFormat);
 
-let visualizationTypes = ['avg-bank-soc', 'avg-rack-soc', 'avg-bank-soh', 'avg-rack-soh', 'avg-bank-power'];
+let visualizationTypes = ['avg-bank-soc', 'avg-rack-soc', 'avg-bank-power'];
 
 // Assign variable collection for dynamic names
 let visualizationTypesObjects = {
@@ -711,8 +762,6 @@ async function createForecastingBankSoLChart() {
     forecastingBankSoLChartElement.parentNode.classList.remove('d-none');
 }
 
-createForecastingBankSoLChart();
-
 // Create forecasting rack max cell voltage
 async function createForecastingRackMaxCellVoltageChart() {
     let root = getChartRoot('forecastingRackMaxCellVoltageChart');
@@ -868,5 +917,413 @@ async function createForecastingRackMaxCellVoltageChart() {
   chart.appear(1000, 100);
 }
 
+/*
+ * Event
+ */ 
+
+// Avg bank SoH search modal
+let essBankSoHVisualizationSearchModalFormStartDateTimePickerElement = document.getElementById('essBankSoHVisualizationSearchModalFormStartDateTimePicker');
+let essBankSoHVisualizationSearchModalFormEndDateTimePickerElement = document.getElementById('essBankSoHVisualizationSearchModalFormEndDateTimePicker');
+let essBankSoHVisualizationSearchModalFormOperatingSiteSelectElement = document.getElementById('essBankSoHVisualizationSearchModalFormOperatingSiteSelect');
+let essBankSoHVisualizationSearchModalFormBankSelectElement = document.getElementById('essBankSoHVisualizationSearchModalFormBankSelect');
+essBankSoHVisualizationSearchModalFormOperatingSiteSelectElement.addEventListener('change', (event) => {
+    essBankSoHVisualizationSearchModalFormBankSelectElement.innerHTML = '';
+    essBankSoHVisualizationSearchModalFormBankSelectElement.insertAdjacentHTML('afterbegin', '<option value="" selected disabled>Bank를 선택해주세요.</option>');
+    essBankSoHVisualizationSearchModalFormBankSelectElement.setAttribute('disabled', '');
+
+    let operatingSiteId = event.target.value;
+    let essProtectionMapInfoRackCountObject = essProtectionMap['info']['rackCount'];
+
+    if (essProtectionMapInfoRackCountObject[`operatingSite${operatingSiteId}`]) {
+        let bankCount = Object.keys(essProtectionMapInfoRackCountObject[`operatingSite${operatingSiteId}`]).length;
+
+        for (i = 0; i < bankCount; i++) {
+            essBankSoHVisualizationSearchModalFormBankSelectElement.insertAdjacentHTML('beforeend', `<option value="${i + 1}">${i + 1}</option>`)
+        }
+        essBankSoHVisualizationSearchModalFormBankSelectElement.removeAttribute('disabled');
+    }
+});
+
+const essBankSoHVisualizationSearchModalFormStartDateTimeTempusDominus = new tempusDominus.TempusDominus(essBankSoHVisualizationSearchModalFormStartDateTimePickerElement, {
+    display: {
+        components: {
+            decades: true,
+            year: true,
+            month: true,
+            date: true,
+            hours: false,
+            minutes: false,
+            seconds: false,
+        },
+    },
+    hooks: {
+        inputFormat: (context, date) => { return DateTime.fromISO(date.toISOString()).toFormat(customFullDateFormat) }
+    }
+});
+
+const essBankSoHVisualizationSearchModalFormEndDateTimeTempusDominus = new tempusDominus.TempusDominus(essBankSoHVisualizationSearchModalFormEndDateTimePickerElement, {
+    display: {
+        components: {
+            decades: true,
+            year: true,
+            month: true,
+            date: true,
+            hours: false,
+            minutes: false,
+            seconds: false,
+        }
+    },
+    hooks: {
+        inputFormat: (context, date) => { return DateTime.fromISO(date.toISOString()).toFormat(customFullDateFormat) }
+    },
+    useCurrent: false
+});
+
+essBankSoHVisualizationSearchModalFormStartDateTimePickerElement.addEventListener(tempusDominus.Namespace.events.change, (e) => {
+    essBankSoHVisualizationSearchModalFormEndDateTimeTempusDominus.updateOptions({
+        restrictions: {
+            minDate: e.detail.date
+        },
+    });
+});
+
+const essBankSoHVisualizationSearchModalFormEndDateTimeTempusDominusSubscription = essBankSoHVisualizationSearchModalFormEndDateTimeTempusDominus.subscribe(tempusDominus.Namespace.events.change, (e) => {
+    essBankSoHVisualizationSearchModalFormStartDateTimeTempusDominus.updateOptions({
+        restrictions: {
+            maxDate: e.date
+        }
+    });
+});
+
+const essBankSoHVisualizationSearchModalFormValidation = new JustValidate('#essBankSoHVisualizationSearchModalForm', {
+    errorFieldCssClass: 'is-invalid',
+    focusInvalidField: true,
+    lockForm: true,
+    tooltip: {
+        position: 'right',
+    }
+});
+essBankSoHVisualizationSearchModalFormValidation
+    .addField('#essBankSoHVisualizationSearchModalFormOperatingSiteSelect', [
+        {
+            rule: 'required',
+            errorMessage: '운영 사이트를 선택하세요.'
+        }
+    ])
+    .addField('#essBankSoHVisualizationSearchModalFormBankSelect', [
+        {
+            rule: 'required',
+            errorMessage: 'Bank를 선택하세요.'
+        }
+    ])
+    .addField('#essBankSoHVisualizationSearchModalFormStartDateTimeInput', [
+        {
+            plugin: JustValidatePluginDate(fields => ({
+                required: true,
+                format: customFullDateFormat
+            })),
+            errorMessage: '시작 날짜를 선택하세요.'
+        },
+    ]).addField('#essBankSoHVisualizationSearchModalFormEndDateTimeInput', [
+        {
+            plugin: JustValidatePluginDate(fields => ({
+                required: true,
+                format: customFullDateFormat
+            })),
+            errorMessage: '마지막 날짜를 선택하세요.'
+        },
+    ])
+    .onSuccess(async (event) => {
+        let essBankSoHVisualizationSearchModalElement = document.getElementById('essBankSoHVisualizationSearchModal');
+        let avgBankSoHCardElement = document.getElementById('avgBankSoHCard');
+        let avgBankSoHChartElement = document.getElementById('avgBankSoHChart');
+
+        // Off modal
+        bootstrap.Modal.getInstance(essBankSoHVisualizationSearchModalElement).hide();
+
+        // Setup loading UI
+        avgBankSoHChartElement.parentNode.classList.add('d-none');
+        avgBankSoHCardElement.querySelector('.card-body .spinner-border').classList.remove('d-none');
+
+        let operatingSiteId = essBankSoHVisualizationSearchModalFormOperatingSiteSelectElement.value;
+        let bankId = essBankSoHVisualizationSearchModalFormBankSelectElement.value;
+        let startTime = DateTime.fromISO(essBankSoHVisualizationSearchModalFormStartDateTimeInput.value).toFormat(customTimeDesignatorFullDateTimeFormat);
+        let endTime = DateTime.fromISO(essBankSoHVisualizationSearchModalFormEndDateTimeInput.value).toFormat(customTimeDesignatorFullDateTimeFormat);
+
+        let requestUrl = new URL(`${window.location.origin}/api/ess/operating-sites/${operatingSiteId}/banks/${bankId}/stats/avg-bank-soh`);
+        requestUrl.searchParams.append('time-bucket-width', '1day');
+        requestUrl.searchParams.append('start-time', startTime);
+        requestUrl.searchParams.append('end-time', endTime);
+
+        let responseData = await loadData(requestUrl);
+
+        let chartData = responseData.map(element => {
+            let time = DateTime.fromISO(element['time']).toMillis();
+            let value = element['avg_bank_soh'];
+
+            return { time: time, value: value };
+        });
+
+        avgBankSoHCardElement.querySelector('.card-body p').textContent = `
+            ${essBankSoHVisualizationSearchModalFormOperatingSiteSelectElement.options[essBankSoHVisualizationSearchModalFormOperatingSiteSelectElement.selectedIndex].text} > Bank ${bankId}
+        `;
+
+        avgBankSoHChartSeries.data.setAll(chartData);
+
+        // Off loading UI
+        avgBankSoHCardElement.querySelector('.card-body .spinner-border').classList.add('d-none');
+        avgBankSoHChartElement.parentNode.classList.remove('d-none');
+    });
+
+// Avg rack SoH search modal
+let essRackSoHVisualizationSearchModalFormOperatingSiteSelectElement = document.getElementById('essRackSoHVisualizationSearchModalFormOperatingSiteSelect');
+let essRackSoHVisualizationSearchModalFormBankSelectElement = document.getElementById('essRackSoHVisualizationSearchModalFormBankSelect');
+let essRackSoHVisualizationSearchModalFormRackSelectElement = document.getElementById('essRackSoHVisualizationSearchModalFormRackSelect');
+let essRackSoHVisualizationSearchModalFormStartDateTimePickerElement = document.getElementById('essRackSoHVisualizationSearchModalFormStartDateTimePicker');
+let essRackSoHVisualizationSearchModalFormEndDateTimePickerElement = document.getElementById('essRackSoHVisualizationSearchModalFormEndDateTimePicker');
+
+essRackSoHVisualizationSearchModalFormOperatingSiteSelectElement.addEventListener('change', (event) => {
+    essRackSoHVisualizationSearchModalFormBankSelectElement.innerHTML = '';
+    essRackSoHVisualizationSearchModalFormBankSelectElement.insertAdjacentHTML('afterbegin', '<option value="" selected disabled>Bank를 선택해주세요.</option>');
+    essRackSoHVisualizationSearchModalFormBankSelectElement.setAttribute('disabled', '');
+
+    essRackSoHVisualizationSearchModalFormRackSelectElement.innerHTML = '';
+    essRackSoHVisualizationSearchModalFormRackSelectElement.insertAdjacentHTML('afterbegin', '<option value="" selected disabled>Rack을 선택해주세요.</option>');
+    essRackSoHVisualizationSearchModalFormRackSelectElement.setAttribute('disabled', '');
+
+    let operatingSiteId = event.target.value;
+    let essProtectionMapInfoRackCountObject = essProtectionMap['info']['rackCount'];
+
+    if (essProtectionMapInfoRackCountObject[`operatingSite${operatingSiteId}`]) {
+        let bankCount = Object.keys(essProtectionMapInfoRackCountObject[`operatingSite${operatingSiteId}`]).length;
+
+        for (i = 0; i < bankCount; i++) {
+            essRackSoHVisualizationSearchModalFormBankSelectElement.insertAdjacentHTML('beforeend', `<option value="${i + 1}">${i + 1}</option>`)
+        }
+
+        essRackSoHVisualizationSearchModalFormBankSelectElement.removeAttribute('disabled');
+    }
+});
+
+essRackSoHVisualizationSearchModalFormBankSelectElement.addEventListener('change', (event) => {
+    essRackSoHVisualizationSearchModalFormRackSelectElement.innerHTML = '';
+    essRackSoHVisualizationSearchModalFormRackSelectElement.insertAdjacentHTML('afterbegin', '<option value="" selected disabled>Rack을 선택해주세요.</option>')
+
+    let operatingSiteId = essRackSoHVisualizationSearchModalFormOperatingSiteSelectElement.value;
+    let bankId = event.target.value;
+    let essProtectionMapInfoRackCountObject = essProtectionMap['info']['rackCount'];
+
+    if (essProtectionMapInfoRackCountObject[`operatingSite${operatingSiteId}`]) {
+        let rackCount = essProtectionMapInfoRackCountObject[`operatingSite${operatingSiteId}`][`bank${bankId}`];
+
+        for (i = 0; i < rackCount; i++) {
+            essRackSoHVisualizationSearchModalFormRackSelectElement.insertAdjacentHTML('beforeend', `<option value="${i + 1}">${i + 1}</option>`)
+        }
+        essRackSoHVisualizationSearchModalFormRackSelectElement.removeAttribute('disabled');
+    } else {
+        essRackSoHVisualizationSearchModalFormRackSelectElement.setAttribute('disabled', '');
+    }
+});
+
+const essRackSoHVisualizationSearchModalFormStartDateTimeTempusDominus = new tempusDominus.TempusDominus(essRackSoHVisualizationSearchModalFormStartDateTimePickerElement, {
+    display: {
+        components: {
+            decades: true,
+            year: true,
+            month: true,
+            date: true,
+            hours: false,
+            minutes: false,
+            seconds: false,
+        },
+    },
+    hooks: {
+        inputFormat: (context, date) => { return DateTime.fromISO(date.toISOString()).toFormat(customFullDateFormat) }
+    }
+});
+
+const essRackSoHVisualizationSearchModalFormEndDateTimeTempusDominus = new tempusDominus.TempusDominus(essRackSoHVisualizationSearchModalFormEndDateTimePickerElement, {
+    display: {
+        components: {
+            decades: true,
+            year: true,
+            month: true,
+            date: true,
+            hours: false,
+            minutes: false,
+            seconds: false,
+        }
+    },
+    hooks: {
+        inputFormat: (context, date) => { return DateTime.fromISO(date.toISOString()).toFormat(customFullDateFormat) }
+    },
+    useCurrent: false
+});
+
+essRackSoHVisualizationSearchModalFormStartDateTimePickerElement.addEventListener(tempusDominus.Namespace.events.change, (e) => {
+    essRackSoHVisualizationSearchModalFormEndDateTimeTempusDominus.updateOptions({
+        restrictions: {
+            minDate: e.detail.date
+        },
+    });
+});
+
+const essRackSoHVisualizationSearchModalFormEndDateTimeTempusDominusSubscription = essRackSoHVisualizationSearchModalFormEndDateTimeTempusDominus.subscribe(tempusDominus.Namespace.events.change, (e) => {
+    essRackSoHVisualizationSearchModalFormStartDateTimeTempusDominus.updateOptions({
+        restrictions: {
+            maxDate: e.date
+        }
+    });
+});
+
+const essRackSoHVisualizationSearchModalFormValidation = new JustValidate('#essRackSoHVisualizationSearchModalForm', {
+    errorFieldCssClass: 'is-invalid',
+    focusInvalidField: true,
+    lockForm: true,
+    tooltip: {
+        position: 'right',
+    }
+});
+essRackSoHVisualizationSearchModalFormValidation
+    .addField('#essRackSoHVisualizationSearchModalFormOperatingSiteSelect', [
+        {
+            rule: 'required',
+            errorMessage: '운영 사이트를 선택하세요.'
+        }
+    ])
+    .addField('#essRackSoHVisualizationSearchModalFormBankSelect', [
+        {
+            rule: 'required',
+            errorMessage: 'Bank를 선택하세요.'
+        }
+    ])
+    .addField('#essRackSoHVisualizationSearchModalFormRackSelect', [
+        {
+            rule: 'required',
+            errorMessage: 'Rack을 선택하세요.'
+        }
+    ])
+    .addField('#essRackSoHVisualizationSearchModalFormStartDateTimeInput', [
+        {
+            plugin: JustValidatePluginDate(fields => ({
+                required: true,
+                format: customFullDateFormat
+            })),
+            errorMessage: '시작 날짜를 선택하세요.'
+        },
+    ]).addField('#essRackSoHVisualizationSearchModalFormEndDateTimeInput', [
+        {
+            plugin: JustValidatePluginDate(fields => ({
+                required: true,
+                format: customFullDateFormat
+            })),
+            errorMessage: '마지막 날짜를 선택하세요.'
+        },
+    ])
+    .onSuccess(async (event) => {
+        let essRackSoHVisualizationSearchModalElement = document.getElementById('essRackSoHVisualizationSearchModal');
+        let avgRackSoHCardElement = document.getElementById('avgRackSoHCard');
+        let avgRackSoHChartElement = document.getElementById('avgRackSoHChart');
+
+        // Off modal
+        bootstrap.Modal.getInstance(essRackSoHVisualizationSearchModalElement).hide();
+
+        // Setup loading UI
+        avgRackSoHChartElement.parentNode.classList.add('d-none');
+        avgRackSoHCardElement.querySelector('.card-body .spinner-border').classList.remove('d-none');
+
+        let operatingSiteId = essRackSoHVisualizationSearchModalFormOperatingSiteSelectElement.value;
+        let bankId = essRackSoHVisualizationSearchModalFormBankSelectElement.value;
+        let rackId = essRackSoHVisualizationSearchModalFormRackSelectElement.value;
+        let startTime = DateTime.fromISO(essRackSoHVisualizationSearchModalFormStartDateTimeInput.value).toFormat(customTimeDesignatorFullDateTimeFormat);
+        let endTime = DateTime.fromISO(essRackSoHVisualizationSearchModalFormEndDateTimeInput.value).toFormat(customTimeDesignatorFullDateTimeFormat);
+
+        let requestUrl = new URL(`${window.location.origin}/api/ess/operating-sites/${operatingSiteId}/banks/${bankId}/racks/${rackId}/stats/avg-rack-soh/`);
+        requestUrl.searchParams.append('time-bucket-width', '1day');
+        requestUrl.searchParams.append('start-time', startTime);
+        requestUrl.searchParams.append('end-time', endTime);
+
+        let responseData = await loadData(requestUrl);
+
+        let chartData = responseData.map(element => {
+            let time = DateTime.fromISO(element['time']).toMillis();
+            let value = element['avg_rack_soh'];
+
+            return { time: time, value: value };
+        });
+
+        avgRackSoHCardElement.querySelector('.card-body p').textContent = `
+            ${essRackSoHVisualizationSearchModalFormOperatingSiteSelectElement.options[essRackSoHVisualizationSearchModalFormOperatingSiteSelectElement.selectedIndex].text} > Bank ${bankId} > Rack ${rackId}
+        `;
+
+        avgRackSoHChartSeries.data.setAll(chartData);
+
+        // Off loading UI
+        avgRackSoHCardElement.querySelector('.card-body .spinner-border').classList.add('d-none');
+        avgRackSoHChartElement.parentNode.classList.remove('d-none');
+    });
+
+/* 
+ * Initial task
+ */
+
+// Create avg bank SoH chart
+let avgBankSoHChartSeries = getAvgSoHChartSeries('avgBankSoHChart');
+
+let requestUrl = new URL(`${window.location.origin}/api/ess/operating-sites/1/banks/1/stats/avg-bank-soh/`);
+requestUrl.searchParams.append('time-bucket-width', '1day');
+requestUrl.searchParams.append('start-time', '2021-10-01T00:00:00');
+requestUrl.searchParams.append('end-time', currentDateTime.toFormat(customTimeDesignatorFullDateTimeFormat));
+
+fetch(requestUrl).then(response => {
+    return response.json();
+}).then(responseData => {
+    let chartData = responseData.map(element => {
+        return {
+            time: DateTime.fromISO(element['time']).toMillis(),
+            value: element['avg_bank_soh']
+        }
+    });
+    
+    avgBankSoHChartSeries.data.setAll(chartData);
+
+    // Off loading UI
+    let avgBankSoHCardElement = document.getElementById('avgBankSoHCard');
+    avgBankSoHCardElement.querySelector('.spinner-border').classList.add('d-none');
+
+    let avgBankSoHChartElement = document.getElementById('avgBankSoHChart');
+    avgBankSoHChartElement.parentNode.classList.remove('d-none');
+}).catch(error => console.log(error));
+
+// Create initial avg rack SoH chart
+let avgRackSoHChartSeries = getAvgSoHChartSeries('avgRackSoHChart');
+
+requestUrl = new URL(`${window.location.origin}/api/ess/operating-sites/1/banks/1/racks/1/stats/avg-rack-soh/`);
+requestUrl.searchParams.append('time-bucket-width', '1day');
+requestUrl.searchParams.append('start-time', '2021-10-01T00:00:00');
+requestUrl.searchParams.append('end-time', currentDateTime.toFormat(customTimeDesignatorFullDateTimeFormat));
+
+fetch(requestUrl).then(response => {
+    return response.json();
+}).then(responseData => {
+    let chartData = responseData.map(element => {
+        return {
+            time: DateTime.fromISO(element['time']).toMillis(),
+            value: element['avg_rack_soh']
+        }
+    });
+    
+    avgRackSoHChartSeries.data.setAll(chartData);
+
+    // Off loading UI
+    let avgRackSoHCardElement = document.getElementById('avgRackSoHCard');
+    avgRackSoHCardElement.querySelector('.spinner-border').classList.add('d-none');
+
+    let avgRackSoHChartElement = document.getElementById('avgRackSoHChart');
+    avgRackSoHChartElement.parentNode.classList.remove('d-none');
+}).catch(error => console.log(error));
+
+
+createForecastingBankSoLChart();
 createForecastingRackMaxCellVoltageChart();
 
