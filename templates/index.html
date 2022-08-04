@@ -139,15 +139,15 @@
                     </h5>
                     <div class="row">
                         <div class="col-xl-6 col-md-12">
-                            <div id="avgBankSohCard" class="card mx-2">
+                            <div id="avgBankSoHCard" class="card mx-2">
                                 <div class="card-header">
                                     <div class="row">
                                         <div class="col-8 my-auto">
-                                            <h5>Bank 배터리 시간당 평균 SoH</h5>
+                                            <h5>평균 Bank SoH</h5>
                                         </div>
                                         <div class="col-4 text-right">
                                             <button class="btn btn-sm" type="button" data-bs-toggle="modal"
-                                                data-bs-target="#essBankVisualizationSearchModal"
+                                                data-bs-target="#essBankSoHVisualizationSearchModal"
                                                 data-visualization-type="avg-bank-soh">
                                                 <span class="material-icons-two-tone">
                                                     search
@@ -167,21 +167,21 @@
                                     </div>
                                     <div class="row d-none">
                                         <p>시온유 태양광 / Bank 1</p>
-                                        <div id="avgBankSohChart" class="visualization-chart"></div>
+                                        <div id="avgBankSoHChart" class="visualization-chart"></div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                         <div class="col-xl-6 col-md-12">
-                            <div id="avgRackSohCard" class="card mx-2">
+                            <div id="avgRackSoHCard" class="card mx-2">
                                 <div class="card-header">
                                     <div class="row">
                                         <div class="col-8 my-auto">
-                                            <h5>Rack 배터리 시간당 평균 SoH</h5>
+                                            <h5>평균 Rack SoH</h5>
                                         </div>
                                         <div class="col-4 text-right">
                                             <button class="btn btn-sm" type="button" data-bs-toggle="modal"
-                                                data-bs-target="#essRackVisualizationSearchModal"
+                                                data-bs-target="#essRackSoHVisualizationSearchModal"
                                                 data-visualization-type="avg-rack-soh">
                                                 <span class="material-icons-two-tone">
                                                     search
@@ -201,7 +201,7 @@
                                     </div>
                                     <div class="row d-none">
                                         <p>시온유 태양광 / Bank 1 / Rack 1</p>
-                                        <div id="avgRackSohChart" class="visualization-chart"></div>
+                                        <div id="avgRackSoHChart" class="visualization-chart"></div>
                                     </div>
                                 </div>
                             </div>
@@ -318,6 +318,8 @@
                 </div>
             </div>
         </div>
+
+
         <!-- [ Modal ] start -->
         <!-- Visualization search modal - type ess bank -->
         <div class="modal fade" id="essBankVisualizationSearchModal" tabindex="-1"
@@ -448,6 +450,146 @@
                                         placeholder="마지막 날짜를 선택해주세요" />
                                     <span class='input-group-text'
                                         data-td-target='#essRackVisualizationSearchModalFormEndDateTimePicker'
+                                        data-td-toggle='datetimepicker'>
+                                        <span class='fas fa-calendar'></span>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <button type="submit" class="btn btn-primary">검색</button>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bank SoH visualization search modal -->
+        <div class="modal fade" id="essBankSoHVisualizationSearchModal" tabindex="-1"
+            aria-labelledby="essBankSoHVisualizationSearchModalFormLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="essBankSoHVisualizationSearchModalFormLabel">검색</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form action="#" id="essBankSoHVisualizationSearchModalForm" autocomplete="off">
+                            <div class="form-group">
+                                <label class='form-label'>구성:</label>
+                                <div class="input-group m-b-10">
+                                    <select id="essBankSoHVisualizationSearchModalFormOperatingSiteSelect"
+                                        class="form-select">
+                                        <option value="" selected disabled>운영 사이트를 선택해주세요.</option>
+                                        <option value="1">시온유 태양광</option>
+                                        <option value="2">판리 태양광</option>
+                                    </select>
+                                </div>
+                                <div class="input-group m-b-10">
+                                    <select id="essBankSoHVisualizationSearchModalFormBankSelect" class="form-select"
+                                        disabled>
+                                        <option value="" selected disabled>Bank를 선택해주세요.</option>
+                                    </select>
+                                </div>
+                                <label class='form-label'>시간:</label>
+                                <div class='input-group log-event m-b-10'
+                                    id='essBankSoHVisualizationSearchModalFormStartDateTimePicker'
+                                    data-td-target-input='nearest' data-td-target-toggle='nearest'>
+                                    <input id='essBankSoHVisualizationSearchModalFormStartDateTimeInput' type='text'
+                                        class='form-control'
+                                        data-td-target='#essBankSoHVisualizationSearchModalFormStartDateTimePicker'
+                                        placeholder="시작 날짜를 선택해주세요" />
+                                    <span class='input-group-text'
+                                        data-td-target='#essBankSoHVisualizationSearchModalFormStartDateTimePicker'
+                                        data-td-toggle='datetimepicker'>
+                                        <span class='fas fa-calendar'></span>
+                                    </span>
+                                </div>
+                                <div class='input-group log-event'
+                                    id='essBankSoHVisualizationSearchModalFormEndDateTimePicker'
+                                    data-td-target-input='nearest' data-td-target-toggle='nearest'>
+                                    <input id='essBankSoHVisualizationSearchModalFormEndDateTimeInput' type='text'
+                                        class='form-control'
+                                        data-td-target='#essBankSoHVisualizationSearchModalFormEndDateTimePicker'
+                                        placeholder="마지막 날짜를 선택해주세요" />
+                                    <span class='input-group-text'
+                                        data-td-target='#essBankSoHVisualizationSearchModalFormEndDateTimePicker'
+                                        data-td-toggle='datetimepicker'>
+                                        <span class='fas fa-calendar'></span>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <button type="submit" class="btn btn-primary">검색</button>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Rack SoH visualization search modal -->
+        <div class="modal fade" id="essRackSoHVisualizationSearchModal" tabindex="-1"
+            aria-labelledby="essRackSoHVisualizationSearchModalFormLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="essRackSoHVisualizationSearchModalFormLabel">검색</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form action="#" id="essRackSoHVisualizationSearchModalForm" autocomplete="off">
+                            <div class="form-group">
+                                <label class='form-label'>구성:</label>
+                                <div class="input-group m-b-10">
+                                    <select id="essRackSoHVisualizationSearchModalFormOperatingSiteSelect"
+                                        class="form-select">
+                                        <option value="" selected disabled>운영 사이트를 선택해주세요.</option>
+                                        <option value="1">시온유 태양광</option>
+                                        <option value="2">판리 태양광</option>
+                                    </select>
+                                </div>
+                                <div class="input-group m-b-10">
+                                    <select name="" id="essRackSoHVisualizationSearchModalFormBankSelect"
+                                        class="form-select" disabled>
+                                        <option value="" selected disabled>Bank를 선택해주세요.</option>
+                                    </select>
+                                </div>
+                                <div class="input-group m-b-10">
+                                    <select id="essRackSoHVisualizationSearchModalFormRackSelect" class="form-select"
+                                        disabled>
+                                        <option value="" selected disabled>Rack를 선택해주세요.</option>
+                                    </select>
+                                </div>
+                                <label class='form-label'>시간:</label>
+                                <div class='input-group log-event m-b-10'
+                                    id='essRackSoHVisualizationSearchModalFormStartDateTimePicker'
+                                    data-td-target-input='nearest' data-td-target-toggle='nearest'>
+                                    <input id='essRackSoHVisualizationSearchModalFormStartDateTimeInput' type='text'
+                                        class='form-control'
+                                        data-td-target='#essRackSoHVisualizationSearchModalFormStartDateTimePicker'
+                                        placeholder="시작 날짜를 선택해주세요" />
+                                    <span class='input-group-text'
+                                        data-td-target='#essRackSoHVisualizationSearchModalFormStartDateTimePicker'
+                                        data-td-toggle='datetimepicker'>
+                                        <span class='fas fa-calendar'></span>
+                                    </span>
+                                </div>
+                                <div class='input-group log-event'
+                                    id='essRackSoHVisualizationSearchModalFormEndDateTimePicker'
+                                    data-td-target-input='nearest' data-td-target-toggle='nearest'>
+                                    <input id='essRackSoHVisualizationSearchModalFormEndDateTimeInput' type='text'
+                                        class='form-control'
+                                        data-td-target='#essRackSoHVisualizationSearchModalFormEndDateTimePicker'
+                                        placeholder="마지막 날짜를 선택해주세요" />
+                                    <span class='input-group-text'
+                                        data-td-target='#essRackSoHVisualizationSearchModalFormEndDateTimePicker'
                                         data-td-toggle='datetimepicker'>
                                         <span class='fas fa-calendar'></span>
                                     </span>
