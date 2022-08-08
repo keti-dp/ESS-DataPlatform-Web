@@ -1,12 +1,10 @@
-from datetime import datetime
 from django.core.exceptions import ValidationError
 from django.db import connections, DataError
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.generics import ListAPIView
 from rest_framework.views import Response, status
-from .models import ForecastingBankSoL, ProtectionMapFeature
+from .models import ProtectionMapFeature
 from .serializers import (
-    ForecastingBankSoLSerializer,
     ProtectionMapFeatureSerializer,
     ProtectionMapFeatureLogLevelCountSerializer,
 )
@@ -144,29 +142,3 @@ class ProtectionMapFeatureLogLevelCountView(ListAPIView):
                 },
                 status=status.HTTP_400_BAD_REQUEST,
             )
-
-
-class ForecastingBankSoLListView(ListAPIView):
-    serializer_class = ForecastingBankSoLSerializer
-
-    def paginate_queryset(self, queryset):
-        return None
-
-    def get_queryset(self):
-        return None
-
-    def list(self, request, *args, **kwargs):
-        operating_site_id = self.kwargs["operating_site_id"]
-        bank_id = self.kwargs["bank_id"]
-        start_date_query_param = self.request.query_params.get("start-date")
-        start_date = datetime.strptime(start_date_query_param, "%Y-%m-%d")
-        end_date_query_param = self.request.query_params.get("end-date")
-        end_date = datetime.strptime(end_date_query_param, "%Y-%m-%d")
-
-        queryset = ForecastingBankSoL.objects.filter(
-            operating_site=operating_site_id, bank_id=bank_id, date__gte=start_date, date__lte=end_date
-        ).order_by("date")
-
-        serializer = self.get_serializer(queryset, many=True)
-
-        return Response(serializer.data)

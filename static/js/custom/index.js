@@ -597,7 +597,15 @@ async function createForecastingBankSoLChart() {
             count: 1
         },
         renderer: am5xy.AxisRendererX.new(root, {}),
-        tooltip: am5.Tooltip.new(root, {})
+        dateFormats: {
+            day: 'yyyy-MM-dd',
+            month: 'yyyy-MM'
+        },
+        periodChangeDateFormats: {
+            month: 'yyyy-MM'
+        },
+        tooltip: am5.Tooltip.new(root, {}),
+        tooltipDateFormat: 'yyyy-MM-dd'
     }));
 
     let yAxis = chart.yAxes.push(am5xy.ValueAxis.new(root, {
@@ -615,7 +623,7 @@ async function createForecastingBankSoLChart() {
         valueYField: 'observedSoL',
         valueXField: 'date',
         tooltip: am5.Tooltip.new(root, {
-            labelText: '[bold]{name}[/]\n{valueX}: {valueY}'
+            labelText: '[bold]{name}[/]\n{valueY}',
         })
     }));
 
@@ -623,27 +631,27 @@ async function createForecastingBankSoLChart() {
         name: 'Forecasting SoL',
         xAxis: xAxis,
         yAxis: yAxis,
-        valueYField: 'forecastingSoL',
+        valueYField: 'value',
         valueXField: 'date',
         tooltip: am5.Tooltip.new(root, {
-            labelText: `[bold]{name}[/]\n{valueX}: {valueY}\nTop Limit: {forecastingSoLTopLimit}\nBottom Limit: {forecastingSoLBottomLimit}`
+            labelText: `[bold]{name}[/]\nTop Limit: {topLimitValue}\nForecasting: {valueY}\nBottom Limit: {bottomLimitValue}`,
         })
     }));
 
-    let forecastingSoLTopLimitSeries = chart.series.push(am5xy.LineSeries.new(root, {
-        name: 'Forecasting SoL Top Limit',
+    let forecastingTopLimitSoLSeries = chart.series.push(am5xy.LineSeries.new(root, {
+        name: 'Forecasting Top Limit SoL',
         xAxis: xAxis,
         yAxis: yAxis,
-        valueYField: 'forecastingSoLTopLimit',
-        openValueYField: 'forecastingSoLBottomLimit',
+        valueYField: 'topLimitValue',
+        openValueYField: 'bottomLimitValue',
         valueXField: 'date',
     }));
 
-    let forecastingSoLBottomLimitSeries = chart.series.push(am5xy.LineSeries.new(root, {
-        name: 'Forecasting SoL Bottom Limit',
+    let forecastingBottomLimitSoLSeries = chart.series.push(am5xy.LineSeries.new(root, {
+        name: 'Forecasting Bottom Limit SoL',
         xAxis: xAxis,
         yAxis: yAxis,
-        valueYField: 'forecastingSoLBottomLimit',
+        valueYField: 'bottomLimitValue',
         valueXField: 'date',
     }));
 
@@ -655,7 +663,7 @@ async function createForecastingBankSoLChart() {
         strokeWidth: 3
     });
 
-    forecastingSoLTopLimitSeries.fills.template.setAll({
+    forecastingTopLimitSoLSeries.fills.template.setAll({
         fillOpacity: 0.3,
         visible: true
     });
@@ -665,49 +673,36 @@ async function createForecastingBankSoLChart() {
         dateFields: ['valueX']
     });
 
-    // Save chartData (1. observed SoL + 2. forecasting SoL)
     let chartData = [];
 
-    // - Save observed SoL
-    let startTime = '2021-10-01T00:00:00';
-    let endTime = currentDateTime.minus({ day: 1}).toFormat(customTimeDesignatorFullDateTimeFormat);
-
-    requestUrl = new URL(`${window.location.origin}/api/ess/operating-sites/1/banks/1/stats/avg-bank-soh/`);
-    requestUrl.searchParams.append('time-bucket-width', '1day');
-    requestUrl.searchParams.append('start-time', startTime);
-    requestUrl.searchParams.append('end-time', endTime);
+    let requestUrl = new URL(`${window.location.origin}/api/ess/stats/avg-soh/operating-sites/1/banks/1/`);
 
     let avgBankSoHData = await loadData(requestUrl);
     avgBankSoHData.forEach(element => {
         chartData.push({
-            date: DateTime.fromISO(element['time']).toMillis(),
-            observedSoL: (element['avg_bank_soh'] - 80) * 5
+            date: DateTime.fromISO(element['date']).toMillis(),
+            observedSoL: (element['value'] - 80) * 5
         });
     });
 
     // - Save forecasting SoL
-    let startDate = currentDateTime.toFormat(customFullDateFormat);
-    let endDate = '2036-01-01';
-
-    requestUrl = new URL(`${window.location.origin}/api/ess-feature/forecasting-bank-sol/operating-sites/1/banks/1/`);
-    requestUrl.searchParams.append('start-date', startDate);
-    requestUrl.searchParams.append('end-date', endDate);
+    requestUrl = new URL(`${window.location.origin}/api/ess/stats/forecasting-sol/operating-sites/1/banks/1/`);
 
     let forecastingBankSoLData = await loadData(requestUrl);
 
     for (const element of forecastingBankSoLData) {
         let item = {};
 
-        if (element['forecasting_sol'] >= 0) {
-            item.date = DateTime.fromISO(element['date']).toMillis();
-            item.forecastingSoL = Math.round(element['forecasting_sol'] * 10) / 10;
+        if (element['value'] >= 0) {
+            item['date'] = DateTime.fromISO(element['date']).toMillis();
+            item['value'] = Math.round(element['value'] * 10) / 10;
 
-            if (element['forecasting_sol_top_limit'] >= 0) {
-                item.forecastingSoLTopLimit = Math.round(element['forecasting_sol_top_limit'] * 10) / 10;
+            if (element['top_limit_value'] >= 0) {
+                item['topLimitValue'] = Math.round(element['top_limit_value'] * 10) / 10;
             }
     
-            if (element['forecasting_sol_bottom_limit'] >= 0) {
-                item.forecastingSoLBottomLimit = Math.round(element['forecasting_sol_bottom_limit'] * 10) / 10;
+            if (element['bottom_limit_value'] >= 0) {
+                item['bottomLimitValue'] = Math.round(element['bottom_limit_value'] * 10) / 10;
             }
 
             chartData.push(item);
@@ -719,8 +714,8 @@ async function createForecastingBankSoLChart() {
     // Setup chart series
     observedSoLSeries.data.setAll(chartData);
     forecastingSoLSeries.data.setAll(chartData);
-    forecastingSoLTopLimitSeries.data.setAll(chartData);
-    forecastingSoLBottomLimitSeries.data.setAll(chartData);
+    forecastingTopLimitSoLSeries.data.setAll(chartData);
+    forecastingBottomLimitSoLSeries.data.setAll(chartData);
 
     // Add guide line
     let rangeDataItem = xAxis.makeDataItem({
@@ -750,8 +745,8 @@ async function createForecastingBankSoLChart() {
     // Chart animation
     observedSoLSeries.appear(1000);
     forecastingSoLSeries.appear(1000);
-    forecastingSoLTopLimitSeries.appear(1000);
-    forecastingSoLBottomLimitSeries.appear(1000);
+    forecastingTopLimitSoLSeries.appear(1000);
+    forecastingBottomLimitSoLSeries.appear(1000);
     chart.appear(1000, 100);
 
     // Setup loading UI
@@ -762,7 +757,7 @@ async function createForecastingBankSoLChart() {
     forecastingBankSoLChartElement.parentNode.classList.remove('d-none');
 }
 
-// Create forecasting rack max cell voltage
+// Create forecasting rack max cell voltage chart
 async function createForecastingRackMaxCellVoltageChart() {
     let root = getChartRoot('forecastingRackMaxCellVoltageChart');
     let chart = getInitialLineChart(root);
@@ -781,7 +776,6 @@ async function createForecastingRackMaxCellVoltageChart() {
         renderer: am5xy.AxisRendererY.new(root, {}),
         tooltip: am5.Tooltip.new(root, {})
     }));
-  
   
     // Add series
     let observedRackMaxCellVoltageSeries = chart.series.push(am5xy.LineSeries.new(root, {

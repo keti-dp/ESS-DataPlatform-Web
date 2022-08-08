@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import AvgBankSoH, AvgRackSoH
+from .models import AvgBankSoH, AvgRackSoH, ForecastingBankSoL
 
 
 class AvgBankSoHSerializer(serializers.ModelSerializer):
@@ -11,4 +11,10 @@ class AvgBankSoHSerializer(serializers.ModelSerializer):
 class AvgRackSoHSerializer(serializers.ModelSerializer):
     class Meta:
         model = AvgRackSoH
+        fields = "__all__"
+
+
+class ForecastingBankSoLSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ForecastingBankSoL
         fields = "__all__"
