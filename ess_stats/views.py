@@ -1,8 +1,8 @@
 from rest_framework.viewsets import ReadOnlyModelViewSet
 from rest_framework.response import Response
-from .models import AvgBankSoH, AvgRackSoH
+from .models import AvgBankSoH, AvgRackSoH, ForecastingBankSoL
 from .filters import CustomDateFilterBackend
-from .serializer import AvgBankSoHSerializer, AvgRackSoHSerializer
+from .serializer import AvgBankSoHSerializer, AvgRackSoHSerializer, ForecastingBankSoLSerializer
 
 
 class AvgBankSoHListViewSet(ReadOnlyModelViewSet):
@@ -46,5 +46,26 @@ class AvgRackSoHListViewSet(ReadOnlyModelViewSet):
         queryset = self.get_queryset().filter(rack_id=rack_id)
         filter_queryset = self.filter_queryset(queryset)
         serializer = AvgRackSoHSerializer(filter_queryset, many=True)
+
+        return Response(serializer.data)
+
+
+class ForecastingBankSoLListViewSet(ReadOnlyModelViewSet):
+    serializer_class = ForecastingBankSoLSerializer
+    filter_backends = [CustomDateFilterBackend]
+
+    def get_queryset(self):
+        operating_site_id = self.kwargs["operating_site_id"]
+
+        return ForecastingBankSoL.objects.filter(operating_site=operating_site_id).order_by("bank_id", "date")
+
+    def paginate_queryset(self, queryset):
+        return None
+
+    def retrieve(self, request, *args, **kwargs):
+        bank_id = self.kwargs["pk"]
+        queryset = self.get_queryset().filter(bank_id=bank_id)
+        filter_queryset = self.filter_queryset(queryset)
+        serializer = ForecastingBankSoLSerializer(filter_queryset, many=True)
 
         return Response(serializer.data)

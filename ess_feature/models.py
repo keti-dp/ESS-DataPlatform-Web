@@ -29,19 +29,3 @@ class ProtectionMapFeature(models.Model):
     class Meta:
         managed = False
         db_table = "protectionmap_feature_new"
-
-
-class ForecastingBankSoL(models.Model):
-    date = models.DateField(db_column="date")
-    operating_site = models.IntegerField(db_column="operating_site_id")
-    bank_id = models.IntegerField(db_column="bank_id")
-    forecasting_sol = models.FloatField(db_column="forecasting_sol")
-    forecasting_sol_top_limit = models.FloatField(db_column="forecasting_sol_top_limit", null=True)
-    forecasting_sol_bottom_limit = models.FloatField(db_column="forecasting_sol_bottom_limit", null=True)
-
-    class Meta:
-        managed = False
-        db_table = "forecasting_bank_sol"
-        constraints = [
-            models.UniqueConstraint(fields=["date", "operating_site", "bank_id"], name="forecasting_bank_sol_unique")
-        ]

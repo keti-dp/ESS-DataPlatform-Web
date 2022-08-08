@@ -1,5 +1,5 @@
 from django.test import TestCase
-from .models import AvgBankSoH, AvgRackSoH
+from .models import AvgBankSoH, AvgRackSoH, ForecastingBankSoL
 
 
 class AvgBankSoHTestCase(TestCase):
@@ -18,5 +18,15 @@ class AvgRackSoHTestCase(TestCase):
     def test_limit_count(self):
         count = 10
         queryset = AvgRackSoH.objects.all()[:count]
+
+        self.assertGreaterEqual(len(queryset), 0)
+
+
+class ForecastingBankSoLTestCase(TestCase):
+    databases = {"ess_stats"}
+
+    def test_limit_count(self):
+        count = 10
+        queryset = ForecastingBankSoL.objects.all()[:count]
 
         self.assertGreaterEqual(len(queryset), 0)

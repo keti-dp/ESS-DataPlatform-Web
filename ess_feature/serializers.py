@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from rest_flex_fields.serializers import FlexFieldsModelSerializer
-from .models import ForecastingBankSoL, ProtectionMapFeature
+from .models import ProtectionMapFeature
 
 
 class ProtectionMapFeatureSerializer(FlexFieldsModelSerializer):
@@ -15,9 +15,3 @@ class ProtectionMapFeatureLogLevelCountSerializer(serializers.Serializer):
     operating_site = serializers.IntegerField()
     level = serializers.IntegerField()
     level_count = serializers.IntegerField()
-
-
-class ForecastingBankSoLSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ForecastingBankSoL
-        fields = "__all__"
