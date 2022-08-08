@@ -139,7 +139,7 @@ function getAvgSoHChartSeries(elementId) {
             xAxis: xAxis,
             yAxis: yAxis,
             valueYField: "value",
-            valueXField: "time",
+            valueXField: "date",
             tooltip: am5.Tooltip.new(root, {
                 labelText: "[bold]{name}[/]\n{valueX.formatDate('yyyy-MM-dd')}: {valueY.formatNumber('#.000')}"
             })
@@ -1047,21 +1047,20 @@ essBankSoHVisualizationSearchModalFormValidation
 
         let operatingSiteId = essBankSoHVisualizationSearchModalFormOperatingSiteSelectElement.value;
         let bankId = essBankSoHVisualizationSearchModalFormBankSelectElement.value;
-        let startTime = DateTime.fromISO(essBankSoHVisualizationSearchModalFormStartDateTimeInput.value).toFormat(customTimeDesignatorFullDateTimeFormat);
-        let endTime = DateTime.fromISO(essBankSoHVisualizationSearchModalFormEndDateTimeInput.value).toFormat(customTimeDesignatorFullDateTimeFormat);
+        let startDate = DateTime.fromISO(essBankSoHVisualizationSearchModalFormStartDateTimeInput.value).toFormat(customFullDateFormat);
+        let endDate = DateTime.fromISO(essBankSoHVisualizationSearchModalFormEndDateTimeInput.value).toFormat(customFullDateFormat);
 
-        let requestUrl = new URL(`${window.location.origin}/api/ess/operating-sites/${operatingSiteId}/banks/${bankId}/stats/avg-bank-soh`);
-        requestUrl.searchParams.append('time-bucket-width', '1day');
-        requestUrl.searchParams.append('start-time', startTime);
-        requestUrl.searchParams.append('end-time', endTime);
+        let requestUrl = new URL(`${window.location.origin}/api/ess/stats/avg-soh/operating-sites/${operatingSiteId}/banks/${bankId}/`);
+        requestUrl.searchParams.append('start-date', startDate);
+        requestUrl.searchParams.append('end-date', endDate);
 
         let responseData = await loadData(requestUrl);
 
         let chartData = responseData.map(element => {
-            let time = DateTime.fromISO(element['time']).toMillis();
-            let value = element['avg_bank_soh'];
+            let date = DateTime.fromISO(element['date']).toMillis();
+            let value = element['value'];
 
-            return { time: time, value: value };
+            return { date: date, value: value };
         });
 
         avgBankSoHCardElement.querySelector('.card-body p').textContent = `
@@ -1235,21 +1234,20 @@ essRackSoHVisualizationSearchModalFormValidation
         let operatingSiteId = essRackSoHVisualizationSearchModalFormOperatingSiteSelectElement.value;
         let bankId = essRackSoHVisualizationSearchModalFormBankSelectElement.value;
         let rackId = essRackSoHVisualizationSearchModalFormRackSelectElement.value;
-        let startTime = DateTime.fromISO(essRackSoHVisualizationSearchModalFormStartDateTimeInput.value).toFormat(customTimeDesignatorFullDateTimeFormat);
-        let endTime = DateTime.fromISO(essRackSoHVisualizationSearchModalFormEndDateTimeInput.value).toFormat(customTimeDesignatorFullDateTimeFormat);
+        let startDate = DateTime.fromISO(essRackSoHVisualizationSearchModalFormStartDateTimeInput.value).toFormat(customFullDateFormat);
+        let endDate = DateTime.fromISO(essRackSoHVisualizationSearchModalFormEndDateTimeInput.value).toFormat(customFullDateFormat);
 
-        let requestUrl = new URL(`${window.location.origin}/api/ess/operating-sites/${operatingSiteId}/banks/${bankId}/racks/${rackId}/stats/avg-rack-soh/`);
-        requestUrl.searchParams.append('time-bucket-width', '1day');
-        requestUrl.searchParams.append('start-time', startTime);
-        requestUrl.searchParams.append('end-time', endTime);
+        let requestUrl = new URL(`${window.location.origin}/api/ess/stats/avg-soh/operating-sites/${operatingSiteId}/banks/${bankId}/racks/${rackId}/`);
+        requestUrl.searchParams.append('start-date', startDate);
+        requestUrl.searchParams.append('end-date', endDate);
 
         let responseData = await loadData(requestUrl);
 
         let chartData = responseData.map(element => {
-            let time = DateTime.fromISO(element['time']).toMillis();
-            let value = element['avg_rack_soh'];
+            let date = DateTime.fromISO(element['date']).toMillis();
+            let value = element['value'];
 
-            return { time: time, value: value };
+            return { date: date, value: value };
         });
 
         avgRackSoHCardElement.querySelector('.card-body p').textContent = `
@@ -1270,18 +1268,15 @@ essRackSoHVisualizationSearchModalFormValidation
 // Create avg bank SoH chart
 let avgBankSoHChartSeries = getAvgSoHChartSeries('avgBankSoHChart');
 
-let requestUrl = new URL(`${window.location.origin}/api/ess/operating-sites/1/banks/1/stats/avg-bank-soh/`);
-requestUrl.searchParams.append('time-bucket-width', '1day');
-requestUrl.searchParams.append('start-time', '2021-10-01T00:00:00');
-requestUrl.searchParams.append('end-time', currentDateTime.toFormat(customTimeDesignatorFullDateTimeFormat));
+let requestUrl = new URL(`${window.location.origin}/api/ess/stats/avg-soh/operating-sites/1/banks/1/`);
 
 fetch(requestUrl).then(response => {
     return response.json();
 }).then(responseData => {
     let chartData = responseData.map(element => {
         return {
-            time: DateTime.fromISO(element['time']).toMillis(),
-            value: element['avg_bank_soh']
+            date: DateTime.fromISO(element['date']).toMillis(),
+            value: element['value']
         }
     });
     
@@ -1295,21 +1290,18 @@ fetch(requestUrl).then(response => {
     avgBankSoHChartElement.parentNode.classList.remove('d-none');
 }).catch(error => console.log(error));
 
-// Create initial avg rack SoH chart
+// Create avg rack SoH chart
 let avgRackSoHChartSeries = getAvgSoHChartSeries('avgRackSoHChart');
 
-requestUrl = new URL(`${window.location.origin}/api/ess/operating-sites/1/banks/1/racks/1/stats/avg-rack-soh/`);
-requestUrl.searchParams.append('time-bucket-width', '1day');
-requestUrl.searchParams.append('start-time', '2021-10-01T00:00:00');
-requestUrl.searchParams.append('end-time', currentDateTime.toFormat(customTimeDesignatorFullDateTimeFormat));
+requestUrl = new URL(`${window.location.origin}/api/ess/stats/avg-soh/operating-sites/1/banks/1/racks/1/`);
 
 fetch(requestUrl).then(response => {
     return response.json();
 }).then(responseData => {
     let chartData = responseData.map(element => {
         return {
-            time: DateTime.fromISO(element['time']).toMillis(),
-            value: element['avg_rack_soh']
+            date: DateTime.fromISO(element['date']).toMillis(),
+            value: element['value']
         }
     });
     

@@ -1,89 +1,106 @@
 steps:
-# [START cloudbuild-trigger-ci]
-# Install dependencies And Run tests
-- name: 'python:3.8-slim'
-  id: Test
-  entrypoint: /bin/sh
-  args: 
-  - -c
-  - 'pip install -r requirements.txt && python manage.py test --keepdb'
-  env:
-  - 'DJANGO_SETTINGS_MODULE=${_DJANGO_SETTINGS_MODULE}'
-  - 'SECRET_KEY=${_SECRET_KEY}'
-  - 'DEFAULT_DB_ENGINE=${_DEFAULT_DB_ENGINE}'
-  - 'DEFAULT_DB_HOST=${_DEFAULT_DB_HOST}'
-  - 'DEFAULT_DB_PORT=${_DEFAULT_DB_PORT}'
-  - 'DEFAULT_DB_NAME=${_DEFAULT_DB_NAME}'
-  - 'DEFAULT_DB_USER=${_DEFAULT_DB_USER}'
-  - 'DEFAULT_DB_PASSWORD=${_DEFAULT_DB_PASSWORD}'
-  - 'DEFAULT_TEST_DB_NAME=${_DEFAULT_TEST_DB_NAME}'
-  - 'ESS_DB_ENGINE=${_ESS_DB_ENGINE}'
-  - 'ESS_DB_HOST=${_ESS_DB_HOST}'
-  - 'ESS_DB_PORT=${_ESS_DB_PORT}'
-  - 'ESS_DB_NAME=${_ESS_DB_NAME}'
-  - 'ESS_DB_USER=${_ESS_DB_USER}'
-  - 'ESS_DB_PASSWORD=${_ESS_DB_PASSWORD}'
-  - 'ESS_TEST_DB_NAME=${_ESS_TEST_DB_NAME}'
-  - 'ESS2_DB_ENGINE=${_ESS_DB_ENGINE}'
-  - 'ESS2_DB_HOST=${_ESS_DB_HOST}'
-  - 'ESS2_DB_PORT=${_ESS_DB_PORT}'
-  - 'ESS2_DB_NAME=${_ESS_DB_NAME}'
-  - 'ESS2_DB_USER=${_ESS_DB_USER}'
-  - 'ESS2_DB_PASSWORD=${_ESS_DB_PASSWORD}'
-  - 'ESS2_TEST_DB_NAME=${_ESS_TEST_DB_NAME}'
-  - 'ESS_FEATURE_DB_ENGINE=${_ESS_FEATURE_DB_ENGINE}'
-  - 'ESS_FEATURE_DB_HOST=${_ESS_FEATURE_DB_HOST}'
-  - 'ESS_FEATURE_DB_PORT=${_ESS_FEATURE_DB_PORT}'
-  - 'ESS_FEATURE_DB_NAME=${_ESS_FEATURE_DB_NAME}'
-  - 'ESS_FEATURE_DB_USER=${_ESS_FEATURE_DB_USER}'
-  - 'ESS_FEATURE_DB_PASSWORD=${_ESS_FEATURE_DB_PASSWORD}'
+  # [START cloudbuild-trigger-ci]
+  # Install dependencies And Run tests
+  - name: "python:3.8-slim"
+    id: Test
+    entrypoint: /bin/sh
+    args:
+      - -c
+      - "pip install -r requirements.txt && python manage.py test --keepdb"
+    env:
+      - "DJANGO_SETTINGS_MODULE=${_DJANGO_SETTINGS_MODULE}"
+      - "SECRET_KEY=${_SECRET_KEY}"
+      - "DEFAULT_DB_ENGINE=${_DEFAULT_DB_ENGINE}"
+      - "DEFAULT_DB_HOST=${_DEFAULT_DB_HOST}"
+      - "DEFAULT_DB_PORT=${_DEFAULT_DB_PORT}"
+      - "DEFAULT_DB_NAME=${_DEFAULT_DB_NAME}"
+      - "DEFAULT_DB_USER=${_DEFAULT_DB_USER}"
+      - "DEFAULT_DB_PASSWORD=${_DEFAULT_DB_PASSWORD}"
+      - "DEFAULT_TEST_DB_NAME=${_DEFAULT_TEST_DB_NAME}"
+      - "ESS_DB_ENGINE=${_ESS_DB_ENGINE}"
+      - "ESS_DB_HOST=${_ESS_DB_HOST}"
+      - "ESS_DB_PORT=${_ESS_DB_PORT}"
+      - "ESS_DB_NAME=${_ESS_DB_NAME}"
+      - "ESS_DB_USER=${_ESS_DB_USER}"
+      - "ESS_DB_PASSWORD=${_ESS_DB_PASSWORD}"
+      - "ESS_TEST_DB_NAME=${_ESS_TEST_DB_NAME}"
+      - "ESS2_DB_ENGINE=${_ESS_DB_ENGINE}"
+      - "ESS2_DB_HOST=${_ESS_DB_HOST}"
+      - "ESS2_DB_PORT=${_ESS_DB_PORT}"
+      - "ESS2_DB_NAME=${_ESS_DB_NAME}"
+      - "ESS2_DB_USER=${_ESS_DB_USER}"
+      - "ESS2_DB_PASSWORD=${_ESS_DB_PASSWORD}"
+      - "ESS2_TEST_DB_NAME=${_ESS_TEST_DB_NAME}"
+      - "ESS_FEATURE_DB_ENGINE=${_ESS_FEATURE_DB_ENGINE}"
+      - "ESS_FEATURE_DB_HOST=${_ESS_FEATURE_DB_HOST}"
+      - "ESS_FEATURE_DB_PORT=${_ESS_FEATURE_DB_PORT}"
+      - "ESS_FEATURE_DB_NAME=${_ESS_FEATURE_DB_NAME}"
+      - "ESS_FEATURE_DB_USER=${_ESS_FEATURE_DB_USER}"
+      - "ESS_FEATURE_DB_PASSWORD=${_ESS_FEATURE_DB_PASSWORD}"
+      - "ESS_STATS_DB_ENGINE=${_ESS_STATS_DB_ENGINE}"
+      - "ESS_STATS_DB_HOST=${_ESS_STATS_DB_HOST}"
+      - "ESS_STATS_DB_PORT=${_ESS_STATS_DB_PORT}"
+      - "ESS_STATS_DB_NAME=${_ESS_STATS_DB_NAME}"
+      - "ESS_STATS_DB_USER=${_ESS_STATS_DB_USER}"
+      - "ESS_STATS_DB_PASSWORD=${_ESS_STATS_DB_PASSWORD}"
 
-# Docker build
-- name: 'gcr.io/cloud-builders/docker'
-  id: Build
-  args: ['build', '-t', 'asia-northeast3-docker.pkg.dev/${PROJECT_ID}/ess-dataplatform-web-repository/ess-dataplatform-web:${SHORT_SHA}', '.']
+  # Docker build
+  - name: "gcr.io/cloud-builders/docker"
+    id: Build
+    args:
+      [
+        "build",
+        "-t",
+        "asia-northeast3-docker.pkg.dev/${PROJECT_ID}/ess-dataplatform-web-repository/ess-dataplatform-web:${SHORT_SHA}",
+        ".",
+      ]
 
-# Docker push to Google Artifact Registry
-- name: 'gcr.io/cloud-builders/docker'
-  id: Push
-  args: ['push', 'asia-northeast3-docker.pkg.dev/${PROJECT_ID}/ess-dataplatform-web-repository/ess-dataplatform-web:${SHORT_SHA}']
-# [END cloudbuild-trigger-ci]
+  # Docker push to Google Artifact Registry
+  - name: "gcr.io/cloud-builders/docker"
+    id: Push
+    args:
+      [
+        "push",
+        "asia-northeast3-docker.pkg.dev/${PROJECT_ID}/ess-dataplatform-web-repository/ess-dataplatform-web:${SHORT_SHA}",
+      ]
+  # [END cloudbuild-trigger-ci]
 
-# [START cloudbuild-trigger-cd]
-# This step clones the ess-dataplatform-web-env repository
-- name: 'gcr.io/cloud-builders/gcloud'
-  id: Clone env repository
-  entrypoint: /bin/sh
-  args:
-  - '-c'
-  - |
-    gcloud source repos clone ess-dataplatform-web-env && \
-    cd ess-dataplatform-web-env && \
-    git checkout candidate && \
-    git config user.email $(gcloud auth list --filter=status:ACTIVE --format='value(account)')
+  # [START cloudbuild-trigger-cd]
+  # This step clones the ess-dataplatform-web-env repository
+  - name: "gcr.io/cloud-builders/gcloud"
+    id: Clone env repository
+    entrypoint: /bin/sh
+    args:
+      - "-c"
+      - |
+        gcloud source repos clone ess-dataplatform-web-env && \
+        cd ess-dataplatform-web-env && \
+        git checkout candidate && \
+        git config user.email $(gcloud auth list --filter=status:ACTIVE --format='value(account)')
 
-# This step generates the new manifest
-- name: 'gcr.io/cloud-builders/gcloud'
-  id: Generate manifest
-  entrypoint: /bin/sh
-  args:
-  - '-c'
-  - |
-     sed "s/GOOGLE_CLOUD_PROJECT/${PROJECT_ID}/g" kubernetes.yaml | \
-     sed "s/COMMIT_SHA/${SHORT_SHA}/g" > ess-dataplatform-web-env/kubernetes.yaml
+  # This step generates the new manifest
+  - name: "gcr.io/cloud-builders/gcloud"
+    id: Generate manifest
+    entrypoint: /bin/sh
+    args:
+      - "-c"
+      - |
+        sed "s/GOOGLE_CLOUD_PROJECT/${PROJECT_ID}/g" kubernetes.yaml | \
+        sed "s/COMMIT_SHA/${SHORT_SHA}/g" > ess-dataplatform-web-env/kubernetes.yaml
 
-# This step pushes the manifest back to ess-dataplatform-web-env
-- name: 'gcr.io/cloud-builders/gcloud'
-  id: Push manifest
-  entrypoint: /bin/sh
-  args:
-  - '-c'
-  - |
-    set -x && \
-    cd  ess-dataplatform-web-env && \
-    git add kubernetes.yaml && \
-    git commit -m "Deploying image asia-northeast3-docker.pkg.dev/${PROJECT_ID}/ess-dataplatform-web-repository/ess-dataplatform-web:${SHORT_SHA}
-    Built from commit ${COMMIT_SHA} of repository ess-dataplatform-web application
-    Author: $(git log --format='%an <%ae>' -n 1 HEAD)" && \
-    git push origin candidate
+  # This step pushes the manifest back to ess-dataplatform-web-env
+  - name: "gcr.io/cloud-builders/gcloud"
+    id: Push manifest
+    entrypoint: /bin/sh
+    args:
+      - "-c"
+      - |
+        set -x && \
+        cd  ess-dataplatform-web-env && \
+        git add kubernetes.yaml && \
+        git commit -m "Deploying image asia-northeast3-docker.pkg.dev/${PROJECT_ID}/ess-dataplatform-web-repository/ess-dataplatform-web:${SHORT_SHA}
+        Built from commit ${COMMIT_SHA} of repository ess-dataplatform-web application
+        Author: $(git log --format='%an <%ae>' -n 1 HEAD)" && \
+        git push origin candidate
+
 # [END cloudbuild-trigger-cd]
