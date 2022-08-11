@@ -43,3 +43,20 @@ class ForecastingBankSoL(models.Model):
         constraints = [
             models.UniqueConstraint(fields=["operating_site", "bank_id", "date"], name="forecasting_bank_sol_unique")
         ]
+
+
+class ForecastingMaxRackCellVoltage(models.Model):
+    operating_site = models.IntegerField(db_column="operating_site_id")
+    bank_id = models.IntegerField()
+    rack_id = models.IntegerField()
+    time = models.DateTimeField()
+    values = models.JSONField()
+
+    class Meta:
+        db_table = "forecasting_max_rack_cell_voltage"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["operating_site", "bank_id", "rack_id", "time"],
+                name="forecasting_max_rack_cell_voltage_unique",
+            )
+        ]

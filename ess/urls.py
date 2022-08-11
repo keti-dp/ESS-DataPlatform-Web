@@ -17,7 +17,6 @@ from .views import (
     LatestESSPcsView,
     LatestESSEtcView,
     ESSOperatingDataDownloadView,
-    ForecastingRackMaxCellVoltageView,
 )
 
 router = DefaultRouter()
@@ -76,8 +75,4 @@ urlpatterns = [
     path("operating-sites/<int:operating_site_id>/pcs/latest/", LatestESSPcsView.as_view()),
     path("operating-sites/<int:operating_site_id>/etc/latest/", LatestESSEtcView.as_view()),
     path("download/operating-sites/<int:operating_site_id>/<data_type>/", ESSOperatingDataDownloadView.as_view()),
-    path(
-        "forecasting-rack-max-cell-voltage/operating-sites/<int:operating_site_id>/banks/<int:bank_id>/racks/<int:rack_id>/",
-        ForecastingRackMaxCellVoltageView.as_view(),
-    ),
 ]
