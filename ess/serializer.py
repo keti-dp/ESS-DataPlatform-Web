@@ -95,8 +95,3 @@ class EssMonitoringLogDocumentSerializer(serializers.Serializer):
             "log_level",
             "message",
         )
-
-
-class ForecastingRackMaxCellVoltageSerializer(serializers.Serializer):
-    time = serializers.DateTimeField()
-    value = serializers.DictField()
