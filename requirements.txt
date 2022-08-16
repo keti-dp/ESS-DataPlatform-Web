@@ -13,6 +13,7 @@ django-elasticsearch-dsl-drf==0.22.2
 django-filter==21.1
 django-nine==0.2.5
 django-storages==1.12.3
+django-test-without-migrations==0.6
 djangorestframework==3.12.4
 djangorestframework-simplejwt==5.0.0
 drf-flex-fields==0.9.6
