@@ -91,7 +91,7 @@ class ForecastingMaxRackCellVoltageViewSet(ReadOnlyModelViewSet):
     def paginate_queryset(self, queryset):
         return None
 
-    def retrieve(self, request, *args, **kwargs):
+    def retrieve(self, request, *args, **kwargs) -> list:
         rack_id = kwargs["pk"]
         queryset = self.get_queryset().filter(rack_id=rack_id)
         filter_queryset = self.filter_queryset(queryset)
