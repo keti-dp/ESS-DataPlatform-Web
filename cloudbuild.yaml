@@ -6,7 +6,7 @@ steps:
     entrypoint: /bin/sh
     args:
       - -c
-      - "pip install -r requirements.txt && python manage.py test --keepdb"
+      - "pip install -r requirements.txt && python manage.py test --keepdb --nomigrations"
     env:
       - "DJANGO_SETTINGS_MODULE=${_DJANGO_SETTINGS_MODULE}"
       - "SECRET_KEY=${_SECRET_KEY}"

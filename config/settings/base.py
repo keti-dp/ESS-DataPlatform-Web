@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     "django_elasticsearch_dsl",
     "django_elasticsearch_dsl_drf",
     "rest_framework",
+    "test_without_migrations",
     "ess",
     "ess_feature",
     "ess_stats",
