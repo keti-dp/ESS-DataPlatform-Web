@@ -103,6 +103,69 @@ function getSimpleLineChart(elementId, data, option = {}) {
     return series;
 }
 
+// Create chart series list
+function getSimpleLineSeriesList(elementId, option) {
+    let root = getChartRoot(elementId);
+    let chart = getInitialLineChart(root);
+
+    // Create axes
+    let xAxis = chart.xAxes.push(am5xy.DateAxis.new(root, {
+        baseInterval: {
+            timeUnit: "second",
+            count: 1
+        },
+        renderer: am5xy.AxisRendererX.new(root, {}),
+        periodChangeDateFormats: {
+            hour: 'yyyy-MM-dd HH:mm'
+        },
+        tooltip: am5.Tooltip.new(root, {})
+    }));
+    
+    let yAxis = chart.yAxes.push(am5xy.ValueAxis.new(root, {
+        renderer: am5xy.AxisRendererY.new(root, {}),
+        tooltip: am5.Tooltip.new(root, {})
+    }));
+
+    
+    let seriesInfo = option['seriesInfo'];
+
+    // Add series
+    let seriesList = seriesInfo.map(element => {
+        return chart.series.push(am5xy.LineSeries.new(root, {
+            name: element['name'],
+            xAxis: xAxis,
+            yAxis: yAxis,
+            valueYField: element['value'],
+            valueXField: 'time',
+            tooltip: am5.Tooltip.new(root, {
+                labelText: "{valueY}",
+                pointerOrientation:"horizontal"
+            })
+        }));
+    });
+
+    seriesList.forEach(element => {
+        element.strokes.template.setAll({
+            strokeWidth: 3
+        });
+    });
+  
+    // Set date fields
+    root.dateFormatter.setAll({
+        dateFormat: customTimeDesignatorFullDateTimeFormat,
+        dateFields: ["valueX"]
+    });
+
+    // Set legend
+    let legend = chart.children.push(am5.Legend.new(root, {
+        centerX: am5.percent(50),
+        x: am5.percent(50)
+    }));
+    legend.data.setAll(chart.series.values);
+
+    return seriesList;
+}
+
 function getAvgSoHChartSeries(elementId) {
     let root = getChartRoot(elementId);
     let chart = getInitialLineChart(root);
@@ -1164,21 +1227,30 @@ essRackSoHVisualizationSearchModalFormValidation
         avgRackSoHChartElement.parentNode.classList.remove('d-none');
     });
 
-// Forecasting max rack cell voltage search modal
-let essForecastingMaxRackCellVoltageVisualizationSearchModalFormOperatingSiteSelectElement = document.getElementById('essForecastingMaxRackCellVoltageVisualizationSearchModalFormOperatingSiteSelect');
-let essForecastingMaxRackCellVoltageVisualizationSearchModalFormBankSelectElement = document.getElementById('essForecastingMaxRackCellVoltageVisualizationSearchModalFormBankSelect');
-let essForecastingMaxRackCellVoltageVisualizationSearchModalFormRackSelectElement = document.getElementById('essForecastingMaxRackCellVoltageVisualizationSearchModalFormRackSelect');
-let essForecastingMaxRackCellVoltageVisualizationSearchModalFormStartDateTimePickerElement = document.getElementById('essForecastingMaxRackCellVoltageVisualizationSearchModalFormStartDateTimePicker');
-let essForecastingMaxRackCellVoltageVisualizationSearchModalFormEndDateTimePickerElement = document.getElementById('essForecastingMaxRackCellVoltageVisualizationSearchModalFormEndDateTimePicker');
+// Forecasting max-min cell voltage search modal
+// - Search visualization card
+let forecastingObjectVisualizationSearchModalElement = document.getElementById('forecastingObjectVisualizationSearchModal');
+forecastingObjectVisualizationSearchModalElement.addEventListener('show.bs.modal', event => {
+    let button = event.relatedTarget;
+    let visualizationType = button.getAttribute('data-visualization-type');
+    let searchButton = forecastingObjectVisualizationSearchModalElement.querySelector('.btn-primary');
+    searchButton.setAttribute('data-visualization-type', visualizationType);
+});
 
-essForecastingMaxRackCellVoltageVisualizationSearchModalFormOperatingSiteSelectElement.addEventListener('change', (event) => {
-    essForecastingMaxRackCellVoltageVisualizationSearchModalFormBankSelectElement.innerHTML = '';
-    essForecastingMaxRackCellVoltageVisualizationSearchModalFormBankSelectElement.insertAdjacentHTML('afterbegin', '<option value="" selected disabled>Bank를 선택해주세요.</option>');
-    essForecastingMaxRackCellVoltageVisualizationSearchModalFormBankSelectElement.setAttribute('disabled', '');
+let forecastingObjectVisualizationSearchModalFormOperatingSiteSelectElement = document.getElementById(`forecastingObjectVisualizationSearchModalFormOperatingSiteSelect`);
+let forecastingObjectVisualizationSearchModalFormBankSelectElement = document.getElementById(`forecastingObjectVisualizationSearchModalFormBankSelect`);
+let forecastingObjectVisualizationSearchModalFormRackSelectElement = document.getElementById(`forecastingObjectVisualizationSearchModalFormRackSelect`);
+let forecastingObjectVisualizationSearchModalFormStartDateTimePickerElement = document.getElementById(`forecastingObjectVisualizationSearchModalFormStartDateTimePicker`);
+let forecastingObjectVisualizationSearchModalFormEndDateTimePickerElement = document.getElementById(`forecastingObjectVisualizationSearchModalFormEndDateTimePicker`);
 
-    essForecastingMaxRackCellVoltageVisualizationSearchModalFormRackSelectElement.innerHTML = '';
-    essForecastingMaxRackCellVoltageVisualizationSearchModalFormRackSelectElement.insertAdjacentHTML('afterbegin', '<option value="" selected disabled>Rack을 선택해주세요.</option>');
-    essForecastingMaxRackCellVoltageVisualizationSearchModalFormRackSelectElement.setAttribute('disabled', '');
+forecastingObjectVisualizationSearchModalFormOperatingSiteSelectElement.addEventListener('change', (event) => {
+    forecastingObjectVisualizationSearchModalFormBankSelectElement.innerHTML = '';
+    forecastingObjectVisualizationSearchModalFormBankSelectElement.insertAdjacentHTML('afterbegin', '<option value="" selected disabled>Bank를 선택해주세요.</option>');
+    forecastingObjectVisualizationSearchModalFormBankSelectElement.setAttribute('disabled', '');
+
+    forecastingObjectVisualizationSearchModalFormRackSelectElement.innerHTML = '';
+    forecastingObjectVisualizationSearchModalFormRackSelectElement.insertAdjacentHTML('afterbegin', '<option value="" selected disabled>Rack을 선택해주세요.</option>');
+    forecastingObjectVisualizationSearchModalFormRackSelectElement.setAttribute('disabled', '');
 
     let operatingSiteId = event.target.value;
     let essProtectionMapInfoRackCountObject = essProtectionMap['info']['rackCount'];
@@ -1187,18 +1259,18 @@ essForecastingMaxRackCellVoltageVisualizationSearchModalFormOperatingSiteSelectE
         let bankCount = Object.keys(essProtectionMapInfoRackCountObject[`operatingSite${operatingSiteId}`]).length;
 
         for (i = 0; i < bankCount; i++) {
-            essForecastingMaxRackCellVoltageVisualizationSearchModalFormBankSelectElement.insertAdjacentHTML('beforeend', `<option value="${i + 1}">${i + 1}</option>`)
+            forecastingObjectVisualizationSearchModalFormBankSelectElement.insertAdjacentHTML('beforeend', `<option value="${i + 1}">${i + 1}</option>`)
         }
 
-        essForecastingMaxRackCellVoltageVisualizationSearchModalFormBankSelectElement.removeAttribute('disabled');
+        forecastingObjectVisualizationSearchModalFormBankSelectElement.removeAttribute('disabled');
     }
 });
 
-essForecastingMaxRackCellVoltageVisualizationSearchModalFormBankSelectElement.addEventListener('change', (event) => {
-    essForecastingMaxRackCellVoltageVisualizationSearchModalFormRackSelectElement.innerHTML = '';
-    essForecastingMaxRackCellVoltageVisualizationSearchModalFormRackSelectElement.insertAdjacentHTML('afterbegin', '<option value="" selected disabled>Rack을 선택해주세요.</option>')
+forecastingObjectVisualizationSearchModalFormBankSelectElement.addEventListener('change', (event) => {
+    forecastingObjectVisualizationSearchModalFormRackSelectElement.innerHTML = '';
+    forecastingObjectVisualizationSearchModalFormRackSelectElement.insertAdjacentHTML('afterbegin', '<option value="" selected disabled>Rack을 선택해주세요.</option>')
 
-    let operatingSiteId = essForecastingMaxRackCellVoltageVisualizationSearchModalFormOperatingSiteSelectElement.value;
+    let operatingSiteId = forecastingObjectVisualizationSearchModalFormOperatingSiteSelectElement.value;
     let bankId = event.target.value;
     let essProtectionMapInfoRackCountObject = essProtectionMap['info']['rackCount'];
 
@@ -1206,15 +1278,15 @@ essForecastingMaxRackCellVoltageVisualizationSearchModalFormBankSelectElement.ad
         let rackCount = essProtectionMapInfoRackCountObject[`operatingSite${operatingSiteId}`][`bank${bankId}`];
 
         for (i = 0; i < rackCount; i++) {
-            essForecastingMaxRackCellVoltageVisualizationSearchModalFormRackSelectElement.insertAdjacentHTML('beforeend', `<option value="${i + 1}">${i + 1}</option>`)
+            forecastingObjectVisualizationSearchModalFormRackSelectElement.insertAdjacentHTML('beforeend', `<option value="${i + 1}">${i + 1}</option>`)
         }
-        essForecastingMaxRackCellVoltageVisualizationSearchModalFormRackSelectElement.removeAttribute('disabled');
+        forecastingObjectVisualizationSearchModalFormRackSelectElement.removeAttribute('disabled');
     } else {
-        essForecastingMaxRackCellVoltageVisualizationSearchModalFormRackSelectElement.setAttribute('disabled', '');
+        forecastingObjectVisualizationSearchModalFormRackSelectElement.setAttribute('disabled', '');
     }
 });
 
-const essForecastingMaxRackCellVoltageVisualizationSearchModalFormStartDateTimeTempusDominus = new tempusDominus.TempusDominus(essForecastingMaxRackCellVoltageVisualizationSearchModalFormStartDateTimePickerElement, {
+const forecastingObjectVisualizationSearchModalFormStartDateTimeTempusDominus = new tempusDominus.TempusDominus(forecastingObjectVisualizationSearchModalFormStartDateTimePickerElement, {
     display: {
         components: {
             seconds: true
@@ -1226,7 +1298,7 @@ const essForecastingMaxRackCellVoltageVisualizationSearchModalFormStartDateTimeT
     }
 });
 
-const essForecastingMaxRackCellVoltageVisualizationSearchModalFormEndDateTimeTempusDominus = new tempusDominus.TempusDominus(essForecastingMaxRackCellVoltageVisualizationSearchModalFormEndDateTimePickerElement, {
+const forecastingObjectVisualizationSearchModalFormEndDateTimeTempusDominus = new tempusDominus.TempusDominus(forecastingObjectVisualizationSearchModalFormEndDateTimePickerElement, {
     display: {
         components: {
             seconds: true
@@ -1239,23 +1311,23 @@ const essForecastingMaxRackCellVoltageVisualizationSearchModalFormEndDateTimeTem
     useCurrent: false
 });
 
-essForecastingMaxRackCellVoltageVisualizationSearchModalFormStartDateTimePickerElement.addEventListener(tempusDominus.Namespace.events.change, (e) => {
-    essForecastingMaxRackCellVoltageVisualizationSearchModalFormEndDateTimeTempusDominus.updateOptions({
+forecastingObjectVisualizationSearchModalFormStartDateTimePickerElement.addEventListener(tempusDominus.Namespace.events.change, (e) => {
+    forecastingObjectVisualizationSearchModalFormEndDateTimeTempusDominus.updateOptions({
         restrictions: {
             minDate: e.detail.date
         },
     });
 });
 
-const essForecastingMaxRackCellVoltageVisualizationSearchModalFormEndDateTimeTempusDominusSubscription = essForecastingMaxRackCellVoltageVisualizationSearchModalFormEndDateTimeTempusDominus.subscribe(tempusDominus.Namespace.events.change, (e) => {
-    essForecastingMaxRackCellVoltageVisualizationSearchModalFormStartDateTimeTempusDominus.updateOptions({
+const forecastingObjectVisualizationSearchModalFormEndDateTimeTempusDominusSubscription = forecastingObjectVisualizationSearchModalFormEndDateTimeTempusDominus.subscribe(tempusDominus.Namespace.events.change, (e) => {
+    forecastingObjectVisualizationSearchModalFormStartDateTimeTempusDominus.updateOptions({
         restrictions: {
             maxDate: e.date
         }
     });
 });
 
-const essForecastingMaxRackCellVoltageVisualizationSearchModalFormValidation = new JustValidate('#essForecastingMaxRackCellVoltageVisualizationSearchModalForm', {
+const forecastingObjectVisualizationSearchModalFormValidation = new JustValidate('#forecastingObjectVisualizationSearchModalForm', {
     errorFieldCssClass: 'is-invalid',
     focusInvalidField: true,
     lockForm: true,
@@ -1263,26 +1335,26 @@ const essForecastingMaxRackCellVoltageVisualizationSearchModalFormValidation = n
         position: 'right',
     }
 });
-essForecastingMaxRackCellVoltageVisualizationSearchModalFormValidation
-    .addField('#essForecastingMaxRackCellVoltageVisualizationSearchModalFormOperatingSiteSelect', [
+forecastingObjectVisualizationSearchModalFormValidation
+    .addField(`#forecastingObjectVisualizationSearchModalFormOperatingSiteSelect`, [
         {
             rule: 'required',
             errorMessage: '운영 사이트를 선택하세요.'
         }
     ])
-    .addField('#essForecastingMaxRackCellVoltageVisualizationSearchModalFormBankSelect', [
+    .addField(`#forecastingObjectVisualizationSearchModalFormBankSelect`, [
         {
             rule: 'required',
             errorMessage: 'Bank를 선택하세요.'
         }
     ])
-    .addField('#essForecastingMaxRackCellVoltageVisualizationSearchModalFormRackSelect', [
+    .addField(`#forecastingObjectVisualizationSearchModalFormRackSelect`, [
         {
             rule: 'required',
             errorMessage: 'Rack을 선택하세요.'
         }
     ])
-    .addField('#essForecastingMaxRackCellVoltageVisualizationSearchModalFormStartDateTimeInput', [
+    .addField(`#forecastingObjectVisualizationSearchModalFormStartDateTimeInput`, [
         {
             plugin: JustValidatePluginDate(fields => ({
                 required: true,
@@ -1290,7 +1362,7 @@ essForecastingMaxRackCellVoltageVisualizationSearchModalFormValidation
             })),
             errorMessage: '시작 날짜를 선택하세요.'
         },
-    ]).addField('#essForecastingMaxRackCellVoltageVisualizationSearchModalFormEndDateTimeInput', [
+    ]).addField(`#forecastingObjectVisualizationSearchModalFormEndDateTimeInput`, [
         {
             plugin: JustValidatePluginDate(fields => ({
                 required: true,
@@ -1300,24 +1372,28 @@ essForecastingMaxRackCellVoltageVisualizationSearchModalFormValidation
         },
     ])
     .onSuccess(async (event) => {
-        let essForecastingMaxRackCellVoltageVisualizationSearchModalElement = document.getElementById('essForecastingMaxRackCellVoltageVisualizationSearchModal');
-        let forecastingMaxRackCellVoltageCardElement = document.getElementById('forecastingMaxRackCellVoltageCard');
-        let forecastingMaxRackCellVoltageChartElement = document.getElementById('forecastingMaxRackCellVoltageChart');
+        let forecastingObjectVisualizationSearchModalElement = document.getElementById('forecastingObjectVisualizationSearchModal');
+        let visualizationType = forecastingObjectVisualizationSearchModalElement.querySelector('.btn-primary').getAttribute('data-visualization-type');
+        let forecastingObject = window[`${getCamelCaseString(visualizationType)}Object`];
+
+        let forecastingObjectName = forecastingObject['name'];
+        let forecastingObjectCardElement = document.getElementById(`${forecastingObjectName}Card`);
+        let forecastingObjectChartElement = document.getElementById(`${forecastingObjectName}Chart`);
 
         // Off modal
-        bootstrap.Modal.getInstance(essForecastingMaxRackCellVoltageVisualizationSearchModalElement).hide();
+        bootstrap.Modal.getInstance(forecastingObjectVisualizationSearchModalElement).hide();
 
         // Setup loading UI
-        forecastingMaxRackCellVoltageChartElement.parentNode.classList.add('d-none');
-        forecastingMaxRackCellVoltageCardElement.querySelector('.card-body .spinner-border').classList.remove('d-none');
+        forecastingObjectChartElement.parentNode.classList.add('d-none');
+        forecastingObjectCardElement.querySelector('.card-body .spinner-border').classList.remove('d-none');
 
-        let operatingSiteId = essForecastingMaxRackCellVoltageVisualizationSearchModalFormOperatingSiteSelectElement.value;
-        let bankId = essForecastingMaxRackCellVoltageVisualizationSearchModalFormBankSelectElement.value;
-        let rackId = essForecastingMaxRackCellVoltageVisualizationSearchModalFormRackSelectElement.value;
-        let startTime = DateTime.fromFormat(essForecastingMaxRackCellVoltageVisualizationSearchModalFormStartDateTimeInput.value, customFullDateTimeFormat).toFormat(customTimeDesignatorFullDateTimeFormat);
-        let endTime = DateTime.fromFormat(essForecastingMaxRackCellVoltageVisualizationSearchModalFormEndDateTimeInput.value, customFullDateTimeFormat).toFormat(customTimeDesignatorFullDateTimeFormat);
+        let operatingSiteId = forecastingObjectVisualizationSearchModalFormOperatingSiteSelectElement.value;
+        let bankId = forecastingObjectVisualizationSearchModalFormOperatingSiteSelectElement.value;
+        let rackId = forecastingObjectVisualizationSearchModalFormRackSelectElement.value;
+        let startTime = DateTime.fromFormat(window['forecastingObjectVisualizationSearchModalFormStartDateTimeInput'].value, customFullDateTimeFormat).toFormat(customTimeDesignatorFullDateTimeFormat);
+        let endTime = DateTime.fromFormat(window['forecastingObjectVisualizationSearchModalFormEndDateTimeInput'].value, customFullDateTimeFormat).toFormat(customTimeDesignatorFullDateTimeFormat);
 
-        let requestUrl = new URL(`${window.location.origin}/api/ess/stats/forecasting-max-cell-voltage/operating-sites/${operatingSiteId}/banks/${bankId}/racks/${rackId}/`);
+        let requestUrl = new URL(`${window.location.origin}/api/ess/stats/${forecastingObject['urlPath']}/operating-sites/${operatingSiteId}/banks/${bankId}/racks/${rackId}/`);
         requestUrl.searchParams.append('start-time', startTime);
         requestUrl.searchParams.append('end-time', endTime);
 
@@ -1334,17 +1410,17 @@ essForecastingMaxRackCellVoltageVisualizationSearchModalFormValidation
             }
         });
 
-        forecastingMaxRackCellVoltageCardElement.querySelector('.card-body p').textContent = `
-            ${essForecastingMaxRackCellVoltageVisualizationSearchModalFormOperatingSiteSelectElement.options[essForecastingMaxRackCellVoltageVisualizationSearchModalFormOperatingSiteSelectElement.selectedIndex].text} > Bank ${bankId} > Rack ${rackId}
+        forecastingObjectCardElement.querySelector('.card-body p').textContent = `
+            ${forecastingObjectVisualizationSearchModalFormOperatingSiteSelectElement.options[forecastingObjectVisualizationSearchModalFormOperatingSiteSelectElement.selectedIndex].text} > Bank ${bankId} > Rack ${rackId}
         `;
 
-        forecastingMaxRackCellVoltageChartSeriesList.forEach(element => {
+        window[`${forecastingObjectName}ChartSeriesList`].forEach(element => {
             element.data.setAll(chartData);
         });
 
         // Off loading UI
-        forecastingMaxRackCellVoltageCardElement.querySelector('.card-body .spinner-border').classList.add('d-none');
-        forecastingMaxRackCellVoltageChartElement.parentNode.classList.remove('d-none');
+        forecastingObjectCardElement.querySelector('.card-body .spinner-border').classList.add('d-none');
+        forecastingObjectChartElement.parentNode.classList.remove('d-none');
     });
 
 /* 
@@ -1403,59 +1479,82 @@ fetch(requestUrl).then(response => {
 
 createForecastingBankSoLChart();
 
-// Create forecasting max rack cell voltage chart
+// Create forecasting max-min cell voltage chart
+let forecastingMaxRackCellVoltageObject = {
+    name: 'forecastingMaxRackCellVoltage',
+    urlPath: 'forecasting-max-cell-voltage'
+};
+
+let forecastingMinRackCellVoltageObject = {
+    name: 'forecastingMinRackCellVoltage',
+    urlPath: 'forecasting-min-cell-voltage'
+};
+
+let forecastingObjects = [
+    forecastingMaxRackCellVoltageObject,
+    forecastingMinRackCellVoltageObject,
+];
+
 let option = {
     seriesInfo: [
         {
-            name: "Observed Max Cell Voltage",
+            name: "Observed",
             value: 'value1'
         },{
-            name: "Forecasting Max Cell Voltage(CatBoost)",
+            name: "CatBoost",
             value: 'value2'
         },{
-            name: "Forecasting Max Cell Voltage(Linear)",
+            name: "Linear",
             value: 'value3'
         },{
-            name: "Forecasting Max Cell Voltage(LightGBM)",
+            name: "LightGBM",
             value: 'value4'
         },{
-            name: "Forecasting Max Cell Voltage(XGBoost)",
+            name: "XGBoost",
             value: 'value5'
         },
     ]
 }
 
-let forecastingMaxRackCellVoltageChartSeriesList = getForecastingMaxRackCellVoltageChartSeriesList('forecastingMaxRackCellVoltageChart', option);
+forecastingObjects.forEach(element => {
+    let forecastingObjectName = element['name'];
+    let forecastingObjectCardElementId = `${forecastingObjectName}Card`;
+    let forecastingObjectChartElementId = `${forecastingObjectName}Chart`;
 
-requestUrl = new URL(`${window.location.origin}/api/ess/stats/forecasting-max-cell-voltage/operating-sites/1/banks/1/racks/1/`);
-requestUrl.searchParams.append('start-time', currentDateTime.set({hour: 0, minute: 0, second: 0}).toFormat(customTimeDesignatorFullDateTimeFormat));
-requestUrl.searchParams.append('end-time', currentDateTime.plus({day: 1}).toFormat(customTimeDesignatorFullDateTimeFormat));
+    // Declare variable with dynamic name in 'window' object
+    window[`${forecastingObjectName}Object`] = element;
+    window[`${forecastingObjectName}ChartSeriesList`] = getSimpleLineSeriesList(forecastingObjectChartElementId, option);
 
-fetch(requestUrl).then(response => {
-    return response.json();
-}).then(responseData => {
-    // Set data
-    let chartData = responseData.map(element => {
-        return {
-            time: DateTime.fromISO(element['time']).toMillis(),
-            value1: element['values']['observed'],
-            value2: element['values']['catboost'],
-            value3: element['values']['linear'],
-            value4: element['values']['lightgbm'],
-            value5: element['values']['xgboost'],
-        }
-    });
+    requestUrl = new URL(`${window.location.origin}/api/ess/stats/${element['urlPath']}/operating-sites/1/banks/1/racks/1/`);
+    requestUrl.searchParams.append('start-time', currentDateTime.set({hour: 0, minute: 0, second: 0}).toFormat(customTimeDesignatorFullDateTimeFormat));
+    requestUrl.searchParams.append('end-time', currentDateTime.plus({day: 1}).toFormat(customTimeDesignatorFullDateTimeFormat));
 
-    forecastingMaxRackCellVoltageChartSeriesList.forEach(element => {
-        element.data.setAll(chartData);
-    });
+    fetch(requestUrl).then(response => {
+        return response.json();
+    }).then(responseData => {
+        // Set data
+        let chartData = responseData.map(element => {
+            return {
+                time: DateTime.fromISO(element['time']).toMillis(),
+                value1: element['values']['observed'],
+                value2: element['values']['catboost'],
+                value3: element['values']['linear'],
+                value4: element['values']['lightgbm'],
+                value5: element['values']['xgboost'],
+            }
+        });
 
-    // Setup loading UI
-    let forecastingMaxRackCellVoltageCardElement = document.getElementById('forecastingMaxRackCellVoltageCard');
-    forecastingMaxRackCellVoltageCardElement.querySelector('.spinner-border').classList.add('d-none');
+        window[`${forecastingObjectName}ChartSeriesList`].forEach(element => {
+            element.data.setAll(chartData);
+        });
 
-    let forecastingMaxRackCellVoltageChartElement = document.getElementById('forecastingMaxRackCellVoltageChart');
-    forecastingMaxRackCellVoltageChartElement.parentNode.classList.remove('d-none');
+        // Setup loading UI
+        let forecastingObjectCardElement = document.getElementById(forecastingObjectCardElementId);
+        forecastingObjectCardElement.querySelector('.spinner-border').classList.add('d-none');
+
+        let forecastingObjectChartElement = document.getElementById(forecastingObjectChartElementId);
+        forecastingObjectChartElement.parentNode.classList.remove('d-none');
 }).catch(error => console.log(error));
+});
 
 

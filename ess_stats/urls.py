@@ -6,6 +6,7 @@ from .views import (
     AvgRackSoHListViewSet,
     ForecastingBankSoLListViewSet,
     ForecastingMaxRackCellVoltageViewSet,
+    ForecastingMinRackCellVoltageViewSet,
 )
 
 router = SimpleRouter()
@@ -20,6 +21,9 @@ avg_bank_soh_router.register(r"racks", AvgRackSoHListViewSet, basename="bank-rac
 forecasting_max_rack_cell_voltage_router = SimpleRouter()
 forecasting_max_rack_cell_voltage_router.register(r"racks", ForecastingMaxRackCellVoltageViewSet, basename="racks")
 
+forecasting_min_rack_cell_voltage_router = SimpleRouter()
+forecasting_min_rack_cell_voltage_router.register(r"racks", ForecastingMinRackCellVoltageViewSet, basename="racks")
+
 
 urlpatterns = [
     path("avg-soh/operating-sites/<int:operating_site_id>/", include(nested_router.urls)),
@@ -28,5 +32,9 @@ urlpatterns = [
     path(
         "forecasting-max-cell-voltage/operating-sites/<int:operating_site_id>/banks/<int:bank_id>/",
         include(forecasting_max_rack_cell_voltage_router.urls),
+    ),
+    path(
+        "forecasting-min-cell-voltage/operating-sites/<int:operating_site_id>/banks/<int:bank_id>/",
+        include(forecasting_min_rack_cell_voltage_router.urls),
     ),
 ]

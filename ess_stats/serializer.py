@@ -1,5 +1,11 @@
 from rest_framework import serializers
-from .models import AvgBankSoH, AvgRackSoH, ForecastingBankSoL, ForecastingMaxRackCellVoltage
+from .models import (
+    AvgBankSoH,
+    AvgRackSoH,
+    ForecastingBankSoL,
+    ForecastingMaxRackCellVoltage,
+    ForecastingMinRackCellVoltage,
+)
 
 
 class AvgBankSoHSerializer(serializers.ModelSerializer):
@@ -23,4 +29,10 @@ class ForecastingBankSoLSerializer(serializers.ModelSerializer):
 class ForecastingMaxRackCellVoltageSerializer(serializers.ModelSerializer):
     class Meta:
         model = ForecastingMaxRackCellVoltage
+        fields = "__all__"
+
+
+class ForecastingMinRackCellVoltageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ForecastingMinRackCellVoltage
         fields = "__all__"

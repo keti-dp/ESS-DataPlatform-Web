@@ -298,7 +298,8 @@
                                             </div>
                                             <div class="col-4 text-right">
                                                 <button class="btn btn-sm" type="button" data-bs-toggle="modal"
-                                                    data-bs-target="#essForecastingMaxRackCellVoltageVisualizationSearchModal">
+                                                    data-bs-target="#forecastingObjectVisualizationSearchModal"
+                                                    data-visualization-type="forecasting-max-rack-cell-voltage">
                                                     <span class="material-icons-two-tone">
                                                         search
                                                     </span>
@@ -318,6 +319,45 @@
                                         <div class="row d-none">
                                             <p>시온유 태양광 / Bank 1 / Rack 1</p>
                                             <div id="forecastingMaxRackCellVoltageChart" class="visualization-chart">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-xl-6 col-md-12">
+                                <div id="forecastingMinRackCellVoltageCard" class="card mx-2">
+                                    <div class="card-header">
+                                        <div class="row">
+                                            <div class="col-8 my-auto">
+                                                <h5>10분 후 최소 Rack 전압 예측 <i class="bi bi-info-circle"
+                                                        data-bs-toggle="tooltip" data-bs-placement="top" title=""
+                                                        data-bs-original-title="관측 데이터의 시점에서 10분 후 최소 Rack 전압을 예측합니다. 5분 단위로 데이터가 추가됩니다."></i>
+                                                </h5>
+                                            </div>
+                                            <div class="col-4 text-right">
+                                                <button class="btn btn-sm" type="button" data-bs-toggle="modal"
+                                                    data-bs-target="#forecastingObjectVisualizationSearchModal"
+                                                    data-visualization-type="forecasting-min-rack-cell-voltage">
+                                                    <span class="material-icons-two-tone">
+                                                        search
+                                                    </span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="card-body">
+                                        <!-- Loading -->
+                                        <div class="row">
+                                            <div class="text-center">
+                                                <div class="spinner-border" role="status">
+                                                    <span class="visually-hidden">Loading...</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row d-none">
+                                            <p>시온유 태양광 / Bank 1 / Rack 1</p>
+                                            <div id="forecastingMinRackCellVoltageChart" class="visualization-chart">
                                             </div>
                                         </div>
                                     </div>
@@ -619,24 +659,22 @@
             </div>
         </div>
 
-        <!-- Forecasting max rack cell voltage visualization search modal -->
-        <div class="modal fade" id="essForecastingMaxRackCellVoltageVisualizationSearchModal" tabindex="-1"
-            aria-labelledby="essForecastingMaxRackCellVoltageVisualizationSearchModalFormLabel" aria-hidden="true">
+        <!-- Forecasting object visualization search modal -->
+        <div class="modal fade" id="forecastingObjectVisualizationSearchModal" tabindex="-1"
+            aria-labelledby="forecastingObjectVisualizationSearchModalFormLabel" aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="essForecastingMaxRackCellVoltageVisualizationSearchModalFormLabel">
+                        <h5 class="modal-title" id="forecastingObjectVisualizationSearchModalFormLabel">
                             검색</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        <form action="#" id="essForecastingMaxRackCellVoltageVisualizationSearchModalForm"
-                            autocomplete="off">
+                        <form action="#" id="forecastingObjectVisualizationSearchModalForm" autocomplete="off">
                             <div class="form-group">
                                 <label class='form-label'>구성:</label>
                                 <div class="input-group m-b-10">
-                                    <select
-                                        id="essForecastingMaxRackCellVoltageVisualizationSearchModalFormOperatingSiteSelect"
+                                    <select id="forecastingObjectVisualizationSearchModalFormOperatingSiteSelect"
                                         class="form-select">
                                         <option value="" selected disabled>운영 사이트를 선택해주세요.</option>
                                         <option value="1">시온유 태양광</option>
@@ -647,43 +685,40 @@
                                     </select>
                                 </div>
                                 <div class="input-group m-b-10">
-                                    <select name=""
-                                        id="essForecastingMaxRackCellVoltageVisualizationSearchModalFormBankSelect"
+                                    <select name="" id="forecastingObjectVisualizationSearchModalFormBankSelect"
                                         class="form-select" disabled>
                                         <option value="" selected disabled>Bank를 선택해주세요.</option>
                                     </select>
                                 </div>
                                 <div class="input-group m-b-10">
-                                    <select id="essForecastingMaxRackCellVoltageVisualizationSearchModalFormRackSelect"
+                                    <select id="forecastingObjectVisualizationSearchModalFormRackSelect"
                                         class="form-select" disabled>
                                         <option value="" selected disabled>Rack를 선택해주세요.</option>
                                     </select>
                                 </div>
                                 <label class='form-label'>시간:</label>
                                 <div class='input-group log-event m-b-10'
-                                    id='essForecastingMaxRackCellVoltageVisualizationSearchModalFormStartDateTimePicker'
+                                    id='forecastingObjectVisualizationSearchModalFormStartDateTimePicker'
                                     data-td-target-input='nearest' data-td-target-toggle='nearest'>
-                                    <input
-                                        id='essForecastingMaxRackCellVoltageVisualizationSearchModalFormStartDateTimeInput'
+                                    <input id='forecastingObjectVisualizationSearchModalFormStartDateTimeInput'
                                         type='text' class='form-control'
-                                        data-td-target='#essForecastingMaxRackCellVoltageVisualizationSearchModalFormStartDateTimePicker'
+                                        data-td-target='#forecastingObjectVisualizationSearchModalFormStartDateTimePicker'
                                         placeholder="시작 날짜를 선택해주세요" />
                                     <span class='input-group-text'
-                                        data-td-target='#essForecastingMaxRackCellVoltageVisualizationSearchModalFormStartDateTimePicker'
+                                        data-td-target='#forecastingObjectVisualizationSearchModalFormStartDateTimePicker'
                                         data-td-toggle='datetimepicker'>
                                         <span class='fas fa-calendar'></span>
                                     </span>
                                 </div>
                                 <div class='input-group log-event'
-                                    id='essForecastingMaxRackCellVoltageVisualizationSearchModalFormEndDateTimePicker'
+                                    id='forecastingObjectVisualizationSearchModalFormEndDateTimePicker'
                                     data-td-target-input='nearest' data-td-target-toggle='nearest'>
-                                    <input
-                                        id='essForecastingMaxRackCellVoltageVisualizationSearchModalFormEndDateTimeInput'
+                                    <input id='forecastingObjectVisualizationSearchModalFormEndDateTimeInput'
                                         type='text' class='form-control'
-                                        data-td-target='#essForecastingMaxRackCellVoltageVisualizationSearchModalFormEndDateTimePicker'
+                                        data-td-target='#forecastingObjectVisualizationSearchModalFormEndDateTimePicker'
                                         placeholder="마지막 날짜를 선택해주세요" />
                                     <span class='input-group-text'
-                                        data-td-target='#essForecastingMaxRackCellVoltageVisualizationSearchModalFormEndDateTimePicker'
+                                        data-td-target='#forecastingObjectVisualizationSearchModalFormEndDateTimePicker'
                                         data-td-toggle='datetimepicker'>
                                         <span class='fas fa-calendar'></span>
                                     </span>
