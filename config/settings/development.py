@@ -25,8 +25,8 @@ If you want to configure local static file and collect static files in local, ke
 Else you want to configure storage static file and collect static files in storage, uncomment below
 """
 
-# DEFAULT_FILE_STORAGE = os.getenv("DEFAULT_FILE_STORAGE")
+DEFAULT_FILE_STORAGE = os.getenv("DEFAULT_FILE_STORAGE")
 
-# STATICFILES_STORAGE = os.getenv("STATICFILES_STORAGE")
+STATICFILES_STORAGE = os.getenv("STATICFILES_STORAGE")
 
-# GS_BUCKET_NAME = os.getenv("GS_BUCKET_NAME")
+GS_BUCKET_NAME = os.getenv("GS_BUCKET_NAME")

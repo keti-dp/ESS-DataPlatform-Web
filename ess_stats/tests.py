@@ -1,5 +1,11 @@
 from django.test import TestCase
-from .models import AvgBankSoH, AvgRackSoH, ForecastingBankSoL, ForecastingMaxRackCellVoltage
+from .models import (
+    AvgBankSoH,
+    AvgRackSoH,
+    ForecastingBankSoL,
+    ForecastingMaxRackCellVoltage,
+    ForecastingMinRackCellVoltage,
+)
 
 
 class AvgBankSoHTestCase(TestCase):
@@ -38,5 +44,15 @@ class ForecastingMaxRackCellVoltageTestCase(TestCase):
     def test_limit_count(self):
         count = 10
         queryset = ForecastingMaxRackCellVoltage.objects.all()[:count]
+
+        self.assertGreaterEqual(len(queryset), 0)
+
+
+class ForecastingMinRackCellVoltageTestCase(TestCase):
+    databases = {"ess_stats"}
+
+    def test_limit_count(self):
+        count = 10
+        queryset = ForecastingMinRackCellVoltage.objects.all()[:count]
 
         self.assertGreaterEqual(len(queryset), 0)
