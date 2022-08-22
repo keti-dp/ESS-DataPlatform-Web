@@ -6,6 +6,7 @@ from .models import (
     ForecastingMaxRackCellVoltage,
     ForecastingMinRackCellVoltage,
     ForecastingMaxRackCellTemperature,
+    ForecastingMinRackCellTemperature,
 )
 
 
@@ -65,5 +66,15 @@ class ForecastingMaxRackCellTemperatureTestCase(TestCase):
     def test_limit_count(self):
         count = 10
         queryset = ForecastingMaxRackCellTemperature.objects.all()[:count]
+
+        self.assertGreaterEqual(len(queryset), 0)
+
+
+class ForecastingMinRackCellTemperatureTestCase(TestCase):
+    databases = {"ess_stats"}
+
+    def test_limit_count(self):
+        count = 10
+        queryset = ForecastingMinRackCellTemperature.objects.all()[:count]
 
         self.assertGreaterEqual(len(queryset), 0)
