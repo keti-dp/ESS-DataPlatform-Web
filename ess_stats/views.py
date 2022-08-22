@@ -6,6 +6,7 @@ from .models import (
     ForecastingBankSoL,
     ForecastingMaxRackCellVoltage,
     ForecastingMinRackCellVoltage,
+    ForecastingMaxRackCellTemperature,
 )
 from .filters import CustomDateFilterBackend, CustomDateTimeFilterBackend
 from .serializer import (
@@ -14,6 +15,7 @@ from .serializer import (
     ForecastingBankSoLSerializer,
     ForecastingMaxRackCellVoltageSerializer,
     ForecastingMinRackCellVoltageSerializer,
+    ForecastingMaxRackCellTemperatureSerializer,
 )
 
 
@@ -127,5 +129,29 @@ class ForecastingMinRackCellVoltageViewSet(ReadOnlyModelViewSet):
         queryset = self.get_queryset().filter(rack_id=rack_id)
         filter_queryset = self.filter_queryset(queryset)
         serializer = ForecastingMinRackCellVoltageSerializer(filter_queryset, many=True)
+
+        return Response(serializer.data)
+
+
+class ForecastingMaxRackCellTemperatureViewSet(ReadOnlyModelViewSet):
+    serializer_class = ForecastingMaxRackCellTemperatureSerializer
+    filter_backends = [CustomDateTimeFilterBackend]
+
+    def get_queryset(self):
+        operating_site_id = self.kwargs["operating_site_id"]
+        bank_id = self.kwargs["bank_id"]
+
+        return ForecastingMaxRackCellTemperature.objects.filter(
+            operating_site=operating_site_id, bank_id=bank_id
+        ).order_by("rack_id", "time")
+
+    def paginate_queryset(self, queryset):
+        return None
+
+    def retrieve(self, request, *args, **kwargs) -> list:
+        rack_id = kwargs["pk"]
+        queryset = self.get_queryset().filter(rack_id=rack_id)
+        filter_queryset = self.filter_queryset(queryset)
+        serializer = ForecastingMaxRackCellTemperatureSerializer(filter_queryset, many=True)
 
         return Response(serializer.data)
