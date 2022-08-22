@@ -1411,7 +1411,7 @@ forecastingObjectVisualizationSearchModalFormValidation
         });
 
         forecastingObjectCardElement.querySelector('.card-body p').textContent = `
-            ${forecastingObjectVisualizationSearchModalFormOperatingSiteSelectElement.options[forecastingObjectVisualizationSearchModalFormOperatingSiteSelectElement.selectedIndex].text} > Bank ${bankId} > Rack ${rackId}
+            ${forecastingObjectVisualizationSearchModalFormOperatingSiteSelectElement.options[forecastingObjectVisualizationSearchModalFormOperatingSiteSelectElement.selectedIndex].text} / Bank ${bankId} / Rack ${rackId}
         `;
 
         window[`${forecastingObjectName}ChartSeriesList`].forEach(element => {
@@ -1490,9 +1490,15 @@ let forecastingMinRackCellVoltageObject = {
     urlPath: 'forecasting-min-cell-voltage'
 };
 
+let forecastingMaxRackCellTemperatureObject = {
+    name: 'forecastingMaxRackCellTemperature',
+    urlPath: 'forecasting-max-cell-temperature'
+}
+
 let forecastingObjects = [
     forecastingMaxRackCellVoltageObject,
     forecastingMinRackCellVoltageObject,
+    forecastingMaxRackCellTemperatureObject,
 ];
 
 let option = {

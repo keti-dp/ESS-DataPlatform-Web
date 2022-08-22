@@ -50,6 +50,7 @@
                         <nav class="nav nav-pills flex-column">
                             <a class="nav-link ml-3 my-1" href="#itemPower">전력</a>
                             <a class="nav-link ml-3 my-1" href="#itemVoltage">전압</a>
+                            <a class="nav-link ml-3 my-1" href="#itemTemperature">온도</a>
                         </nav>
                     </nav>
                 </nav>
@@ -291,9 +292,9 @@
                                     <div class="card-header">
                                         <div class="row">
                                             <div class="col-8 my-auto">
-                                                <h5>10분 후 최대 Rack 전압 예측 <i class="bi bi-info-circle"
+                                                <h5>10분 후 최대 Rack 셀 전압 예측 <i class="bi bi-info-circle"
                                                         data-bs-toggle="tooltip" data-bs-placement="top" title=""
-                                                        data-bs-original-title="관측 데이터의 시점에서 10분 후 최대 Rack 전압을 예측합니다. 5분 단위로 데이터가 추가됩니다."></i>
+                                                        data-bs-original-title="관측 데이터의 시점에서 10분 후 최대 Rack 셀 전압을 예측합니다. 5분 단위로 데이터가 추가됩니다."></i>
                                                 </h5>
                                             </div>
                                             <div class="col-4 text-right">
@@ -330,9 +331,9 @@
                                     <div class="card-header">
                                         <div class="row">
                                             <div class="col-8 my-auto">
-                                                <h5>10분 후 최소 Rack 전압 예측 <i class="bi bi-info-circle"
+                                                <h5>10분 후 최소 Rack 셀 전압 예측 <i class="bi bi-info-circle"
                                                         data-bs-toggle="tooltip" data-bs-placement="top" title=""
-                                                        data-bs-original-title="관측 데이터의 시점에서 10분 후 최소 Rack 전압을 예측합니다. 5분 단위로 데이터가 추가됩니다."></i>
+                                                        data-bs-original-title="관측 데이터의 시점에서 10분 후 최소 Rack 셀 전압을 예측합니다. 5분 단위로 데이터가 추가됩니다."></i>
                                                 </h5>
                                             </div>
                                             <div class="col-4 text-right">
@@ -358,6 +359,49 @@
                                         <div class="row d-none">
                                             <p>시온유 태양광 / Bank 1 / Rack 1</p>
                                             <div id="forecastingMinRackCellVoltageChart" class="visualization-chart">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <h5 id="itemTemperature">온도</h5>
+                        <div class="row">
+                            <div class="col-xl-6 col-md-12">
+                                <div id="forecastingMaxRackCellTemperatureCard" class="card mx-2">
+                                    <div class="card-header">
+                                        <div class="row">
+                                            <div class="col-8 my-auto">
+                                                <h5>10분 후 최대 Rack 셀 온도 예측 <i class="bi bi-info-circle"
+                                                        data-bs-toggle="tooltip" data-bs-placement="top" title=""
+                                                        data-bs-original-title="관측 데이터의 시점에서 10분 후 최대 Rack 셀 온도를 예측합니다. 5분 단위로 데이터가 추가됩니다."></i>
+                                                </h5>
+                                            </div>
+                                            <div class="col-4 text-right">
+                                                <button class="btn btn-sm" type="button" data-bs-toggle="modal"
+                                                    data-bs-target="#forecastingObjectVisualizationSearchModal"
+                                                    data-visualization-type="forecasting-max-rack-cell-temperature">
+                                                    <span class="material-icons-two-tone">
+                                                        search
+                                                    </span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="card-body">
+                                        <!-- Loading -->
+                                        <div class="row">
+                                            <div class="text-center">
+                                                <div class="spinner-border" role="status">
+                                                    <span class="visually-hidden">Loading...</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row d-none">
+                                            <p>시온유 태양광 / Bank 1 / Rack 1</p>
+                                            <div id="forecastingMaxRackCellTemperatureChart"
+                                                class="visualization-chart">
                                             </div>
                                         </div>
                                     </div>
