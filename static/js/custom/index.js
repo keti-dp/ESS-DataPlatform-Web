@@ -1495,10 +1495,16 @@ let forecastingMaxRackCellTemperatureObject = {
     urlPath: 'forecasting-max-cell-temperature'
 }
 
+let forecastingMinRackCellTemperatureObject = {
+    name: 'forecastingMinRackCellTemperature',
+    urlPath: 'forecasting-min-cell-temperature'
+}
+
 let forecastingObjects = [
     forecastingMaxRackCellVoltageObject,
     forecastingMinRackCellVoltageObject,
     forecastingMaxRackCellTemperatureObject,
+    forecastingMinRackCellTemperatureObject,
 ];
 
 let option = {
