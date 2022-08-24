@@ -6,6 +6,9 @@ const essMonitoringLogLevel = {
     'warning': '1',
     'danger': '2',
 }
+const customFullDateFormat = 'yyyy-MM-dd';
+const customFullDateTimeFormat = 'yyyy-MM-dd HH:mm:ss';
+const customTimeDesignatorFullDateTimeFormat = `yyyy-MM-dd'T'HH:mm:ss`;
 
 async function loadData(requestUrl) {
     let response = await fetch(requestUrl);
@@ -337,6 +340,18 @@ function getLineChart(elementId, data, option = {}) {
     return series;
 }
 
+function getAlertElement(message) {
+    let alertElement = document.createElement('div');
+    alertElement.innerHTML = `
+        <div class="alert alert-success alert-dismissible fade show p-l-10" role="alert">
+            <p class="m-t-0 m-b-0"><small>${message}</small></p>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    `
+
+    return alertElement;
+}
+
 /* Initial task */
 // - Create monitoring list
 var operatingSiteMonitoringListColumnIds = ['operatingSite1MonitoringListColumn', 'operatingSite2MonitoringListColumn'];
@@ -508,13 +523,21 @@ operatingSiteMonitoringLogColumnIds.forEach(async (operatingSiteMonitoringLogCol
     requestUrl.searchParams.append('start-time', DateTime.utc().toFormat('yyyy-MM-dd').toString());
     requestUrl.searchParams.append('end-time', DateTime.utc().plus({ days: 1 }).toFormat('yyyy-MM-dd').toString());
 
-    let protectionmapLogData = await loadData(requestUrl);
+    let responseProtectionmapLogData = await loadData(requestUrl);
+    let protectionmapLogData = responseProtectionmapLogData['results'];
 
-    protectionmapLogData['results'].forEach(result => {
-        let alertElement = getMonitoringLogAlertElement(result);
+    if (Array.isArray(protectionmapLogData) && protectionmapLogData.length == 0) {
+        let message = `${DateTime.now().toFormat(customFullDateTimeFormat)}<br><strong>금일 정상 운영 중입니다.</strong>`
+        let alertElement = getAlertElement(message);
 
         monitoringLogContainerElement.appendChild(alertElement);
-    });
+    } else {
+        protectionmapLogData.forEach(data => {
+            let alertElement = getMonitoringLogAlertElement(data);
+    
+            monitoringLogContainerElement.appendChild(alertElement);
+        });
+    }
 
     monitoringLogLoadingElement.classList.add('d-none');
 
@@ -1131,20 +1154,29 @@ fetch(requestUrl).then(response => {
     }
 
     throw new Error(response.statusText);
-}).then(data => {
-    data['results'].forEach(element => {
-        let primaryMonitoringLogAlertContainerElement = getPrimaryMonitoringLogAlertContainerElement(element);
+}).then(responseData => {
+    let data = responseData['results'];
 
-        primaryMonitoringLogContainerElement.appendChild(primaryMonitoringLogAlertContainerElement);
-    });
+    if (Array.isArray(data) && data.length == 0) {
+        let message = `${DateTime.now().toFormat(customFullDateTimeFormat)} <strong>금일 정상 운영 중입니다.</strong>`
+        let alertElement = getAlertElement(message);
+
+        primaryMonitoringLogContainerElement.appendChild(alertElement);
+    } else {
+        data.forEach(element => {
+            let primaryMonitoringLogAlertContainerElement = getPrimaryMonitoringLogAlertContainerElement(element);
+    
+            primaryMonitoringLogContainerElement.appendChild(primaryMonitoringLogAlertContainerElement);
+        });
+    }
 
     primaryMonitoringLogLoadingElement.classList.add('d-none');
     primaryMonitoringLogContainerElement.classList.remove('d-none');
 
-    setUpPaginationButton(data, primaryMonitoringLogPagination, primaryMonitoringLogPaginationUlElement);
+    setUpPaginationButton(responseData, primaryMonitoringLogPagination, primaryMonitoringLogPaginationUlElement);
 
     function loadLatestProtectionMapFeature() {
-        let time = DateTime.now().minus({ seconds: 2 }).toFormat('yyyy-MM-dd HH:mm:ss').replace(' ', 'T');
+        let time = DateTime.now().minus({ seconds: 2 }).toFormat(customTimeDesignatorFullDateTimeFormat);
         let requestUrl = new URL(`${window.location.origin}/api/ess-feature/protectionmap/`);
         requestUrl.searchParams.append('time', time);
 
@@ -1154,8 +1186,8 @@ fetch(requestUrl).then(response => {
             }
 
             throw new Error(response.statusText);
-        }).then(data => {
-            data['results'].forEach(element => {
+        }).then(responseData => {
+            responseData['results'].forEach(element => {
                 let primaryMonitoringLogAlertContainerElement = getPrimaryMonitoringLogAlertContainerElement(element);
 
                 if (primaryMonitoringLogContainerElement.firstElementChild) {
@@ -1217,7 +1249,7 @@ fetch(requestUrl).then(response => {
 });
 
 // - Monitoring log level type count visualization
-function getcreateMonitoringLogLevelTypeCountChartSeriesData(data) {
+function getPrimaryMonitoringLogLevelTypeCountChartSeriesData(data) {
     let seriesData = data.map(element => {
         let logLevelDescription;
 
@@ -1243,7 +1275,7 @@ function getcreateMonitoringLogLevelTypeCountChartSeriesData(data) {
     return seriesData;
 }
 
-function createMonitoringLogLevelTypeCountChart(chartSeries, chartSeriesData, chartLegend) {
+function createPrimaryMonitoringLogLevelTypeCountChart(chartSeries, chartSeriesData, chartLegend) {
     chartSeries.data.setAll(chartSeriesData);
 
     chartLegend.data.setAll(chartSeries.dataItems);
@@ -1253,8 +1285,8 @@ function createMonitoringLogLevelTypeCountChart(chartSeries, chartSeriesData, ch
 }
 
 // Create initial monitoring log level type count chart
-let primaryMonitoringLogLevelTypeCountContainer = document.getElementById('primaryMonitoringLogLevelTypeCount');
-let primaryMonitoringLogLevelTypeCountLoadingElement = primaryMonitoringLogLevelTypeCountContainer.querySelector('.spinner-border');
+let primaryMonitoringLogLevelTypeCountElement = document.getElementById('primaryMonitoringLogLevelTypeCount');
+let primaryMonitoringLogLevelTypeCountLoadingElement = primaryMonitoringLogLevelTypeCountElement.querySelector('.spinner-border');
 let primaryMonitoringLogLevelTypeCountChartElement = document.getElementById('primaryMonitoringLogLevelTypeCountChart');
 var primaryMonitoringLogLevelTypeCountChartRoot = am5.Root.new('primaryMonitoringLogLevelTypeCountChart');
 primaryMonitoringLogLevelTypeCountChartRoot.setThemes([am5themes_Animated.new(primaryMonitoringLogLevelTypeCountChartRoot)]);
@@ -1302,18 +1334,26 @@ fetch(requestUrl).then(response => {
     }
 
     throw new Error(response.statusText);
-}).then(data => {
-    let seriesData = getcreateMonitoringLogLevelTypeCountChartSeriesData(data);
+}).then(responseData => {
+    if (Array.isArray(responseData) && responseData.length == 0) {
+        let message = `${DateTime.now().toFormat(customFullDateTimeFormat)} <strong>금일 정상 운영 중입니다.</strong>`
+        let alertElement = getAlertElement(message);
 
-    createMonitoringLogLevelTypeCountChart(primaryMonitoringLogLevelTypeCountChartSeries, seriesData, primaryMonitoringLogLevelTypeCountChartLegend);
+        primaryMonitoringLogLevelTypeCountElement.appendChild(alertElement);
+    } else {
+        let seriesData = getPrimaryMonitoringLogLevelTypeCountChartSeriesData(responseData);
+
+        createPrimaryMonitoringLogLevelTypeCountChart(primaryMonitoringLogLevelTypeCountChartSeries, seriesData, primaryMonitoringLogLevelTypeCountChartLegend);
+        primaryMonitoringLogLevelTypeCountChartElement.classList.remove('d-none');
+    }
+
+    
     primaryMonitoringLogLevelTypeCountLoadingElement.classList.add('d-none');
-    primaryMonitoringLogLevelTypeCountChartElement.classList.remove('d-none');
 }).catch(error => {
     console.log(error);
 });
 
 // Monitoring log level type count select event
-var primaryMonitoringLogLevelTypeCountElement = document.getElementById('primaryMonitoringLogLevelTypeCount');
 var primaryMonitoringLogLevelTypeCountSelectElement = primaryMonitoringLogLevelTypeCountElement.querySelector('select');
 primaryMonitoringLogLevelTypeCountSelectElement.addEventListener('change', event => {
     primaryMonitoringLogLevelTypeCountChartElement.classList.add('d-none');
@@ -1333,12 +1373,21 @@ primaryMonitoringLogLevelTypeCountSelectElement.addEventListener('change', event
         }
 
         throw new Error(response.statusText);
-    }).then(data => {
-        let seriesData = getcreateMonitoringLogLevelTypeCountChartSeriesData(data);
+    }).then(responseData => {
+        if (Array.isArray(responseData) && responseData.length == 0) {
+            let message = `${DateTime.now().toFormat(customFullDateTimeFormat)} <strong>금일 정상 운영 중입니다.</strong>`
+            let alertElement = getAlertElement(message);
 
-        createMonitoringLogLevelTypeCountChart(primaryMonitoringLogLevelTypeCountChartSeries, seriesData, primaryMonitoringLogLevelTypeCountChartLegend);
+            primaryMonitoringLogLevelTypeCountSelectElement.after(alertElement);
+        } else {
+            let seriesData = getPrimaryMonitoringLogLevelTypeCountChartSeriesData(responseData);
+
+            createPrimaryMonitoringLogLevelTypeCountChart(primaryMonitoringLogLevelTypeCountChartSeries, seriesData, primaryMonitoringLogLevelTypeCountChartLegend);
+            primaryMonitoringLogLevelTypeCountChartElement.classList.remove('d-none');
+        }
+
         primaryMonitoringLogLevelTypeCountLoadingElement.classList.add('d-none');
-        primaryMonitoringLogLevelTypeCountChartElement.classList.remove('d-none')
+        
     }).catch(error => {
         console.log(error);
     });
