@@ -1321,11 +1321,11 @@ var primaryMonitoringLogLevelTypeCountChartLegend = primaryMonitoringLogLevelTyp
     marginBottom: 15,
 }));
 
-var startTime = DateTime.now().toISODate();
-var endTime = DateTime.now().plus({ days: 1 }).toISODate();
+var startDate = DateTime.now().toISODate();
+var endDate = DateTime.now().plus({ days: 1 }).toISODate();
 var requestUrl = new URL(`${window.location.origin}/api/ess-feature/protectionmap/operating-sites/1/stats/log-level-count/`);
-requestUrl.searchParams.append('start-time', startTime);
-requestUrl.searchParams.append('end-time', endTime);
+requestUrl.searchParams.append('start-time', startDate);
+requestUrl.searchParams.append('end-time', endDate);
 requestUrl.searchParams.append('time-bucket-width', '1days');
 
 fetch(requestUrl).then(response => {
@@ -1360,11 +1360,11 @@ primaryMonitoringLogLevelTypeCountSelectElement.addEventListener('change', event
     primaryMonitoringLogLevelTypeCountLoadingElement.classList.remove('d-none');
 
     let operatingSiteId = event.target.value;
-    let startTime = DateTime.now().toISODate();
-    let endTime = DateTime.now().plus({ days: 1 }).toISODate();
+    let startDate = DateTime.now().toISODate();
+    let endDate = DateTime.now().plus({ days: 1 }).toISODate();
     let requestUrl = new URL(`${window.location.origin}/api/ess-feature/protectionmap/operating-sites/${operatingSiteId}/stats/log-level-count/`);
-    requestUrl.searchParams.append('start-time', startTime);
-    requestUrl.searchParams.append('end-time', endTime);
+    requestUrl.searchParams.append('start-time', startDate);
+    requestUrl.searchParams.append('end-time', endDate);
     requestUrl.searchParams.append('time-bucket-width', '1days');
 
     fetch(requestUrl).then(response => {
