@@ -1,6 +1,4 @@
 import csv
-import joblib
-import pandas as pd
 from datetime import datetime
 from datetime import timedelta
 from django.db import connections, DataError
@@ -91,13 +89,25 @@ class ESSBankListView(ListAPIView):
         database = "ess" + str(operating_site_id)
         bank_id = self.kwargs["bank_id"]
         start_date = self.request.query_params.get("date")
+        start_time_query_param = self.request.query_params.get("start-time")
+        end_time_query_param = self.request.query_params.get("end-time")
 
+        # If 'date' query param is exist, 'start-end time' query params are ignored
         if start_date is not None:
             end_date = datetime.strptime(start_date, "%Y-%m-%d") + timedelta(days=1)
             queryset = (
                 ESS_BANK[database]
                 .objects.using(database)
                 .filter(bank_id=bank_id, timestamp__gte=start_date, timestamp__lt=end_date)
+            ).order_by("timestamp")
+        elif start_time_query_param is not None or end_time_query_param is not None:
+            start_time = datetime.strptime(start_time_query_param, "%Y-%m-%dT%H:%M:%S")
+            end_time = datetime.strptime(end_time_query_param, "%Y-%m-%dT%H:%M:%S")
+
+            queryset = (
+                ESS_BANK[database]
+                .objects.using(database)
+                .filter(bank_id=bank_id, timestamp__gte=start_time, timestamp__lt=end_time)
             ).order_by("timestamp")
         else:
             queryset = ESS_BANK[database].objects.using(database).filter(bank_id=bank_id).order_by("timestamp")
@@ -122,9 +132,22 @@ class ESSBankListView(ListAPIView):
                 {"code": "400", "exception type": "Key Error", "message": "올바른 요청 URL을 입력하세요.(operating_site_id)"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+        except TypeError:
+            return Response(
+                {
+                    "code": "400",
+                    "exception type": "Type Error",
+                    "message": "필수 요청 파라미터를 입력하세요.(start-time, end-time)",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         except ValueError:
             return Response(
-                {"code": "400", "exception type": "Value Error", "message": "올바른 요청 파라미터를 입력하세요.(date)"},
+                {
+                    "code": "400",
+                    "exception type": "Value Error",
+                    "message": "올바른 요청 파라미터를 입력하세요.(date 형식은 'YYYY-MM-DD', time 형식은 'YYYY-MM-DDThh:mm:ss' 입니다.)",
+                },
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -143,7 +166,10 @@ class ESSRackListView(ListAPIView):
         database = "ess" + str(operating_site_id)
         bank_id = self.kwargs["bank_id"]
         start_date = self.request.query_params.get("date")
+        start_time_query_param = self.request.query_params.get("start-time")
+        end_time_query_param = self.request.query_params.get("end-time")
 
+        # If 'date' query param is exist, 'start-end time' query params are ignored
         if start_date is not None:
             end_date = datetime.strptime(start_date, "%Y-%m-%d") + timedelta(days=1)
             queryset = (
@@ -152,6 +178,15 @@ class ESSRackListView(ListAPIView):
                 .filter(bank_id=bank_id, timestamp__gte=start_date, timestamp__lt=end_date)
                 .order_by("timestamp")
             )
+        elif start_time_query_param is not None or end_time_query_param is not None:
+            start_time = datetime.strptime(start_time_query_param, "%Y-%m-%dT%H:%M:%S")
+            end_time = datetime.strptime(end_time_query_param, "%Y-%m-%dT%H:%M:%S")
+
+            queryset = (
+                ESS_RACK[database]
+                .objects.using(database)
+                .filter(bank_id=bank_id, timestamp__gte=start_time, timestamp__lt=end_time)
+            ).order_by("timestamp")
         else:
             queryset = ESS_RACK[database].objects.using(database).filter(bank_id=bank_id).order_by("timestamp")
 
@@ -175,9 +210,22 @@ class ESSRackListView(ListAPIView):
                 {"code": "400", "exception type": "Key Error", "message": "올바른 요청 URL을 입력하세요.(operating_site_id)"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+        except TypeError:
+            return Response(
+                {
+                    "code": "400",
+                    "exception type": "Type Error",
+                    "message": "필수 요청 파라미터를 입력하세요.(start-time, end-time)",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         except ValueError:
             return Response(
-                {"code": "400", "exception type": "Value Error", "message": "올바른 요청 파라미터를 입력하세요.(date)"},
+                {
+                    "code": "400",
+                    "exception type": "Value Error",
+                    "message": "올바른 요청 파라미터를 입력하세요.(date 형식은 'YYYY-MM-DD', time 형식은 'YYYY-MM-DDThh:mm:ss' 입니다.)",
+                },
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -195,7 +243,10 @@ class ESSPcsListView(ListAPIView):
         operating_site_id = self.kwargs["operating_site_id"]
         database = "ess" + str(operating_site_id)
         start_date = self.request.query_params.get("date")
+        start_time_query_param = self.request.query_params.get("start-time")
+        end_time_query_param = self.request.query_params.get("end-time")
 
+        # If 'date' query param is exist, 'start-end time' query params are ignored
         if start_date is not None:
             end_date = datetime.strptime(start_date, "%Y-%m-%d") + timedelta(days=1)
             queryset = (
@@ -204,6 +255,13 @@ class ESSPcsListView(ListAPIView):
                 .filter(timestamp__gte=start_date, timestamp__lt=end_date)
                 .order_by("timestamp")
             )
+        elif start_time_query_param is not None or end_time_query_param is not None:
+            start_time = datetime.strptime(start_time_query_param, "%Y-%m-%dT%H:%M:%S")
+            end_time = datetime.strptime(end_time_query_param, "%Y-%m-%dT%H:%M:%S")
+
+            queryset = (
+                ESS_PCS[database].objects.using(database).filter(timestamp__gte=start_time, timestamp__lt=end_time)
+            ).order_by("timestamp")
         else:
             queryset = ESS_PCS[database].objects.using(database).all().order_by("timestamp")
 
@@ -247,7 +305,10 @@ class ESSEtcListView(ListAPIView):
         operating_site_id = self.kwargs["operating_site_id"]
         database = "ess" + str(operating_site_id)
         start_date = self.request.query_params.get("date")
+        start_time_query_param = self.request.query_params.get("start-time")
+        end_time_query_param = self.request.query_params.get("end-time")
 
+        # If 'date' query param is exist, 'start-end time' query params are ignored
         if start_date is not None:
             end_date = datetime.strptime(start_date, "%Y-%m-%d") + timedelta(days=1)
             queryset = (
@@ -256,6 +317,13 @@ class ESSEtcListView(ListAPIView):
                 .filter(timestamp__gte=start_date, timestamp__lt=end_date)
                 .order_by("timestamp")
             )
+        elif start_time_query_param is not None or end_time_query_param is not None:
+            start_time = datetime.strptime(start_time_query_param, "%Y-%m-%dT%H:%M:%S")
+            end_time = datetime.strptime(end_time_query_param, "%Y-%m-%dT%H:%M:%S")
+
+            queryset = (
+                ESS_ETC[database].objects.using(database).filter(timestamp__gte=start_time, timestamp__lt=end_time)
+            ).order_by("timestamp")
         else:
             queryset = ESS_ETC[database].objects.using(database).all().order_by("timestamp")
 
@@ -304,7 +372,10 @@ class ESSRackDetailListView(ListAPIView):
         bank_id = self.kwargs["bank_id"]
         rack_id = self.kwargs["rack_id"]
         start_date = self.request.query_params.get("date")
+        start_time_query_param = self.request.query_params.get("start-time")
+        end_time_query_param = self.request.query_params.get("end-time")
 
+        # If 'date' query param is exist, 'start-end time' query params are ignored
         if start_date is not None:
             end_date = datetime.strptime(start_date, "%Y-%m-%d") + timedelta(days=1)
             queryset = (
@@ -313,6 +384,15 @@ class ESSRackDetailListView(ListAPIView):
                 .filter(bank_id=bank_id, rack_id=rack_id, timestamp__gte=start_date, timestamp__lt=end_date)
                 .order_by("timestamp")
             )
+        elif start_time_query_param is not None or end_time_query_param is not None:
+            start_time = datetime.strptime(start_time_query_param, "%Y-%m-%dT%H:%M:%S")
+            end_time = datetime.strptime(end_time_query_param, "%Y-%m-%dT%H:%M:%S")
+
+            queryset = (
+                ESS_RACK[database]
+                .objects.using(database)
+                .filter(bank_id=bank_id, rack_id=rack_id, timestamp__gte=start_time, timestamp__lt=end_time)
+            ).order_by("timestamp")
         else:
             queryset = (
                 ESS_RACK[database]
