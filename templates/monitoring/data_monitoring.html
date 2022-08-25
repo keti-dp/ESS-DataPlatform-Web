@@ -452,7 +452,7 @@
         <!-- Monitoring list item modal -->
         <div class="modal fade" id="monitoringListItemModal" tabindex="-1"
             aria-labelledby="monitoringListItemModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
+            <div class="modal-dialog modal-lg">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title" id="monitoringListItemModalLabel"></h5>
@@ -464,7 +464,45 @@
                                 <div></div>
                             </div>
                         </div>
-                        <div id="monitoringListItemChart" class="d-none"></div>
+                        <form id="monitoringListItemModalForm">
+                            <div class="row">
+                                <div class="col-6">
+                                    <div class='input-group log-event m-b-10'
+                                        id='monitoringListItemModalStartDateTimePicker' data-td-target-input='nearest'
+                                        data-td-target-toggle='nearest'>
+                                        <input id='monitoringListItemModalStartDateTimeInput' type='text'
+                                            class='form-control'
+                                            data-td-target='#monitoringListItemModalStartDateTimePicker'
+                                            placeholder="시작 날짜를 입력해주세요" />
+                                        <span class='input-group-text'
+                                            data-td-target='#monitoringListItemModalStartDateTimePicker'
+                                            data-td-toggle='datetimepicker'>
+                                            <span class='fas fa-calendar'></span>
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class='input-group log-event' id='monitoringListItemModalEndDateTimePicker'
+                                        data-td-target-input='nearest' data-td-target-toggle='nearest'>
+                                        <input id='monitoringListItemModalEndDateTimeInput' type='text'
+                                            class='form-control'
+                                            data-td-target='#monitoringListItemModalEndDateTimePicker'
+                                            placeholder="마지막 날짜를 입력해주세요" />
+                                        <span class='input-group-text'
+                                            data-td-target='#monitoringListItemModalEndDateTimePicker'
+                                            data-td-toggle='datetimepicker'>
+                                            <span class='fas fa-calendar'></span>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="monitoringListItemChart"></div>
+
+                            <div class="form-group">
+                                <button type="submit" class="btn btn-primary">검색</button>
+                            </div>
+                        </form>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>

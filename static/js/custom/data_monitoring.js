@@ -313,7 +313,7 @@ function getLineChart(elementId, data, option = {}) {
             xAxis: xAxis,
             yAxis: yAxis,
             valueYField: "value",
-            valueXField: "date",
+            valueXField: "time",
             tooltip: am5.Tooltip.new(root, {})
         })
     );
@@ -441,16 +441,16 @@ operatingSiteMonitoringListColumnIds.forEach((operatingSiteMonitoringListColumnI
 });
 
 // - Create monitoring list item chart
-var monitoringListItemChart;
+let monitoringListItemChart;
+let monitoringListItemModalElement = document.getElementById('monitoringListItemModal');
+let monitoringListItemModalFormElement = document.getElementById('monitoringListItemModalForm');
 
-var monitoringListItemModalTriggerList = [].slice.call(document.querySelectorAll('[data-bs-target="#monitoringListItemModal"]'));
+let monitoringListItemModalTriggerList = [].slice.call(document.querySelectorAll('[data-bs-target="#monitoringListItemModal"]'));
 monitoringListItemModalTriggerList.forEach(element => {
     element.addEventListener('click', event => {
-        let chart = document.getElementById('monitoringListItemChart');
-        let loader = chart.previousElementSibling.firstElementChild;
-
-        chart.classList.add('d-none');
-        loader.classList.remove('d-none');
+        let loadingElement = monitoringListItemModalElement.querySelector('.lds-ripple');
+        loadingElement.classList.remove('d-none');
+        monitoringListItemModalFormElement.classList.add('d-none');
 
         let operatingSiteInfoType = element.dataset.operatingSiteInfoType;
         let operatingSiteId = element.dataset.operatingSiteId;
@@ -472,8 +472,7 @@ monitoringListItemModalTriggerList.forEach(element => {
                 break;
         }
 
-        var currentDateTime = DateTime.now();
-        var currentDate = currentDateTime.toISODate();
+        let currentDate = DateTime.now().toISODate();
 
         let monitoringListItemModalTitleEl = document.getElementById('monitoringListItemModalLabel');
         monitoringListItemModalTitleEl.innerHTML = `${operatingSiteInfoColumn} 시간별 모니터링 차트 <span class="material-icons-two-tone">watch_later</span> ${currentDate}`;
@@ -490,10 +489,10 @@ monitoringListItemModalTriggerList.forEach(element => {
             throw new Error(response.statusText);
         }).then(responseData => {
             let data = responseData.map(element => {
-                let date = new Date(element['timestamp']).getTime();
+                let time = new Date(element['timestamp']).getTime();
                 let value = element[operatingSiteInfoColumn];
 
-                return { date: date, value: value };
+                return { time: time, value: value };
             });
 
             if (monitoringListItemChart && 'data' in monitoringListItemChart) {
@@ -502,8 +501,8 @@ monitoringListItemModalTriggerList.forEach(element => {
                 monitoringListItemChart = getLineChart('monitoringListItemChart', data);
             }
 
-            loader.classList.add('d-none');
-            chart.classList.remove('d-none');
+            loadingElement.classList.add('d-none');
+            monitoringListItemModalFormElement.classList.remove('d-none');
         }).catch(error => {
             console.log(error);
         });
@@ -1079,6 +1078,142 @@ monitoringLogViewModalFormValidation.addField('#monitoringLogViewModalStartDateT
         monitoringLogViewModalGridLoading.classList.add('d-none');
         monitoringLogViewModalGrid.classList.remove('d-none');
     });
+});
+
+// - Monitoring list item modal search event
+let monitoringListItemModal = document.getElementById('monitoringListItemModal');
+monitoringListItemModal.addEventListener('show.bs.modal', function (event) {
+    let monitoringListItemElement = event.relatedTarget;
+    let operatingSiteInfoType = monitoringListItemElement.getAttribute('data-operating-site-info-type');
+    let operatingSiteId = monitoringListItemElement.getAttribute('data-operating-site-id');
+    let bankId = monitoringListItemElement.getAttribute('data-operating-site-bank-id');
+    let dataColumn = monitoringListItemElement.getAttribute('data-operating-site-info-column');
+
+    let searchButton = monitoringListItemModal.querySelector('.btn-primary');
+    searchButton.setAttribute('data-operating-site-info-type', operatingSiteInfoType);
+    searchButton.setAttribute('data-operating-site-id', operatingSiteId);
+    searchButton.setAttribute('data-operating-site-bank-id', bankId);
+    searchButton.setAttribute('data-operating-site-info-column', dataColumn);
+
+    if (operatingSiteInfoType == 'rack') {
+        let rackId = monitoringListItemElement.getAttribute('data-operating-site-rack-id');
+
+        searchButton.setAttribute('data-operating-site-rack-id', rackId);
+    }
+});
+
+const monitoringListItemModalStartDateTimePickerElement = document.getElementById('monitoringListItemModalStartDateTimePicker');
+const monitoringListItemModalStartDateTimeTempusDominus = new tempusDominus.TempusDominus(monitoringListItemModalStartDateTimePickerElement, {
+    display: {
+        components: {
+            seconds: true
+        },
+        sideBySide: true
+    },
+    hooks: {
+        inputFormat: (context, date) => { return DateTime.fromISO(date.toISOString()).toFormat(customFullDateTimeFormat) }
+    }
+});
+const monitoringListItemModalEndDateTimeTempusDominus = new tempusDominus.TempusDominus(document.getElementById('monitoringListItemModalEndDateTimePicker'), {
+    display: {
+        components: {
+            seconds: true
+        },
+        sideBySide: true
+    },
+    hooks: {
+        inputFormat: (context, date) => { return DateTime.fromISO(date.toISOString()).toFormat(customFullDateTimeFormat) }
+    },
+    useCurrent: false
+});
+
+// Using event listeners
+monitoringListItemModalStartDateTimePickerElement.addEventListener(tempusDominus.Namespace.events.change, (e) => {
+    monitoringListItemModalEndDateTimeTempusDominus.updateOptions({
+        restrictions: {
+            minDate: e.detail.date
+        },
+    });
+});
+
+// Using subscribe method
+const monitoringListItemModalEndDateTimeTempusDominusSubscription = monitoringListItemModalEndDateTimeTempusDominus.subscribe(tempusDominus.Namespace.events.change, (e) => {
+    monitoringListItemModalStartDateTimeTempusDominus.updateOptions({
+        restrictions: {
+            maxDate: e.date
+        }
+    });
+});
+
+// Validate operating data download modal form
+const monitoringListItemModalFormValidation = new JustValidate('#monitoringListItemModalForm', {
+    errorFieldCssClass: 'is-invalid',
+    tootip: {
+        position: 'bottom'
+    }
+});
+monitoringListItemModalFormValidation.addField('#monitoringListItemModalStartDateTimeInput', [
+    {
+        plugin: JustValidatePluginDate(fields => ({
+            required: true,
+            format: customFullDateTimeFormat
+        })),
+        errorMessage: '시간을 선택하세요.'
+    },
+]).addField('#monitoringListItemModalEndDateTimeInput', [
+    {
+        plugin: JustValidatePluginDate(fields => ({
+            required: true,
+            format: customFullDateTimeFormat
+        })),
+        errorMessage: '시간을 선택하세요.'
+    },
+]).onSuccess(async (event) => {
+    monitoringListItemModalFormElement.classList.add('d-none');
+
+    let loadingElement = monitoringListItemModalElement.querySelector('.lds-ripple');
+    loadingElement.classList.remove('d-none');
+
+    let monitoringListItemModalSearchDataSet = monitoringListItemModalElement.querySelector('.btn-primary').dataset;
+    let operatingSiteInfoType = monitoringListItemModalSearchDataSet.operatingSiteInfoType;
+    let operatingSiteId = monitoringListItemModalSearchDataSet.operatingSiteId;
+    let bankId = monitoringListItemModalSearchDataSet.operatingSiteBankId;
+    let dataColumn = monitoringListItemModalSearchDataSet.operatingSiteInfoColumn;
+    let startTime = DateTime.fromFormat(monitoringListItemModalStartDateTimeInput.value, customFullDateTimeFormat).toFormat(customTimeDesignatorFullDateTimeFormat);
+    let endTime = DateTime.fromFormat(monitoringListItemModalEndDateTimeInput.value, customFullDateTimeFormat).toFormat(customTimeDesignatorFullDateTimeFormat);
+    let requestUrl;
+
+    switch (operatingSiteInfoType) {
+        case 'bank':
+            requestUrl = new URL(`${window.location.origin}/api/ess/operating-sites/${operatingSiteId}/banks/${bankId}/`);
+
+            break;
+        case 'rack':
+            let rackId = monitoringListItemModalSearchDataSet.operatingSiteRackId;
+            requestUrl = new URL(`${window.location.origin}/api/ess/operating-sites/${operatingSiteId}/banks/${bankId}/racks/${rackId}/`);
+
+            break;
+        default:
+            break;
+    }
+
+    requestUrl.searchParams.append('fields', `timestamp,${dataColumn}`);
+    requestUrl.searchParams.append('start-time', startTime);
+    requestUrl.searchParams.append('end-time', endTime);
+    requestUrl.searchParams.append('no_page', '');
+
+    let responseData = await loadData(requestUrl);
+    let data = responseData.map(element => {
+        let time = DateTime.fromISO(element['timestamp']).toMillis();
+        let value = element[dataColumn];
+
+        return {time: time, value: value};
+    });
+
+    monitoringListItemChart.data.setAll(data);
+
+    loadingElement.classList.add('d-none');
+    monitoringListItemModalFormElement.classList.remove('d-none');
 });
 
 // Primary monitoring
