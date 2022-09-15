@@ -344,19 +344,19 @@
                 },
                 "MAX_CELL_VOLTAGE_OF_BANK": {
                     "type": "number",
-                    "value": "3.20~4.05"
+                    "value": "-"
                 },
                 "MIN_CELL_VOLTAGE_OF_BANK": {
                     "type": "number",
-                    "value": "3.20~4.05"
+                    "value": "-"
                 },
                 "MAX_CELL_TEMPERATURE_OF_BANK": {
                     "type": "number",
-                    "value": "0~50"
+                    "value": "-"
                 },
                 "MIN_CELL_TEMPERATURE_OF_BANK": {
                     "type": "number",
-                    "value": "0~50"
+                    "value": "-"
                 },
                 "MAX_MODULE_TEMPERATURE": {
                     "type": "number",
@@ -478,14 +478,6 @@
                     "type": "boolean",
                     "value": "0,1"
                 },
-                "CHARGING_STOP_OF_STATUS": {
-                    "type": "boolean",
-                    "value": "0,1"
-                },
-                "DISCHARGING_STOP_OF_STATUS": {
-                    "type": "boolean",
-                    "value": "0,1"
-                },
                 "EMERGENCY_STATUS": {
                     "type": "boolean",
                     "value": "0,1"
@@ -514,35 +506,35 @@
                 },
                 "RACK_CURRENT": {
                     "type": "number",
-                    "value": "120"
+                    "value": "-"
                 },
                 "RACK_MAX_CELL_VOLTAGE": {
                     "type": "number",
-                    "value": "3.20~4.05"
+                    "value": "-"
                 },
                 "RACK_MIN_CELL_VOLTAGE": {
                     "type": "number",
-                    "value": "3.20~4.05"
+                    "value": "-"
                 },
                 "RACK_CELL_VOLTAGE_GAP": {
                     "type": "number",
-                    "value": "0.3"
+                    "value": "-"
                 },
                 "RACK_CELL_VOLTAGE_AVERAGE": {
                     "type": "number",
-                    "value": "3.20~4.05"
+                    "value": "-"
                 },
                 "RACK_MAX_CELL_TEMPERATURE": {
                     "type": "number",
-                    "value": "0~50"
+                    "value": "-"
                 },
                 "RACK_MIN_CELL_TEMPERATURE": {
                     "type": "number",
-                    "value": "0~50"
+                    "value": "-"
                 },
                 "RACK_CELL_TEMPERATURE_GAP": {
                     "type": "number",
-                    "value": "20"
+                    "value": "-"
                 },
                 "RACK_MAX_MODULE_TEMPERATURE": {
                     "type": "number",
