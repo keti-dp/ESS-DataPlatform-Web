@@ -1568,5 +1568,3 @@ forecastingObjects.forEach(element => {
         forecastingObjectChartElement.parentNode.classList.remove('d-none');
 }).catch(error => console.log(error));
 });
-
-
