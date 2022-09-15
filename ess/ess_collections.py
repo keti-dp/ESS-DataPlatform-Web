@@ -1,5 +1,5 @@
 from .models import Bank, Rack, Pcs, Etc, ESS2Bank, ESS2Rack, ESS2Pcs, ESS2Etc
-from .serializer import (
+from .serializers import (
     BankSerializer,
     EtcSerializer,
     PcsSerializer,

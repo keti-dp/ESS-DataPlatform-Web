@@ -25,14 +25,13 @@ from rest_framework.views import Response
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from .documents import EssMonitoringLogDocument
 from .paginations import LargeResultsSetPagination
-from .serializer import (
+from .serializers import (
     AvgESSBankSoCSerializer,
     AvgESSRackSoCSerializer,
     AvgESSBankSoHSerializer,
     AvgESSRackSoHSerializer,
     AvgESSBankPowerSerializer,
     EssMonitoringLogDocumentSerializer,
-    # ForecastingRackMaxCellVoltageSerializer,
 )
 
 # This custom module have dynamic ess models, serializers, data_dates
