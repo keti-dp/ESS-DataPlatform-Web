@@ -42,7 +42,7 @@ function getInitialLineChart(chartRoot) {
     return chart;
 }
 
-function getSimpleLineChart(elementId, data, option = {}) {
+function getLineChartSeries(elementId, data, option = {}) {
     let root = getChartRoot(elementId);
     let chart = getInitialLineChart(root);
 
@@ -217,6 +217,42 @@ function getAvgSoHChartSeries(elementId) {
     return series
 }
 
+/**
+ * 
+ * @param {object} chartSeries 
+ */
+function createAvgChartLine(chartSeries, data) {
+    let totalValue = 0;
+
+    data.forEach(element => {
+        totalValue += element['value'];
+    });
+
+    let avgValue = totalValue / data.length;
+
+    let yAxis = chartSeries.get('yAxis');
+    let avgAxisRange = yAxis.createAxisRange(yAxis.makeDataItem({
+        value: avgValue
+    }));
+
+    avgAxisRange.get('grid').setAll({
+        stroke: am5.color(0xffe3bb),
+        strokeDasharray: [3],
+        strokeOpacity: 1,
+        strokeWidth: 2,
+    });
+
+    let avgAxisLabel = avgAxisRange.get('label');
+    avgAxisLabel.setAll({
+        text: `평균 ${avgAxisRange.get('value').toFixed(2)}`,
+        background: am5.RoundedRectangle.new(chartSeries.root, {
+            fill: am5.color(0xffe3bb),
+        }),
+    });
+
+    avgAxisLabel.zIndex = 10000;
+}
+
 // <!-- Create initial chart -->
 
 // Luxon alias 'DateTime'
@@ -226,18 +262,18 @@ let startTimeObject = currentDateTime.startOf('day');
 let startTime = startTimeObject.toFormat(customTimeDesignatorFullDateTimeFormat);
 let endTime = startTimeObject.plus({ day: 1 }).toFormat(customTimeDesignatorFullDateTimeFormat);
 
-let visualizationTypes = ['avg-bank-soc', 'avg-rack-soc', 'avg-bank-power'];
-
 // Assign variable collection for dynamic names
 let visualizationTypesObjects = {
-    chart: {},
+    chartSeries: {},
     cardElement: {},
     chartElement: {},
 };
-visualizationTypes.forEach(element => {
-    let visualizationTypeCamelCaseString = getCamelCaseString(element);
 
-    visualizationTypesObjects['chart'][visualizationTypeCamelCaseString] = '';
+let visualizationTypes = ['avg-bank-soc', 'avg-rack-soc', 'avg-bank-power'];
+visualizationTypes.forEach(visualizationType => {
+    let visualizationTypeCamelCaseString = getCamelCaseString(visualizationType);
+
+    visualizationTypesObjects['chartSeries'][visualizationTypeCamelCaseString] = '';
     visualizationTypesObjects['cardElement'][visualizationTypeCamelCaseString] = document.getElementById(`${visualizationTypeCamelCaseString}Card`);
     visualizationTypesObjects['chartElement'][visualizationTypeCamelCaseString] = document.getElementById(`${visualizationTypeCamelCaseString}Chart`);
 });
@@ -258,13 +294,8 @@ visualizationTypes.forEach(visualizationType => {
     requestUrl.searchParams.append('start-time', startTime);
     requestUrl.searchParams.append('end-time', endTime);
 
-    fetch(requestUrl).then(response => {
-        if (response.ok) {
-            return response.json();
-        }
-
-        throw new Error(response.statusText);
-    }).then(responseData => {
+    loadData(requestUrl)
+    .then(responseData => {
         let data = responseData.map(element => {
             let date = new Date(element.time).getTime();
             let value = element[visualizationType.replaceAll('-', '_')];
@@ -274,23 +305,46 @@ visualizationTypes.forEach(visualizationType => {
 
         let visualizationTypeCamelCaseString = getCamelCaseString(visualizationType);
         let chartString = `${visualizationTypeCamelCaseString}Chart`;
+        let chartOption;
 
-        if (visualizationType.includes('soc') || visualizationType.includes('soh')) {
-            let chartOption = {
-                yAxis: {
-                    min: 0,
-                    max: 100
+        switch (visualizationType) {
+            case 'avg-bank-soc':
+                chartOption = {
+                    yAxis: {
+                        min: 0,
+                        max: 100
+                    }
                 }
-            }
+    
+                visualizationTypesObjects['chartSeries'][visualizationTypeCamelCaseString] = getLineChartSeries(chartString, data, chartOption);
 
-            visualizationTypesObjects['chart'][visualizationTypeCamelCaseString] = getSimpleLineChart(chartString, data, chartOption);
-        } else {
-            visualizationTypesObjects['chart'][visualizationTypeCamelCaseString] = getSimpleLineChart(chartString, data);
+                break;
+            case 'avg-rack-soc':
+                chartOption = {
+                    yAxis: {
+                        min: 0,
+                        max: 100
+                    }
+                }
+    
+                visualizationTypesObjects['chartSeries'][visualizationTypeCamelCaseString] = getLineChartSeries(chartString, data, chartOption);
+
+                break;
+            case 'avg-bank-power':
+                visualizationTypesObjects['chartSeries'][visualizationTypeCamelCaseString] = getLineChartSeries(chartString, data);
+                let chartSeries = visualizationTypesObjects['chartSeries'][visualizationTypeCamelCaseString];
+
+                createAvgChartLine(chartSeries, data);
+
+                break;
+            default:
+                break;
         }
 
         visualizationTypesObjects['cardElement'][visualizationTypeCamelCaseString].querySelector('.card-body .spinner-border').classList.add('d-none');
         visualizationTypesObjects['chartElement'][visualizationTypeCamelCaseString].parentNode.classList.remove('d-none');
-    }).catch(error => console.log(error));
+    })
+    .catch(error => console.log(error));
 });
 
 // Event
@@ -488,13 +542,8 @@ essBankVisualizationSearchModalFormValidation
         requestUrl.searchParams.append('start-time', startTime);
         requestUrl.searchParams.append('end-time', endTime);
 
-        fetch(requestUrl).then(response => {
-            if (response.ok) {
-                return response.json();
-            }
-
-            throw new Error(response.statusText);
-        }).then(responseData => {
+        loadData(requestUrl)
+        .then(responseData => {
             let data = responseData.map(element => {
                 let date = new Date(element.time).getTime();
                 let value = element[visualizationType.replaceAll('-', '_')];
@@ -503,15 +552,57 @@ essBankVisualizationSearchModalFormValidation
             });
 
             visualizationCardElement.querySelector('.card-body p').textContent = `
-                ${essBankVisualizationSearchModalFormOperatingSiteSelectElement.options[essBankVisualizationSearchModalFormOperatingSiteSelectElement.selectedIndex].text} > Bank ${bankId}
+                ${essBankVisualizationSearchModalFormOperatingSiteSelectElement.options[essBankVisualizationSearchModalFormOperatingSiteSelectElement.selectedIndex].text} / Bank ${bankId}
             `;
 
-            let chart = visualizationTypesObjects['chart'][visualizationTypeCamelCaseString];
-            chart.data.setAll(data);
+            let chartSeries;
+
+            switch (visualizationType) {
+                case 'avg-bank-soc':
+                    chartOption = {
+                        yAxis: {
+                            min: 0,
+                            max: 100
+                        }
+                    }
+        
+                    chartSeries = visualizationTypesObjects['chartSeries'][visualizationTypeCamelCaseString];
+                    chartSeries.data.setAll(data);
+    
+                    break;
+                case 'avg-rack-soc':
+                    chartOption = {
+                        yAxis: {
+                            min: 0,
+                            max: 100
+                        }
+                    }
+        
+                    chartSeries = visualizationTypesObjects['chartSeries'][visualizationTypeCamelCaseString];
+                    chartSeries.data.setAll(data);
+    
+                    break;
+                case 'avg-bank-power':                    
+                    chartSeries = visualizationTypesObjects['chartSeries'][visualizationTypeCamelCaseString];
+                    chartSeries.data.setAll(data);
+
+                    // Remove previous avg chart lines
+                    let yAxis = chartSeries.get('yAxis');
+                    yAxis.axisRanges.each(value => {
+                        yAxis.axisRanges.removeValue(value);
+                    });
+
+                    createAvgChartLine(chartSeries, data);
+    
+                    break;
+                default:
+                    break;
+            }
 
             visualizationCardElement.querySelector('.card-body .spinner-border').classList.add('d-none');
             visualizationChartElement.parentNode.classList.remove('d-none');
-        }).catch(error => console.log(error));
+        })
+        .catch(error => console.log(error));
     });
 
 // -- Validation ess rack type modal
@@ -638,16 +729,18 @@ essRackVisualizationSearchModalFormValidation
             });
 
             visualizationCardElement.querySelector('.card-body p').textContent = `
-                ${essRackVisualizationSearchModalFormOperatingSiteSelectElement.options[essRackVisualizationSearchModalFormOperatingSiteSelectElement.selectedIndex].text} > Bank ${bankId} > Rack ${rackId}
+                ${essRackVisualizationSearchModalFormOperatingSiteSelectElement.options[essRackVisualizationSearchModalFormOperatingSiteSelectElement.selectedIndex].text} / Bank ${bankId} / Rack ${rackId}
             `;
 
-            let chart = visualizationTypesObjects['chart'][visualizationTypeCamelCaseString];
+            let chart = visualizationTypesObjects['chartSeries'][visualizationTypeCamelCaseString];
             chart.data.setAll(data);
 
             visualizationCardElement.querySelector('.card-body .spinner-border').classList.add('d-none');
             visualizationChartElement.parentNode.classList.remove('d-none');
         }).catch(error => console.log(error));
     });
+
+
 
 // Create forecasting bank SoL chart
 async function createForecastingBankSoLChart() {
@@ -1030,7 +1123,7 @@ essBankSoHVisualizationSearchModalFormValidation
         });
 
         avgBankSoHCardElement.querySelector('.card-body p').textContent = `
-            ${essBankSoHVisualizationSearchModalFormOperatingSiteSelectElement.options[essBankSoHVisualizationSearchModalFormOperatingSiteSelectElement.selectedIndex].text} > Bank ${bankId}
+            ${essBankSoHVisualizationSearchModalFormOperatingSiteSelectElement.options[essBankSoHVisualizationSearchModalFormOperatingSiteSelectElement.selectedIndex].text} / Bank ${bankId}
         `;
 
         avgBankSoHChartSeries.data.setAll(chartData);
@@ -1217,7 +1310,7 @@ essRackSoHVisualizationSearchModalFormValidation
         });
 
         avgRackSoHCardElement.querySelector('.card-body p').textContent = `
-            ${essRackSoHVisualizationSearchModalFormOperatingSiteSelectElement.options[essRackSoHVisualizationSearchModalFormOperatingSiteSelectElement.selectedIndex].text} > Bank ${bankId} > Rack ${rackId}
+            ${essRackSoHVisualizationSearchModalFormOperatingSiteSelectElement.options[essRackSoHVisualizationSearchModalFormOperatingSiteSelectElement.selectedIndex].text} / Bank ${bankId} / Rack ${rackId}
         `;
 
         avgRackSoHChartSeries.data.setAll(chartData);
@@ -1226,6 +1319,9 @@ essRackSoHVisualizationSearchModalFormValidation
         avgRackSoHCardElement.querySelector('.card-body .spinner-border').classList.add('d-none');
         avgRackSoHChartElement.parentNode.classList.remove('d-none');
     });
+
+// Avg Bank Power Modal
+
 
 // Forecasting max-min cell voltage search modal
 // - Search visualization card
@@ -1430,7 +1526,7 @@ forecastingObjectVisualizationSearchModalFormValidation
 // Create avg bank SoH chart
 let avgBankSoHChartSeries = getAvgSoHChartSeries('avgBankSoHChart');
 
-let requestUrl = new URL(`${window.location.origin}/api/ess/stats/avg-soh/operating-sites/1/banks/1/`);
+requestUrl = new URL(`${window.location.origin}/api/ess/stats/avg-soh/operating-sites/1/banks/1/`);
 
 fetch(requestUrl).then(response => {
     return response.json();
