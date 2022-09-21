@@ -19,8 +19,24 @@ async function loadData(requestUrl) {
 
 function getChartRoot(elementId) {
     let root = am5.Root.new(elementId);
+    let customTheme = am5.Theme.new(root);
+    customTheme.rule('ColorSet').set('colors', [
+        // Color naming site: https://www.htmlcsscolor.com/
+        // Color palettes site: https://coolors.co/
+        am5.color(0x00589b), // cobalt
+        am5.color(0x00a0b0), // bondi blue
+        am5.color(0xcf5c78), // cabaret
+        // am5.color(0xf5df4d), // energy yellow
+        // am5.color(0xf0eee9), // romance
+        // am5.color(0x939597), // grey chateau
+        am5.color(0x887244), // shadow
+        am5.color(0xb9f18c), // sulu
+        // am5.color(0xffbd00), // amber
+    ]);
+
     root.setThemes([
-        am5themes_Animated.new(root)
+        am5themes_Animated.new(root),
+        customTheme,
     ]);
 
     return root;
@@ -30,14 +46,13 @@ function getInitialLineChart(chartRoot) {
     let root = chartRoot;
     let chart = root.container.children.push(
         am5xy.XYChart.new(root, {
-            panY: false,
+            panX: true,
+            panY: true,
+            wheelX: "panX",
             wheelY: "zoomX",
             layout: root.verticalLayout,
         })
     );
-    chart.set("cursor", am5xy.XYCursor.new(root, {
-        behavior: "zoomXY",
-    }));
 
     return chart;
 }
@@ -145,6 +160,11 @@ function getSimpleLineSeriesList(elementId, option) {
     });
 
     seriesList.forEach(element => {
+        // 'Observed' series is in front of everything
+        if (element.get('name') == 'Observed') {
+            element.toFront();
+        }
+
         element.strokes.template.setAll({
             strokeWidth: 3
         });
@@ -152,7 +172,7 @@ function getSimpleLineSeriesList(elementId, option) {
   
     // Set date fields
     root.dateFormatter.setAll({
-        dateFormat: customTimeDesignatorFullDateTimeFormat,
+        dateFormat: 'HH:mm',
         dateFields: ["valueX"]
     });
 
@@ -161,6 +181,40 @@ function getSimpleLineSeriesList(elementId, option) {
         centerX: am5.percent(50),
         x: am5.percent(50)
     }));
+
+    // Event legend
+    // When legend item container is hovered, dim all the series except the hovered one
+    legend.itemContainers.template.events.on("pointerover", function(e) {
+        let itemContainer = e.target;
+    
+        // As series list is data of a legend, dataContext is series
+        let series = itemContainer.dataItem.dataContext;
+    
+        chart.series.each(function(chartSeries) {
+            if (chartSeries != series) {
+                chartSeries.strokes.template.setAll({
+                    strokeOpacity: 0.15,
+                    stroke: am5.color(0x000000)
+                });
+            } else {
+                chartSeries.strokes.template.setAll({
+                strokeWidth: 3
+                });
+            }
+        });
+    });
+    
+    // When legend item container is unhovered, make all series as they are
+    legend.itemContainers.template.events.on("pointerout", function(e) {
+        chart.series.each(function(chartSeries) {
+            chartSeries.strokes.template.setAll({
+                strokeOpacity: 1,
+                strokeWidth: 3,
+                stroke: chartSeries.get("fill")
+            });
+        });
+    })
+
     legend.data.setAll(chart.series.values);
 
     return seriesList;
@@ -218,7 +272,7 @@ function getAvgSoHChartSeries(elementId) {
 }
 
 /**
- * 
+ * Create avg chart line
  * @param {object} chartSeries 
  */
 function createAvgChartLine(chartSeries, data) {
@@ -236,7 +290,7 @@ function createAvgChartLine(chartSeries, data) {
     }));
 
     avgAxisRange.get('grid').setAll({
-        stroke: am5.color(0xffe3bb),
+        stroke: am5.color(0xf5df4d),
         strokeDasharray: [3],
         strokeOpacity: 1,
         strokeWidth: 2,
@@ -246,11 +300,53 @@ function createAvgChartLine(chartSeries, data) {
     avgAxisLabel.setAll({
         text: `평균 ${avgAxisRange.get('value').toFixed(2)}`,
         background: am5.RoundedRectangle.new(chartSeries.root, {
-            fill: am5.color(0xffe3bb),
+            fill: am5.color(0xf5df4d),
         }),
     });
 
     avgAxisLabel.zIndex = 10000;
+}
+
+
+/**
+ * Get forecasting chart data
+ * @param {Array} data 
+ * @returns {Array}
+ */
+function getForecastingChartData(data) {
+    // Set observed and forecasting data objects
+    let dataObject = {};
+
+    data.forEach(element => {
+        let timeObject = DateTime.fromISO(element['time']);
+
+        if (dataObject[`${timeObject.toMillis()}`]) {
+            dataObject[`${timeObject.toMillis()}`]['value1'] = element['values']['observed'];
+        } else {
+            dataObject[`${timeObject.toMillis()}`] = {
+                value1: element['values']['observed'],
+            }
+        }
+
+        dataObject[`${timeObject.plus({minute: 10}).toMillis()}`] = {
+            value2: element['values']['catboost'],
+            value3: element['values']['linear'],
+            value4: element['values']['lightgbm'],
+            value5: element['values']['xgboost'],
+        }
+    });
+
+    // Set chart data
+    let chartData = Object.keys(dataObject).map(element => {
+        return {
+            time: Number(element),
+            ...dataObject[element],
+        }
+    });
+
+    chartData.sort((a, b) => a['time'] - b['time']);
+
+    return chartData;
 }
 
 // <!-- Create initial chart -->
@@ -746,6 +842,14 @@ essRackVisualizationSearchModalFormValidation
 async function createForecastingBankSoLChart() {
     let root = getChartRoot('forecastingBankSoLChart');
     let chart = getInitialLineChart(root);
+
+    // Change chart colors
+    chart.get('colors').set('colors', [
+        am5.color(0x00589b), // cobalt
+        am5.color(0x00a0b0), // bondi blue
+        am5.color(0x00adbd), // iris blue
+        am5.color(0x00adbd), // iris blue
+    ]);
 
     let xAxis = chart.xAxes.push(am5xy.DateAxis.new(root, {
         baseInterval: {
@@ -1323,7 +1427,7 @@ essRackSoHVisualizationSearchModalFormValidation
 // Avg Bank Power Modal
 
 
-// Forecasting max-min cell voltage search modal
+// Forecasting max-min rack cell voltage-temperature search modal
 // - Search visualization card
 let forecastingObjectVisualizationSearchModalElement = document.getElementById('forecastingObjectVisualizationSearchModal');
 forecastingObjectVisualizationSearchModalElement.addEventListener('show.bs.modal', event => {
@@ -1495,16 +1599,7 @@ forecastingObjectVisualizationSearchModalFormValidation
 
         let responseData = await loadData(requestUrl);
 
-        let chartData = responseData.map(element => {
-            return {
-                time: DateTime.fromISO(element['time']).toMillis(),
-                value1: element['values']['observed'],
-                value2: element['values']['catboost'],
-                value3: element['values']['linear'],
-                value4: element['values']['lightgbm'],
-                value5: element['values']['xgboost'],
-            }
-        });
+        let chartData = getForecastingChartData(responseData);
 
         forecastingObjectCardElement.querySelector('.card-body p').textContent = `
             ${forecastingObjectVisualizationSearchModalFormOperatingSiteSelectElement.options[forecastingObjectVisualizationSearchModalFormOperatingSiteSelectElement.selectedIndex].text} / Bank ${bankId} / Rack ${rackId}
@@ -1633,24 +1728,16 @@ forecastingObjects.forEach(element => {
     window[`${forecastingObjectName}Object`] = element;
     window[`${forecastingObjectName}ChartSeriesList`] = getSimpleLineSeriesList(forecastingObjectChartElementId, option);
 
+    let endTime = DateTime.now().toFormat(customTimeDesignatorFullDateTimeFormat);
+    let startTime = DateTime.fromISO(endTime).minus({hour: 1}).toFormat(customTimeDesignatorFullDateTimeFormat);
+    
     requestUrl = new URL(`${window.location.origin}/api/ess/stats/${element['urlPath']}/operating-sites/1/banks/1/racks/1/`);
-    requestUrl.searchParams.append('start-time', currentDateTime.set({hour: 0, minute: 0, second: 0}).toFormat(customTimeDesignatorFullDateTimeFormat));
-    requestUrl.searchParams.append('end-time', currentDateTime.plus({day: 1}).toFormat(customTimeDesignatorFullDateTimeFormat));
+    requestUrl.searchParams.append('start-time', startTime);
+    requestUrl.searchParams.append('end-time', endTime);
 
-    fetch(requestUrl).then(response => {
-        return response.json();
-    }).then(responseData => {
-        // Set data
-        let chartData = responseData.map(element => {
-            return {
-                time: DateTime.fromISO(element['time']).toMillis(),
-                value1: element['values']['observed'],
-                value2: element['values']['catboost'],
-                value3: element['values']['linear'],
-                value4: element['values']['lightgbm'],
-                value5: element['values']['xgboost'],
-            }
-        });
+    loadData(requestUrl)
+    .then(responseData => {
+        let chartData = getForecastingChartData(responseData);
 
         window[`${forecastingObjectName}ChartSeriesList`].forEach(element => {
             element.data.setAll(chartData);
@@ -1662,5 +1749,6 @@ forecastingObjects.forEach(element => {
 
         let forecastingObjectChartElement = document.getElementById(forecastingObjectChartElementId);
         forecastingObjectChartElement.parentNode.classList.remove('d-none');
-}).catch(error => console.log(error));
+    })
+    .catch(error => console.log(error));
 });
