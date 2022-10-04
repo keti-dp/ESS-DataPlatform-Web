@@ -3,6 +3,10 @@ const customFullDateFormat = 'yyyy-MM-dd';
 const customFullDateTimeFormat = 'yyyy-MM-dd HH:mm:ss';
 const customTimeDesignatorFullDateTimeFormat = `yyyy-MM-dd'T'HH:mm:ss`;
 
+// Luxon alias 'DateTime'
+let DateTime = luxon.DateTime;
+let currentDateTime = DateTime.now();
+
 function getCamelCaseString(text, seperator = '-') {
     return text.split(seperator).map((element, index) => index > 0 ? element.charAt(0).toUpperCase() + element.substr(1) : element).join('');
 }
@@ -53,6 +57,10 @@ function getInitialLineChart(chartRoot) {
             layout: root.verticalLayout,
         })
     );
+
+    chart.set("cursor", am5xy.XYCursor.new(root, {
+        behavior: "none",
+    }));
 
     return chart;
 }
@@ -118,108 +126,6 @@ function getLineChartSeries(elementId, data, option = {}) {
     return series;
 }
 
-// Create chart series list
-function getSimpleLineSeriesList(elementId, option) {
-    let root = getChartRoot(elementId);
-    let chart = getInitialLineChart(root);
-
-    // Create axes
-    let xAxis = chart.xAxes.push(am5xy.DateAxis.new(root, {
-        baseInterval: {
-            timeUnit: "second",
-            count: 1
-        },
-        renderer: am5xy.AxisRendererX.new(root, {}),
-        periodChangeDateFormats: {
-            hour: 'yyyy-MM-dd HH:mm'
-        },
-        tooltip: am5.Tooltip.new(root, {})
-    }));
-    
-    let yAxis = chart.yAxes.push(am5xy.ValueAxis.new(root, {
-        renderer: am5xy.AxisRendererY.new(root, {}),
-        tooltip: am5.Tooltip.new(root, {})
-    }));
-
-    
-    let seriesInfo = option['seriesInfo'];
-
-    // Add series
-    let seriesList = seriesInfo.map(element => {
-        return chart.series.push(am5xy.LineSeries.new(root, {
-            name: element['name'],
-            xAxis: xAxis,
-            yAxis: yAxis,
-            valueYField: element['value'],
-            valueXField: 'time',
-            tooltip: am5.Tooltip.new(root, {
-                labelText: "{valueY}",
-                pointerOrientation:"horizontal"
-            })
-        }));
-    });
-
-    seriesList.forEach(element => {
-        // 'Observed' series is in front of everything
-        if (element.get('name') == 'Observed') {
-            element.toFront();
-        }
-
-        element.strokes.template.setAll({
-            strokeWidth: 3
-        });
-    });
-  
-    // Set date fields
-    root.dateFormatter.setAll({
-        dateFormat: 'HH:mm',
-        dateFields: ["valueX"]
-    });
-
-    // Set legend
-    let legend = chart.children.push(am5.Legend.new(root, {
-        centerX: am5.percent(50),
-        x: am5.percent(50)
-    }));
-
-    // Event legend
-    // When legend item container is hovered, dim all the series except the hovered one
-    legend.itemContainers.template.events.on("pointerover", function(e) {
-        let itemContainer = e.target;
-    
-        // As series list is data of a legend, dataContext is series
-        let series = itemContainer.dataItem.dataContext;
-    
-        chart.series.each(function(chartSeries) {
-            if (chartSeries != series) {
-                chartSeries.strokes.template.setAll({
-                    strokeOpacity: 0.15,
-                    stroke: am5.color(0x000000)
-                });
-            } else {
-                chartSeries.strokes.template.setAll({
-                strokeWidth: 3
-                });
-            }
-        });
-    });
-    
-    // When legend item container is unhovered, make all series as they are
-    legend.itemContainers.template.events.on("pointerout", function(e) {
-        chart.series.each(function(chartSeries) {
-            chartSeries.strokes.template.setAll({
-                strokeOpacity: 1,
-                strokeWidth: 3,
-                stroke: chartSeries.get("fill")
-            });
-        });
-    })
-
-    legend.data.setAll(chart.series.values);
-
-    return seriesList;
-}
-
 function getAvgSoHChartSeries(elementId) {
     let root = getChartRoot(elementId);
     let chart = getInitialLineChart(root);
@@ -272,573 +178,8 @@ function getAvgSoHChartSeries(elementId) {
 }
 
 /**
- * Create avg chart line
- * @param {object} chartSeries 
+ * Create forecasting bank SoL chart
  */
-function createAvgChartLine(chartSeries, data) {
-    let totalValue = 0;
-
-    data.forEach(element => {
-        totalValue += element['value'];
-    });
-
-    let avgValue = totalValue / data.length;
-
-    let yAxis = chartSeries.get('yAxis');
-    let avgAxisRange = yAxis.createAxisRange(yAxis.makeDataItem({
-        value: avgValue
-    }));
-
-    avgAxisRange.get('grid').setAll({
-        stroke: am5.color(0xf5df4d),
-        strokeDasharray: [3],
-        strokeOpacity: 1,
-        strokeWidth: 2,
-    });
-
-    let avgAxisLabel = avgAxisRange.get('label');
-    avgAxisLabel.setAll({
-        text: `평균 ${avgAxisRange.get('value').toFixed(2)}`,
-        background: am5.RoundedRectangle.new(chartSeries.root, {
-            fill: am5.color(0xf5df4d),
-        }),
-    });
-
-    avgAxisLabel.zIndex = 10000;
-}
-
-
-/**
- * Get forecasting chart data
- * @param {Array} data 
- * @returns {Array}
- */
-function getForecastingChartData(data) {
-    // Set observed and forecasting data objects
-    let dataObject = {};
-
-    data.forEach(element => {
-        let timeObject = DateTime.fromISO(element['time']);
-
-        if (dataObject[`${timeObject.toMillis()}`]) {
-            dataObject[`${timeObject.toMillis()}`]['value1'] = element['values']['observed'];
-        } else {
-            dataObject[`${timeObject.toMillis()}`] = {
-                value1: element['values']['observed'],
-            }
-        }
-
-        dataObject[`${timeObject.plus({minute: 10}).toMillis()}`] = {
-            value2: element['values']['catboost'],
-            value3: element['values']['linear'],
-            value4: element['values']['lightgbm'],
-            value5: element['values']['xgboost'],
-        }
-    });
-
-    // Set chart data
-    let chartData = Object.keys(dataObject).map(element => {
-        return {
-            time: Number(element),
-            ...dataObject[element],
-        }
-    });
-
-    chartData.sort((a, b) => a['time'] - b['time']);
-
-    return chartData;
-}
-
-// <!-- Create initial chart -->
-
-// Luxon alias 'DateTime'
-let DateTime = luxon.DateTime;
-let currentDateTime = DateTime.now();
-let startTimeObject = currentDateTime.startOf('day');
-let startTime = startTimeObject.toFormat(customTimeDesignatorFullDateTimeFormat);
-let endTime = startTimeObject.plus({ day: 1 }).toFormat(customTimeDesignatorFullDateTimeFormat);
-
-// Assign variable collection for dynamic names
-let visualizationTypesObjects = {
-    chartSeries: {},
-    cardElement: {},
-    chartElement: {},
-};
-
-let visualizationTypes = ['avg-bank-soc', 'avg-rack-soc', 'avg-bank-power'];
-visualizationTypes.forEach(visualizationType => {
-    let visualizationTypeCamelCaseString = getCamelCaseString(visualizationType);
-
-    visualizationTypesObjects['chartSeries'][visualizationTypeCamelCaseString] = '';
-    visualizationTypesObjects['cardElement'][visualizationTypeCamelCaseString] = document.getElementById(`${visualizationTypeCamelCaseString}Card`);
-    visualizationTypesObjects['chartElement'][visualizationTypeCamelCaseString] = document.getElementById(`${visualizationTypeCamelCaseString}Chart`);
-});
-
-// Create initial visualization chart
-visualizationTypes.forEach(visualizationType => {
-    let requestUrl;
-
-    if (visualizationType.includes('bank')) {
-        requestUrl = new URL(`${window.location.origin}/api/ess/operating-sites/1/banks/1/stats/${visualizationType}`);
-    }
-
-    if (visualizationType.includes('rack')) {
-        requestUrl = new URL(`${window.location.origin}/api/ess/operating-sites/1/banks/1/racks/1/stats/${visualizationType}`);
-    }
-
-    requestUrl.searchParams.append('time-bucket-width', '1hour');
-    requestUrl.searchParams.append('start-time', startTime);
-    requestUrl.searchParams.append('end-time', endTime);
-
-    loadData(requestUrl)
-    .then(responseData => {
-        let data = responseData.map(element => {
-            let date = new Date(element.time).getTime();
-            let value = element[visualizationType.replaceAll('-', '_')];
-
-            return { date: date, value: value };
-        });
-
-        let visualizationTypeCamelCaseString = getCamelCaseString(visualizationType);
-        let chartString = `${visualizationTypeCamelCaseString}Chart`;
-        let chartOption;
-
-        switch (visualizationType) {
-            case 'avg-bank-soc':
-                chartOption = {
-                    yAxis: {
-                        min: 0,
-                        max: 100
-                    }
-                }
-    
-                visualizationTypesObjects['chartSeries'][visualizationTypeCamelCaseString] = getLineChartSeries(chartString, data, chartOption);
-
-                break;
-            case 'avg-rack-soc':
-                chartOption = {
-                    yAxis: {
-                        min: 0,
-                        max: 100
-                    }
-                }
-    
-                visualizationTypesObjects['chartSeries'][visualizationTypeCamelCaseString] = getLineChartSeries(chartString, data, chartOption);
-
-                break;
-            case 'avg-bank-power':
-                visualizationTypesObjects['chartSeries'][visualizationTypeCamelCaseString] = getLineChartSeries(chartString, data);
-                let chartSeries = visualizationTypesObjects['chartSeries'][visualizationTypeCamelCaseString];
-
-                createAvgChartLine(chartSeries, data);
-
-                break;
-            default:
-                break;
-        }
-
-        visualizationTypesObjects['cardElement'][visualizationTypeCamelCaseString].querySelector('.card-body .spinner-border').classList.add('d-none');
-        visualizationTypesObjects['chartElement'][visualizationTypeCamelCaseString].parentNode.classList.remove('d-none');
-    })
-    .catch(error => console.log(error));
-});
-
-// Event
-// - Search visualization card
-let essBankVisualizationSearchModalElement = document.getElementById('essBankVisualizationSearchModal');
-essBankVisualizationSearchModalElement.addEventListener('show.bs.modal', event => {
-    let button = event.relatedTarget;
-    let visualizationType = button.getAttribute('data-visualization-type');
-    let searchButton = essBankVisualizationSearchModalElement.querySelector('.btn-primary');
-    searchButton.setAttribute('data-visualization-type', visualizationType);
-});
-
-let essRackVisualizationSearchModalElement = document.getElementById('essRackVisualizationSearchModal');
-essRackVisualizationSearchModalElement.addEventListener('show.bs.modal', event => {
-    let button = event.relatedTarget;
-    let visualizationType = button.getAttribute('data-visualization-type');
-    let searchButton = essRackVisualizationSearchModalElement.querySelector('.btn-primary');
-    searchButton.setAttribute('data-visualization-type', visualizationType);
-});
-
-let essBankVisualizationSearchModalFormOperatingSiteSelectElement = document.getElementById('essBankVisualizationSearchModalFormOperatingSiteSelect');
-let essBankVisualizationSearchModalFormBankSelectElement = document.getElementById('essBankVisualizationSearchModalFormBankSelect');
-let essBankVisualizationSearchModalFormStartDateTimePickerElement = document.getElementById('essBankVisualizationSearchModalFormStartDateTimePicker');
-let essBankVisualizationSearchModalFormEndDateTimePickerElement = document.getElementById('essBankVisualizationSearchModalFormEndDateTimePicker');
-let essBankVisualizationSearchModalFormStartDateTimeInputElement = document.getElementById('essBankVisualizationSearchModalFormStartDateTimeInput');
-let essBankVisualizationSearchModalFormEndDateTimeInputElement = document.getElementById('essBankVisualizationSearchModalFormEndDateTimeInput');
-
-let essRackVisualizationSearchModalFormOperatingSiteSelectElement = document.getElementById('essRackVisualizationSearchModalFormOperatingSiteSelect');
-let essRackVisualizationSearchModalFormBankSelectElement = document.getElementById('essRackVisualizationSearchModalFormBankSelect');
-let essRackVisualizationSearchModalFormRackSelectElement = document.getElementById('essRackVisualizationSearchModalFormRackSelect');
-let essRackVisualizationSearchModalFormStartDateTimePickerElement = document.getElementById('essRackVisualizationSearchModalFormStartDateTimePicker');
-let essRackVisualizationSearchModalFormEndDateTimePickerElement = document.getElementById('essRackVisualizationSearchModalFormEndDateTimePicker');
-let essRackVisualizationSearchModalFormStartDateTimeInputElement = document.getElementById('essRackVisualizationSearchModalFormStartDateTimeInput');
-let essRackVisualizationSearchModalFormEndDateTimeInputElement = document.getElementById('essRackVisualizationSearchModalFormEndDateTimeInput');
-
-essBankVisualizationSearchModalFormOperatingSiteSelectElement.addEventListener('change', (event) => {
-    essBankVisualizationSearchModalFormBankSelectElement.innerHTML = '';
-    essBankVisualizationSearchModalFormBankSelectElement.insertAdjacentHTML('afterbegin', '<option value="" selected disabled>Bank를 선택해주세요.</option>');
-    essBankVisualizationSearchModalFormBankSelectElement.setAttribute('disabled', '');
-
-    let operatingSiteId = event.target.value;
-    let essProtectionMapInfoRackCountObject = essProtectionMap['info']['rackCount'];
-
-    if (essProtectionMapInfoRackCountObject[`operatingSite${operatingSiteId}`]) {
-        let bankCount = Object.keys(essProtectionMapInfoRackCountObject[`operatingSite${operatingSiteId}`]).length;
-
-        for (i = 0; i < bankCount; i++) {
-            essBankVisualizationSearchModalFormBankSelectElement.insertAdjacentHTML('beforeend', `<option value="${i + 1}">${i + 1}</option>`)
-        }
-        essBankVisualizationSearchModalFormBankSelectElement.removeAttribute('disabled');
-    }
-});
-
-essRackVisualizationSearchModalFormOperatingSiteSelectElement.addEventListener('change', (event) => {
-    essRackVisualizationSearchModalFormBankSelectElement.innerHTML = '';
-    essRackVisualizationSearchModalFormBankSelectElement.insertAdjacentHTML('afterbegin', '<option value="" selected disabled>Bank를 선택해주세요.</option>');
-    essRackVisualizationSearchModalFormRackSelectElement.innerHTML = '';
-    essRackVisualizationSearchModalFormRackSelectElement.insertAdjacentHTML('afterbegin', '<option value="" selected disabled>Rack을 선택해주세요.</option>');
-    essRackVisualizationSearchModalFormBankSelectElement.setAttribute('disabled', '');
-    essRackVisualizationSearchModalFormRackSelectElement.setAttribute('disabled', '');
-
-    let operatingSiteId = event.target.value;
-    let essProtectionMapInfoRackCountObject = essProtectionMap['info']['rackCount'];
-
-    if (essProtectionMapInfoRackCountObject[`operatingSite${operatingSiteId}`]) {
-        let bankCount = Object.keys(essProtectionMapInfoRackCountObject[`operatingSite${operatingSiteId}`]).length;
-
-        for (i = 0; i < bankCount; i++) {
-            essRackVisualizationSearchModalFormBankSelectElement.insertAdjacentHTML('beforeend', `<option value="${i + 1}">${i + 1}</option>`)
-        }
-
-        essRackVisualizationSearchModalFormBankSelectElement.removeAttribute('disabled');
-    }
-});
-
-essRackVisualizationSearchModalFormBankSelectElement.addEventListener('change', (event) => {
-    essRackVisualizationSearchModalFormRackSelectElement.innerHTML = '';
-    essRackVisualizationSearchModalFormRackSelectElement.insertAdjacentHTML('afterbegin', '<option value="" selected disabled>Rack을 선택해주세요.</option>')
-
-    let operatingSiteId = essRackVisualizationSearchModalFormOperatingSiteSelectElement.value;
-    let bankId = event.target.value;
-    let essProtectionMapInfoRackCountObject = essProtectionMap['info']['rackCount'];
-
-    if (essProtectionMapInfoRackCountObject[`operatingSite${operatingSiteId}`]) {
-        let rackCount = essProtectionMapInfoRackCountObject[`operatingSite${operatingSiteId}`][`bank${bankId}`];
-
-        for (i = 0; i < rackCount; i++) {
-            essRackVisualizationSearchModalFormRackSelectElement.insertAdjacentHTML('beforeend', `<option value="${i + 1}">${i + 1}</option>`)
-        }
-        essRackVisualizationSearchModalFormRackSelectElement.removeAttribute('disabled');
-    } else {
-        essRackVisualizationSearchModalFormRackSelectElement.setAttribute('disabled', '');
-    }
-});
-
-// -- Validation ess bank type modal
-const essBankVisualizationSearchModalFormStartDateTimeTempusDominus = new tempusDominus.TempusDominus(essBankVisualizationSearchModalFormStartDateTimePickerElement, {
-    display: {
-        components: {
-            seconds: true
-        },
-        sideBySide: true
-    },
-    hooks: {
-        inputFormat: (context, date) => { return DateTime.fromISO(date.toISOString()).toFormat(customFullDateTimeFormat) }
-    }
-});
-
-const essBankVisualizationSearchModalFormEndDateTimeTempusDominus = new tempusDominus.TempusDominus(essBankVisualizationSearchModalFormEndDateTimePickerElement, {
-    display: {
-        components: {
-            seconds: true
-        },
-        sideBySide: true
-    },
-    hooks: {
-        inputFormat: (context, date) => { return DateTime.fromISO(date.toISOString()).toFormat(customFullDateTimeFormat) }
-    },
-    useCurrent: false
-});
-
-// Using event listeners
-essBankVisualizationSearchModalFormStartDateTimePickerElement.addEventListener(tempusDominus.Namespace.events.change, (e) => {
-    essBankVisualizationSearchModalFormEndDateTimeTempusDominus.updateOptions({
-        restrictions: {
-            minDate: e.detail.date
-        },
-    });
-});
-
-// Using subscribe method
-const essBankVisualizationSearchModalFormEndDateTimeTempusDominusSubscription = essBankVisualizationSearchModalFormEndDateTimeTempusDominus.subscribe(tempusDominus.Namespace.events.change, (e) => {
-    essBankVisualizationSearchModalFormStartDateTimeTempusDominus.updateOptions({
-        restrictions: {
-            maxDate: e.date
-        }
-    });
-});
-
-const essBankVisualizationSearchModalFormValidation = new JustValidate('#essBankVisualizationSearchModalForm', {
-    errorFieldCssClass: 'is-invalid',
-    focusInvalidField: true,
-    lockForm: true,
-    tooltip: {
-        position: 'right',
-    }
-});
-essBankVisualizationSearchModalFormValidation
-    .addField('#essBankVisualizationSearchModalFormOperatingSiteSelect', [
-        {
-            rule: 'required',
-            errorMessage: '운영 사이트를 선택하세요.'
-        }
-    ])
-    .addField('#essBankVisualizationSearchModalFormBankSelect', [
-        {
-            rule: 'required',
-            errorMessage: 'Bank를 선택하세요.'
-        }
-    ])
-    .addField('#essBankVisualizationSearchModalFormStartDateTimeInput', [
-        {
-            plugin: JustValidatePluginDate(fields => ({
-                required: true,
-                format: customFullDateTimeFormat
-            })),
-            errorMessage: '시작 시간을 선택하세요.'
-        },
-    ]).addField('#essBankVisualizationSearchModalFormEndDateTimeInput', [
-        {
-            plugin: JustValidatePluginDate(fields => ({
-                required: true,
-                format: customFullDateTimeFormat
-            })),
-            errorMessage: '마지막 시간을 선택하세요.'
-        },
-    ])
-    .onSuccess((event) => {
-        let visualizationType = essBankVisualizationSearchModalElement.querySelector('.btn-primary').getAttribute('data-visualization-type');
-        let visualizationTypeCamelCaseString = getCamelCaseString(visualizationType, '-');
-        let visualizationCardElement = visualizationTypesObjects['cardElement'][visualizationTypeCamelCaseString];
-        let visualizationChartElement = visualizationTypesObjects['chartElement'][visualizationTypeCamelCaseString];
-
-        bootstrap.Modal.getInstance(essBankVisualizationSearchModalElement).hide();
-        visualizationChartElement.parentNode.classList.add('d-none');
-        visualizationCardElement.querySelector('.card-body .spinner-border').classList.remove('d-none');
-
-        let operatingSiteId = essBankVisualizationSearchModalFormOperatingSiteSelectElement.value;
-        let bankId = essBankVisualizationSearchModalFormBankSelectElement.value;
-        let startTime = DateTime.fromFormat(essBankVisualizationSearchModalFormStartDateTimeInput.value, customFullDateTimeFormat).toFormat(customTimeDesignatorFullDateTimeFormat);
-        let endTime = DateTime.fromFormat(essBankVisualizationSearchModalFormEndDateTimeInput.value, customFullDateTimeFormat).toFormat(customTimeDesignatorFullDateTimeFormat);
-
-        let requestUrl = new URL(`${window.location.origin}/api/ess/operating-sites/${operatingSiteId}/banks/${bankId}/stats/${visualizationType}`);
-        requestUrl.searchParams.append('time-bucket-width', '1hour');
-        requestUrl.searchParams.append('start-time', startTime);
-        requestUrl.searchParams.append('end-time', endTime);
-
-        loadData(requestUrl)
-        .then(responseData => {
-            let data = responseData.map(element => {
-                let date = new Date(element.time).getTime();
-                let value = element[visualizationType.replaceAll('-', '_')];
-
-                return { date: date, value: value };
-            });
-
-            visualizationCardElement.querySelector('.card-body p').textContent = `
-                ${essBankVisualizationSearchModalFormOperatingSiteSelectElement.options[essBankVisualizationSearchModalFormOperatingSiteSelectElement.selectedIndex].text} / Bank ${bankId}
-            `;
-
-            let chartSeries;
-
-            switch (visualizationType) {
-                case 'avg-bank-soc':
-                    chartOption = {
-                        yAxis: {
-                            min: 0,
-                            max: 100
-                        }
-                    }
-        
-                    chartSeries = visualizationTypesObjects['chartSeries'][visualizationTypeCamelCaseString];
-                    chartSeries.data.setAll(data);
-    
-                    break;
-                case 'avg-rack-soc':
-                    chartOption = {
-                        yAxis: {
-                            min: 0,
-                            max: 100
-                        }
-                    }
-        
-                    chartSeries = visualizationTypesObjects['chartSeries'][visualizationTypeCamelCaseString];
-                    chartSeries.data.setAll(data);
-    
-                    break;
-                case 'avg-bank-power':                    
-                    chartSeries = visualizationTypesObjects['chartSeries'][visualizationTypeCamelCaseString];
-                    chartSeries.data.setAll(data);
-
-                    // Remove previous avg chart lines
-                    let yAxis = chartSeries.get('yAxis');
-                    yAxis.axisRanges.each(value => {
-                        yAxis.axisRanges.removeValue(value);
-                    });
-
-                    createAvgChartLine(chartSeries, data);
-    
-                    break;
-                default:
-                    break;
-            }
-
-            visualizationCardElement.querySelector('.card-body .spinner-border').classList.add('d-none');
-            visualizationChartElement.parentNode.classList.remove('d-none');
-        })
-        .catch(error => console.log(error));
-    });
-
-// -- Validation ess rack type modal
-const essRackVisualizationSearchModalFormStartDateTimeTempusDominus = new tempusDominus.TempusDominus(essRackVisualizationSearchModalFormStartDateTimePickerElement, {
-    display: {
-        components: {
-            seconds: true
-        },
-        sideBySide: true
-    },
-    hooks: {
-        inputFormat: (context, date) => { return DateTime.fromISO(date.toISOString()).toFormat(customFullDateTimeFormat) }
-    }
-});
-
-const essRackVisualizationSearchModalFormEndDateTimeTempusDominus = new tempusDominus.TempusDominus(essRackVisualizationSearchModalFormEndDateTimePickerElement, {
-    display: {
-        components: {
-            seconds: true
-        },
-        sideBySide: true
-    },
-    hooks: {
-        inputFormat: (context, date) => { return DateTime.fromISO(date.toISOString()).toFormat(customFullDateTimeFormat) }
-    },
-    useCurrent: false
-});
-
-// Using event listeners
-essRackVisualizationSearchModalFormStartDateTimePickerElement.addEventListener(tempusDominus.Namespace.events.change, (e) => {
-    essRackVisualizationSearchModalFormEndDateTimeTempusDominus.updateOptions({
-        restrictions: {
-            minDate: e.detail.date
-        },
-    });
-});
-
-// Using subscribe method
-const essRackVisualizationSearchModalFormEndDateTimeTempusDominusSubscription = essRackVisualizationSearchModalFormEndDateTimeTempusDominus.subscribe(tempusDominus.Namespace.events.change, (e) => {
-    essBankVisualizationSearchModalFormStartDateTimeTempusDominus.updateOptions({
-        restrictions: {
-            maxDate: e.date
-        }
-    });
-});
-
-const essRackVisualizationSearchModalFormValidation = new JustValidate('#essRackVisualizationSearchModalForm', {
-    errorFieldCssClass: 'is-invalid',
-    focusInvalidField: true,
-    lockForm: true,
-    tooltip: {
-        position: 'right',
-    }
-});
-essRackVisualizationSearchModalFormValidation
-    .addField('#essRackVisualizationSearchModalFormOperatingSiteSelect', [
-        {
-            rule: 'required',
-            errorMessage: '운영 사이트를 선택하세요.'
-        }
-    ])
-    .addField('#essRackVisualizationSearchModalFormBankSelect', [
-        {
-            rule: 'required',
-            errorMessage: 'Bank를 선택하세요.'
-        }
-    ])
-    .addField('#essRackVisualizationSearchModalFormRackSelect', [
-        {
-            rule: 'required',
-            errorMessage: 'Rack를 선택하세요.'
-        }
-    ])
-    .addField('#essRackVisualizationSearchModalFormStartDateTimeInput', [
-        {
-            plugin: JustValidatePluginDate(fields => ({
-                required: true,
-                format: customFullDateTimeFormat
-            })),
-            errorMessage: '시작 시간을 선택하세요.'
-        },
-    ]).addField('#essRackVisualizationSearchModalFormEndDateTimeInput', [
-        {
-            plugin: JustValidatePluginDate(fields => ({
-                required: true,
-                format: customFullDateTimeFormat
-            })),
-            errorMessage: '마지막 시간을 선택하세요.'
-        },
-    ])
-    .onSuccess((event) => {
-        let visualizationType = essRackVisualizationSearchModalElement.querySelector('.btn-primary').getAttribute('data-visualization-type');
-        let visualizationTypeCamelCaseString = getCamelCaseString(visualizationType, '-');
-        let visualizationCardElement = visualizationTypesObjects['cardElement'][visualizationTypeCamelCaseString];
-        let visualizationChartElement = visualizationTypesObjects['chartElement'][visualizationTypeCamelCaseString];
-
-        bootstrap.Modal.getInstance(essRackVisualizationSearchModalElement).hide();
-        visualizationChartElement.parentNode.classList.add('d-none');
-        visualizationCardElement.querySelector('.card-body .spinner-border').classList.remove('d-none');
-
-        let operatingSiteId = essRackVisualizationSearchModalFormOperatingSiteSelectElement.value;
-        let bankId = essRackVisualizationSearchModalFormBankSelectElement.value;
-        let rackId = essRackVisualizationSearchModalFormRackSelectElement.value;
-        let startTime = DateTime.fromFormat(essRackVisualizationSearchModalFormStartDateTimeInput.value, customFullDateTimeFormat).toFormat(customTimeDesignatorFullDateTimeFormat);
-        let endTime = DateTime.fromFormat(essRackVisualizationSearchModalFormEndDateTimeInput.value, customFullDateTimeFormat).toFormat(customTimeDesignatorFullDateTimeFormat);
-
-        let requestUrl = new URL(`${window.location.origin}/api/ess/operating-sites/${operatingSiteId}/banks/${bankId}/racks/${rackId}/stats/${visualizationType}`);
-        requestUrl.searchParams.append('time-bucket-width', '1hour');
-        requestUrl.searchParams.append('start-time', startTime);
-        requestUrl.searchParams.append('end-time', endTime);
-
-        fetch(requestUrl).then(response => {
-            if (response.ok) {
-                return response.json();
-            }
-
-            throw new Error(response.statusText);
-        }).then(responseData => {
-            let data = responseData.map(element => {
-                let date = new Date(element.time).getTime();
-                let value = element[visualizationType.replaceAll('-', '_')];
-
-                return { date: date, value: value };
-            });
-
-            visualizationCardElement.querySelector('.card-body p').textContent = `
-                ${essRackVisualizationSearchModalFormOperatingSiteSelectElement.options[essRackVisualizationSearchModalFormOperatingSiteSelectElement.selectedIndex].text} / Bank ${bankId} / Rack ${rackId}
-            `;
-
-            let chart = visualizationTypesObjects['chartSeries'][visualizationTypeCamelCaseString];
-            chart.data.setAll(data);
-
-            visualizationCardElement.querySelector('.card-body .spinner-border').classList.add('d-none');
-            visualizationChartElement.parentNode.classList.remove('d-none');
-        }).catch(error => console.log(error));
-    });
-
-
-
-// Create forecasting bank SoL chart
 async function createForecastingBankSoLChart() {
     let root = getChartRoot('forecastingBankSoLChart');
     let chart = getInitialLineChart(root);
@@ -1017,8 +358,49 @@ async function createForecastingBankSoLChart() {
     forecastingBankSoLChartElement.parentNode.classList.remove('d-none');
 }
 
-// Create forecasting max rack cell voltage chart
-function getForecastingMaxRackCellVoltageChartSeriesList(elementId, option) {
+/**
+ * Create avg chart line
+ * @param {object} chartSeries 
+ */
+function createAvgChartLine(chartSeries, data) {
+    let totalValue = 0;
+
+    data.forEach(element => {
+        totalValue += element['value'];
+    });
+
+    let avgValue = totalValue / data.length;
+
+    let yAxis = chartSeries.get('yAxis');
+    let avgAxisRange = yAxis.createAxisRange(yAxis.makeDataItem({
+        value: avgValue
+    }));
+
+    avgAxisRange.get('grid').setAll({
+        stroke: am5.color(0xf5df4d),
+        strokeDasharray: [3],
+        strokeOpacity: 1,
+        strokeWidth: 2,
+    });
+
+    let avgAxisLabel = avgAxisRange.get('label');
+    avgAxisLabel.setAll({
+        text: `평균 ${avgAxisRange.get('value').toFixed(2)}`,
+        background: am5.RoundedRectangle.new(chartSeries.root, {
+            fill: am5.color(0xf5df4d),
+        }),
+    });
+
+    avgAxisLabel.zIndex = 10000;
+}
+
+/**
+ * Get forecasting max-min rack cell chart series list
+ * @param {string} elementId 
+ * @param {object} option 
+ * @returns {Array}
+ */
+function getForecastingMaxMinRackCellSeriesList(elementId, option) {
     let root = getChartRoot(elementId);
     let chart = getInitialLineChart(root);
 
@@ -1045,6 +427,7 @@ function getForecastingMaxRackCellVoltageChartSeriesList(elementId, option) {
 
     // Add series
     let seriesList = seriesInfo.map(element => {
+        
         return chart.series.push(am5xy.LineSeries.new(root, {
             name: element['name'],
             xAxis: xAxis,
@@ -1052,13 +435,18 @@ function getForecastingMaxRackCellVoltageChartSeriesList(elementId, option) {
             valueYField: element['value'],
             valueXField: 'time',
             tooltip: am5.Tooltip.new(root, {
-                labelText: "{valueY}",
+                labelText: `값: {valueY} / 차이:{${element['value']}Diff}`,
                 pointerOrientation:"horizontal"
             })
         }));
     });
 
     seriesList.forEach(element => {
+        // 'Observed' series is in front of everything
+        if (element.get('name') == 'Observed') {
+            element.toFront();
+        }
+
         element.strokes.template.setAll({
             strokeWidth: 3
         });
@@ -1066,23 +454,531 @@ function getForecastingMaxRackCellVoltageChartSeriesList(elementId, option) {
   
     // Set date fields
     root.dateFormatter.setAll({
-        dateFormat: customTimeDesignatorFullDateTimeFormat,
+        dateFormat: 'HH:mm',
         dateFields: ["valueX"]
     });
 
     // Set legend
     let legend = chart.children.push(am5.Legend.new(root, {
         centerX: am5.percent(50),
-        x: am5.percent(50)
+        x: am5.percent(50),
+        layout: am5.GridLayout.new(root, {
+            maxColumns: 2,
+            fixedWidthGrid: true
+        })
     }));
+
+    // Event legend
+    // When legend item container is hovered, dim all the series except the hovered one
+    legend.itemContainers.template.events.on("pointerover", function(e) {
+        let itemContainer = e.target;
+    
+        // As series list is data of a legend, dataContext is series
+        let series = itemContainer.dataItem.dataContext;
+    
+        chart.series.each(function(chartSeries) {
+            if (chartSeries != series) {
+                chartSeries.strokes.template.setAll({
+                    strokeOpacity: 0.15,
+                    stroke: am5.color(0x000000)
+                });
+            } else {
+                chartSeries.strokes.template.setAll({
+                strokeWidth: 3
+                });
+            }
+        });
+    });
+    
+    // When legend item container is unhovered, make all series as they are
+    legend.itemContainers.template.events.on("pointerout", function(e) {
+        chart.series.each(function(chartSeries) {
+            chartSeries.strokes.template.setAll({
+                strokeOpacity: 1,
+                strokeWidth: 3,
+                stroke: chartSeries.get("fill")
+            });
+        });
+    })
+
     legend.data.setAll(chart.series.values);
 
     return seriesList;
 }
 
-/*
- * Event
- */ 
+
+/**
+ * Get forecasting chart data
+ * @param {Array} data 
+ * @returns {Array}
+ */
+function getForecastingChartData(data) {
+    // Set observed and forecasting data objects
+    let dataObject = {};
+
+    data.forEach(element => {
+        let timeObject = DateTime.fromISO(element['time']);
+
+        if (dataObject[`${timeObject.toMillis()}`]) {
+            dataObject[`${timeObject.toMillis()}`]['value1'] = element['values']['observed'];
+        } else {
+            dataObject[`${timeObject.toMillis()}`] = {
+                value1: element['values']['observed'],
+            }
+        }
+
+        dataObject[`${timeObject.plus({minute: 10}).toMillis()}`] = {
+            value2: element['values']['catboost'],
+            value3: element['values']['linear'],
+            value4: element['values']['lightgbm'],
+            value5: element['values']['xgboost'],
+        }
+    });
+
+    // Set chart data
+    let chartData = Object.keys(dataObject).map(element => {
+        return {
+            time: Number(element),
+            ...dataObject[element],
+        }
+    });
+
+    chartData.sort((a, b) => a['time'] - b['time']);
+
+    return chartData;
+}
+
+/**
+ * Get forecasting max-min rack cell chart option with prediction error
+ * @param {Array} chartData 
+ * @param {object} defaultOption 
+ * @param {object} forecastingDiffObject 
+ * @returns 
+ */
+async function getForecastingMaxMinRackCellChartOption(chartData, defaultOption, forecastingDiffObject) {
+    // - Deep copy
+    let forecastingMaxMinRackCellChartOption = JSON.parse(JSON.stringify(defaultOption));
+
+    chartData.forEach(element => {
+        // Check all values exist
+        if (element['value1'] && Object.keys(element).length > 2) {
+            Object.keys(forecastingDiffObject).forEach(forecastingDiffObjectKey => {
+                forecastingDiffObject[forecastingDiffObjectKey].push(element[forecastingDiffObjectKey]);
+            });
+        }
+    });
+
+    Object.keys(forecastingDiffObject).forEach((forecastingDiffObjectKey) => {
+        if (forecastingDiffObjectKey !== 'value1') {
+            const observedValues = tf.tensor(forecastingDiffObject['value1']);
+            const predictionValues = tf.tensor(forecastingDiffObject[forecastingDiffObjectKey]);
+            const meanAbsoluteError = tf.metrics.meanAbsoluteError(observedValues, predictionValues).dataSync()[0];
+            const meanSquaredError = tf.metrics.meanSquaredError(observedValues, predictionValues).dataSync()[0];
+            const rootMeanSquaredError = Math.sqrt(meanSquaredError);
+            
+            let optionSeriesInfoIndex = defaultOption['seriesInfo'].findIndex(optionSeriesInfoItem => optionSeriesInfoItem['value'] === forecastingDiffObjectKey);
+            let name = defaultOption['seriesInfo'][optionSeriesInfoIndex]['name'];
+            forecastingMaxMinRackCellChartOption['seriesInfo'][optionSeriesInfoIndex]['name'] = `${name}(MAE: ${meanAbsoluteError.toFixed(4)}, RMSE: ${rootMeanSquaredError.toFixed(4)})`;
+        }
+    });
+
+    return forecastingMaxMinRackCellChartOption;
+}
+
+/**
+ * Events
+ */
+
+// Search visualization card
+let essBankVisualizationSearchModalElement = document.getElementById('essBankVisualizationSearchModal');
+essBankVisualizationSearchModalElement.addEventListener('show.bs.modal', event => {
+    let button = event.relatedTarget;
+    let visualizationType = button.getAttribute('data-visualization-type');
+    let searchButton = essBankVisualizationSearchModalElement.querySelector('.btn-primary');
+    searchButton.setAttribute('data-visualization-type', visualizationType);
+});
+
+let essRackVisualizationSearchModalElement = document.getElementById('essRackVisualizationSearchModal');
+essRackVisualizationSearchModalElement.addEventListener('show.bs.modal', event => {
+    let button = event.relatedTarget;
+    let visualizationType = button.getAttribute('data-visualization-type');
+    let searchButton = essRackVisualizationSearchModalElement.querySelector('.btn-primary');
+    searchButton.setAttribute('data-visualization-type', visualizationType);
+});
+
+let essBankVisualizationSearchModalFormOperatingSiteSelectElement = document.getElementById('essBankVisualizationSearchModalFormOperatingSiteSelect');
+let essBankVisualizationSearchModalFormBankSelectElement = document.getElementById('essBankVisualizationSearchModalFormBankSelect');
+let essBankVisualizationSearchModalFormStartDateTimePickerElement = document.getElementById('essBankVisualizationSearchModalFormStartDateTimePicker');
+let essBankVisualizationSearchModalFormEndDateTimePickerElement = document.getElementById('essBankVisualizationSearchModalFormEndDateTimePicker');
+let essBankVisualizationSearchModalFormStartDateTimeInputElement = document.getElementById('essBankVisualizationSearchModalFormStartDateTimeInput');
+let essBankVisualizationSearchModalFormEndDateTimeInputElement = document.getElementById('essBankVisualizationSearchModalFormEndDateTimeInput');
+
+let essRackVisualizationSearchModalFormOperatingSiteSelectElement = document.getElementById('essRackVisualizationSearchModalFormOperatingSiteSelect');
+let essRackVisualizationSearchModalFormBankSelectElement = document.getElementById('essRackVisualizationSearchModalFormBankSelect');
+let essRackVisualizationSearchModalFormRackSelectElement = document.getElementById('essRackVisualizationSearchModalFormRackSelect');
+let essRackVisualizationSearchModalFormStartDateTimePickerElement = document.getElementById('essRackVisualizationSearchModalFormStartDateTimePicker');
+let essRackVisualizationSearchModalFormEndDateTimePickerElement = document.getElementById('essRackVisualizationSearchModalFormEndDateTimePicker');
+let essRackVisualizationSearchModalFormStartDateTimeInputElement = document.getElementById('essRackVisualizationSearchModalFormStartDateTimeInput');
+let essRackVisualizationSearchModalFormEndDateTimeInputElement = document.getElementById('essRackVisualizationSearchModalFormEndDateTimeInput');
+
+essBankVisualizationSearchModalFormOperatingSiteSelectElement.addEventListener('change', (event) => {
+    essBankVisualizationSearchModalFormBankSelectElement.innerHTML = '';
+    essBankVisualizationSearchModalFormBankSelectElement.insertAdjacentHTML('afterbegin', '<option value="" selected disabled>Bank를 선택해주세요.</option>');
+    essBankVisualizationSearchModalFormBankSelectElement.setAttribute('disabled', '');
+
+    let operatingSiteId = event.target.value;
+    let essProtectionMapInfoRackCountObject = essProtectionMap['info']['rackCount'];
+
+    if (essProtectionMapInfoRackCountObject[`operatingSite${operatingSiteId}`]) {
+        let bankCount = Object.keys(essProtectionMapInfoRackCountObject[`operatingSite${operatingSiteId}`]).length;
+
+        for (i = 0; i < bankCount; i++) {
+            essBankVisualizationSearchModalFormBankSelectElement.insertAdjacentHTML('beforeend', `<option value="${i + 1}">${i + 1}</option>`)
+        }
+        essBankVisualizationSearchModalFormBankSelectElement.removeAttribute('disabled');
+    }
+});
+
+essRackVisualizationSearchModalFormOperatingSiteSelectElement.addEventListener('change', (event) => {
+    essRackVisualizationSearchModalFormBankSelectElement.innerHTML = '';
+    essRackVisualizationSearchModalFormBankSelectElement.insertAdjacentHTML('afterbegin', '<option value="" selected disabled>Bank를 선택해주세요.</option>');
+    essRackVisualizationSearchModalFormRackSelectElement.innerHTML = '';
+    essRackVisualizationSearchModalFormRackSelectElement.insertAdjacentHTML('afterbegin', '<option value="" selected disabled>Rack을 선택해주세요.</option>');
+    essRackVisualizationSearchModalFormBankSelectElement.setAttribute('disabled', '');
+    essRackVisualizationSearchModalFormRackSelectElement.setAttribute('disabled', '');
+
+    let operatingSiteId = event.target.value;
+    let essProtectionMapInfoRackCountObject = essProtectionMap['info']['rackCount'];
+
+    if (essProtectionMapInfoRackCountObject[`operatingSite${operatingSiteId}`]) {
+        let bankCount = Object.keys(essProtectionMapInfoRackCountObject[`operatingSite${operatingSiteId}`]).length;
+
+        for (i = 0; i < bankCount; i++) {
+            essRackVisualizationSearchModalFormBankSelectElement.insertAdjacentHTML('beforeend', `<option value="${i + 1}">${i + 1}</option>`)
+        }
+
+        essRackVisualizationSearchModalFormBankSelectElement.removeAttribute('disabled');
+    }
+});
+
+essRackVisualizationSearchModalFormBankSelectElement.addEventListener('change', (event) => {
+    essRackVisualizationSearchModalFormRackSelectElement.innerHTML = '';
+    essRackVisualizationSearchModalFormRackSelectElement.insertAdjacentHTML('afterbegin', '<option value="" selected disabled>Rack을 선택해주세요.</option>')
+
+    let operatingSiteId = essRackVisualizationSearchModalFormOperatingSiteSelectElement.value;
+    let bankId = event.target.value;
+    let essProtectionMapInfoRackCountObject = essProtectionMap['info']['rackCount'];
+
+    if (essProtectionMapInfoRackCountObject[`operatingSite${operatingSiteId}`]) {
+        let rackCount = essProtectionMapInfoRackCountObject[`operatingSite${operatingSiteId}`][`bank${bankId}`];
+
+        for (i = 0; i < rackCount; i++) {
+            essRackVisualizationSearchModalFormRackSelectElement.insertAdjacentHTML('beforeend', `<option value="${i + 1}">${i + 1}</option>`)
+        }
+        essRackVisualizationSearchModalFormRackSelectElement.removeAttribute('disabled');
+    } else {
+        essRackVisualizationSearchModalFormRackSelectElement.setAttribute('disabled', '');
+    }
+});
+
+// - Validation ess bank type modal
+const essBankVisualizationSearchModalFormStartDateTimeTempusDominus = new tempusDominus.TempusDominus(essBankVisualizationSearchModalFormStartDateTimePickerElement, {
+    display: {
+        components: {
+            seconds: true
+        },
+        sideBySide: true
+    },
+    hooks: {
+        inputFormat: (context, date) => { return DateTime.fromISO(date.toISOString()).toFormat(customFullDateTimeFormat) }
+    }
+});
+
+const essBankVisualizationSearchModalFormEndDateTimeTempusDominus = new tempusDominus.TempusDominus(essBankVisualizationSearchModalFormEndDateTimePickerElement, {
+    display: {
+        components: {
+            seconds: true
+        },
+        sideBySide: true
+    },
+    hooks: {
+        inputFormat: (context, date) => { return DateTime.fromISO(date.toISOString()).toFormat(customFullDateTimeFormat) }
+    },
+    useCurrent: false
+});
+
+// -- Using event listeners
+essBankVisualizationSearchModalFormStartDateTimePickerElement.addEventListener(tempusDominus.Namespace.events.change, (e) => {
+    essBankVisualizationSearchModalFormEndDateTimeTempusDominus.updateOptions({
+        restrictions: {
+            minDate: e.detail.date
+        },
+    });
+});
+
+// -- Using subscribe method
+const essBankVisualizationSearchModalFormEndDateTimeTempusDominusSubscription = essBankVisualizationSearchModalFormEndDateTimeTempusDominus.subscribe(tempusDominus.Namespace.events.change, (e) => {
+    essBankVisualizationSearchModalFormStartDateTimeTempusDominus.updateOptions({
+        restrictions: {
+            maxDate: e.date
+        }
+    });
+});
+
+const essBankVisualizationSearchModalFormValidation = new JustValidate('#essBankVisualizationSearchModalForm', {
+    errorFieldCssClass: 'is-invalid',
+    focusInvalidField: true,
+    lockForm: true,
+    tooltip: {
+        position: 'right',
+    }
+});
+essBankVisualizationSearchModalFormValidation
+    .addField('#essBankVisualizationSearchModalFormOperatingSiteSelect', [
+        {
+            rule: 'required',
+            errorMessage: '운영 사이트를 선택하세요.'
+        }
+    ])
+    .addField('#essBankVisualizationSearchModalFormBankSelect', [
+        {
+            rule: 'required',
+            errorMessage: 'Bank를 선택하세요.'
+        }
+    ])
+    .addField('#essBankVisualizationSearchModalFormStartDateTimeInput', [
+        {
+            plugin: JustValidatePluginDate(fields => ({
+                required: true,
+                format: customFullDateTimeFormat
+            })),
+            errorMessage: '시작 시간을 선택하세요.'
+        },
+    ]).addField('#essBankVisualizationSearchModalFormEndDateTimeInput', [
+        {
+            plugin: JustValidatePluginDate(fields => ({
+                required: true,
+                format: customFullDateTimeFormat
+            })),
+            errorMessage: '마지막 시간을 선택하세요.'
+        },
+    ])
+    .onSuccess((event) => {
+        let visualizationType = essBankVisualizationSearchModalElement.querySelector('.btn-primary').getAttribute('data-visualization-type');
+        let visualizationTypeCamelCaseString = getCamelCaseString(visualizationType, '-');
+        let visualizationCardElement = visualizationTypesObjects['cardElement'][visualizationTypeCamelCaseString];
+        let visualizationChartElement = visualizationTypesObjects['chartElement'][visualizationTypeCamelCaseString];
+
+        bootstrap.Modal.getInstance(essBankVisualizationSearchModalElement).hide();
+        visualizationChartElement.parentNode.classList.add('d-none');
+        visualizationCardElement.querySelector('.card-body .spinner-border').classList.remove('d-none');
+
+        let operatingSiteId = essBankVisualizationSearchModalFormOperatingSiteSelectElement.value;
+        let bankId = essBankVisualizationSearchModalFormBankSelectElement.value;
+        let startTime = DateTime.fromFormat(essBankVisualizationSearchModalFormStartDateTimeInput.value, customFullDateTimeFormat).toFormat(customTimeDesignatorFullDateTimeFormat);
+        let endTime = DateTime.fromFormat(essBankVisualizationSearchModalFormEndDateTimeInput.value, customFullDateTimeFormat).toFormat(customTimeDesignatorFullDateTimeFormat);
+
+        let requestUrl = new URL(`${window.location.origin}/api/ess/operating-sites/${operatingSiteId}/banks/${bankId}/stats/${visualizationType}`);
+        requestUrl.searchParams.append('time-bucket-width', '1hour');
+        requestUrl.searchParams.append('start-time', startTime);
+        requestUrl.searchParams.append('end-time', endTime);
+
+        loadData(requestUrl)
+        .then(responseData => {
+            let data = responseData.map(element => {
+                let date = new Date(element.time).getTime();
+                let value = element[visualizationType.replaceAll('-', '_')];
+
+                return { date: date, value: value };
+            });
+
+            visualizationCardElement.querySelector('.card-body p').textContent = `
+                ${essBankVisualizationSearchModalFormOperatingSiteSelectElement.options[essBankVisualizationSearchModalFormOperatingSiteSelectElement.selectedIndex].text} / Bank ${bankId}
+            `;
+
+            let chartSeries;
+
+            switch (visualizationType) {
+                case 'avg-bank-soc':
+                    chartOption = {
+                        yAxis: {
+                            min: 0,
+                            max: 100
+                        }
+                    }
+        
+                    chartSeries = visualizationTypesObjects['chartSeries'][visualizationTypeCamelCaseString];
+                    chartSeries.data.setAll(data);
+    
+                    break;
+                case 'avg-rack-soc':
+                    chartOption = {
+                        yAxis: {
+                            min: 0,
+                            max: 100
+                        }
+                    }
+        
+                    chartSeries = visualizationTypesObjects['chartSeries'][visualizationTypeCamelCaseString];
+                    chartSeries.data.setAll(data);
+    
+                    break;
+                case 'avg-bank-power':                    
+                    chartSeries = visualizationTypesObjects['chartSeries'][visualizationTypeCamelCaseString];
+                    chartSeries.data.setAll(data);
+
+                    // Remove previous avg chart lines
+                    let yAxis = chartSeries.get('yAxis');
+                    yAxis.axisRanges.each(value => {
+                        yAxis.axisRanges.removeValue(value);
+                    });
+
+                    createAvgChartLine(chartSeries, data);
+    
+                    break;
+                default:
+                    break;
+            }
+
+            visualizationCardElement.querySelector('.card-body .spinner-border').classList.add('d-none');
+            visualizationChartElement.parentNode.classList.remove('d-none');
+        })
+        .catch(error => console.log(error));
+    });
+
+// - Validation ess rack type modal
+const essRackVisualizationSearchModalFormStartDateTimeTempusDominus = new tempusDominus.TempusDominus(essRackVisualizationSearchModalFormStartDateTimePickerElement, {
+    display: {
+        components: {
+            seconds: true
+        },
+        sideBySide: true
+    },
+    hooks: {
+        inputFormat: (context, date) => { return DateTime.fromISO(date.toISOString()).toFormat(customFullDateTimeFormat) }
+    }
+});
+
+const essRackVisualizationSearchModalFormEndDateTimeTempusDominus = new tempusDominus.TempusDominus(essRackVisualizationSearchModalFormEndDateTimePickerElement, {
+    display: {
+        components: {
+            seconds: true
+        },
+        sideBySide: true
+    },
+    hooks: {
+        inputFormat: (context, date) => { return DateTime.fromISO(date.toISOString()).toFormat(customFullDateTimeFormat) }
+    },
+    useCurrent: false
+});
+
+
+essRackVisualizationSearchModalFormStartDateTimePickerElement.addEventListener(tempusDominus.Namespace.events.change, (e) => {
+    essRackVisualizationSearchModalFormEndDateTimeTempusDominus.updateOptions({
+        restrictions: {
+            minDate: e.detail.date
+        },
+    });
+});
+
+const essRackVisualizationSearchModalFormEndDateTimeTempusDominusSubscription = essRackVisualizationSearchModalFormEndDateTimeTempusDominus.subscribe(tempusDominus.Namespace.events.change, (e) => {
+    essBankVisualizationSearchModalFormStartDateTimeTempusDominus.updateOptions({
+        restrictions: {
+            maxDate: e.date
+        }
+    });
+});
+
+const essRackVisualizationSearchModalFormValidation = new JustValidate('#essRackVisualizationSearchModalForm', {
+    errorFieldCssClass: 'is-invalid',
+    focusInvalidField: true,
+    lockForm: true,
+    tooltip: {
+        position: 'right',
+    }
+});
+essRackVisualizationSearchModalFormValidation
+    .addField('#essRackVisualizationSearchModalFormOperatingSiteSelect', [
+        {
+            rule: 'required',
+            errorMessage: '운영 사이트를 선택하세요.'
+        }
+    ])
+    .addField('#essRackVisualizationSearchModalFormBankSelect', [
+        {
+            rule: 'required',
+            errorMessage: 'Bank를 선택하세요.'
+        }
+    ])
+    .addField('#essRackVisualizationSearchModalFormRackSelect', [
+        {
+            rule: 'required',
+            errorMessage: 'Rack를 선택하세요.'
+        }
+    ])
+    .addField('#essRackVisualizationSearchModalFormStartDateTimeInput', [
+        {
+            plugin: JustValidatePluginDate(fields => ({
+                required: true,
+                format: customFullDateTimeFormat
+            })),
+            errorMessage: '시작 시간을 선택하세요.'
+        },
+    ]).addField('#essRackVisualizationSearchModalFormEndDateTimeInput', [
+        {
+            plugin: JustValidatePluginDate(fields => ({
+                required: true,
+                format: customFullDateTimeFormat
+            })),
+            errorMessage: '마지막 시간을 선택하세요.'
+        },
+    ])
+    .onSuccess((event) => {
+        let visualizationType = essRackVisualizationSearchModalElement.querySelector('.btn-primary').getAttribute('data-visualization-type');
+        let visualizationTypeCamelCaseString = getCamelCaseString(visualizationType, '-');
+        let visualizationCardElement = visualizationTypesObjects['cardElement'][visualizationTypeCamelCaseString];
+        let visualizationChartElement = visualizationTypesObjects['chartElement'][visualizationTypeCamelCaseString];
+
+        bootstrap.Modal.getInstance(essRackVisualizationSearchModalElement).hide();
+        visualizationChartElement.parentNode.classList.add('d-none');
+        visualizationCardElement.querySelector('.card-body .spinner-border').classList.remove('d-none');
+
+        let operatingSiteId = essRackVisualizationSearchModalFormOperatingSiteSelectElement.value;
+        let bankId = essRackVisualizationSearchModalFormBankSelectElement.value;
+        let rackId = essRackVisualizationSearchModalFormRackSelectElement.value;
+        let startTime = DateTime.fromFormat(essRackVisualizationSearchModalFormStartDateTimeInput.value, customFullDateTimeFormat).toFormat(customTimeDesignatorFullDateTimeFormat);
+        let endTime = DateTime.fromFormat(essRackVisualizationSearchModalFormEndDateTimeInput.value, customFullDateTimeFormat).toFormat(customTimeDesignatorFullDateTimeFormat);
+
+        let requestUrl = new URL(`${window.location.origin}/api/ess/operating-sites/${operatingSiteId}/banks/${bankId}/racks/${rackId}/stats/${visualizationType}`);
+        requestUrl.searchParams.append('time-bucket-width', '1hour');
+        requestUrl.searchParams.append('start-time', startTime);
+        requestUrl.searchParams.append('end-time', endTime);
+
+        fetch(requestUrl).then(response => {
+            if (response.ok) {
+                return response.json();
+            }
+
+            throw new Error(response.statusText);
+        }).then(responseData => {
+            let data = responseData.map(element => {
+                let date = new Date(element.time).getTime();
+                let value = element[visualizationType.replaceAll('-', '_')];
+
+                return { date: date, value: value };
+            });
+
+            visualizationCardElement.querySelector('.card-body p').textContent = `
+                ${essRackVisualizationSearchModalFormOperatingSiteSelectElement.options[essRackVisualizationSearchModalFormOperatingSiteSelectElement.selectedIndex].text} / Bank ${bankId} / Rack ${rackId}
+            `;
+
+            let chart = visualizationTypesObjects['chartSeries'][visualizationTypeCamelCaseString];
+            chart.data.setAll(data);
+
+            visualizationCardElement.querySelector('.card-body .spinner-border').classList.add('d-none');
+            visualizationChartElement.parentNode.classList.remove('d-none');
+        }).catch(error => console.log(error));
+    });
 
 // Avg bank SoH search modal
 let essBankSoHVisualizationSearchModalFormStartDateTimePickerElement = document.getElementById('essBankSoHVisualizationSearchModalFormStartDateTimePicker');
@@ -1237,7 +1133,7 @@ essBankSoHVisualizationSearchModalFormValidation
         avgBankSoHChartElement.parentNode.classList.remove('d-none');
     });
 
-// Avg rack SoH search modal
+// Search avg rack SoH card
 let essRackSoHVisualizationSearchModalFormOperatingSiteSelectElement = document.getElementById('essRackSoHVisualizationSearchModalFormOperatingSiteSelect');
 let essRackSoHVisualizationSearchModalFormBankSelectElement = document.getElementById('essRackSoHVisualizationSearchModalFormBankSelect');
 let essRackSoHVisualizationSearchModalFormRackSelectElement = document.getElementById('essRackSoHVisualizationSearchModalFormRackSelect');
@@ -1424,11 +1320,7 @@ essRackSoHVisualizationSearchModalFormValidation
         avgRackSoHChartElement.parentNode.classList.remove('d-none');
     });
 
-// Avg Bank Power Modal
-
-
-// Forecasting max-min rack cell voltage-temperature search modal
-// - Search visualization card
+// Search forecasting max-min rack cell modal
 let forecastingObjectVisualizationSearchModalElement = document.getElementById('forecastingObjectVisualizationSearchModal');
 forecastingObjectVisualizationSearchModalElement.addEventListener('show.bs.modal', event => {
     let button = event.relatedTarget;
@@ -1605,8 +1497,38 @@ forecastingObjectVisualizationSearchModalFormValidation
             ${forecastingObjectVisualizationSearchModalFormOperatingSiteSelectElement.options[forecastingObjectVisualizationSearchModalFormOperatingSiteSelectElement.selectedIndex].text} / Bank ${bankId} / Rack ${rackId}
         `;
 
-        window[`${forecastingObjectName}ChartSeriesList`].forEach(element => {
-            element.data.setAll(chartData);
+        // Set forecastingDiffObject
+        let forecastingDiffObject = {};
+        forecastingMaxMinRackCellChartDefaultOption['seriesInfo'].forEach(seriesInfoItem => {
+            forecastingDiffObject[seriesInfoItem['value']] = [];
+        });
+
+        chartData.forEach(element => {
+            // Check object with all models
+            if (element['value1'] && Object.keys(element).length > 2) {
+                Object.keys(forecastingDiffObject).forEach(forecastingDiffObjectKey => {
+                    let forecastingDiff = Math.abs(element['value1'] - element[forecastingDiffObjectKey]);
+
+                    element[`${forecastingDiffObjectKey}Diff`] = forecastingDiff;
+                });
+            }
+        });
+
+        let forecastingMaxMinRackCellChartOption = await getForecastingMaxMinRackCellChartOption(chartData, forecastingMaxMinRackCellChartDefaultOption, forecastingDiffObject);
+
+        window[`${forecastingObjectName}ChartSeriesList`].forEach(chartSeries => {
+            chartSeries.data.setAll(chartData);
+
+            // Change legend's name
+            forecastingMaxMinRackCellChartDefaultOption['seriesInfo'].forEach(forecastingMaxMinRackCellChartDefaultOptionSeriesInfoItem => {
+                if (chartSeries.get('name').includes(forecastingMaxMinRackCellChartDefaultOptionSeriesInfoItem['name'])) {
+                    forecastingMaxMinRackCellChartOption['seriesInfo'].forEach(forecastingMaxMinRackCellChartOptionSeriesInfoItem => {
+                        if (forecastingMaxMinRackCellChartOptionSeriesInfoItem['name'].includes(forecastingMaxMinRackCellChartDefaultOptionSeriesInfoItem['name'])) {
+                            chartSeries.set('name', forecastingMaxMinRackCellChartOptionSeriesInfoItem['name']);
+                        }
+                    });
+                }
+            });
         });
 
         // Off loading UI
@@ -1615,17 +1537,104 @@ forecastingObjectVisualizationSearchModalFormValidation
     });
 
 /* 
- * Initial task
+ * Initial tasks
  */
+
+// Create initial visualization chart
+// - Assign variable collection for dynamic names
+let visualizationTypesObjects = {
+    chartSeries: {}, 
+    cardElement: {},
+    chartElement: {},
+};
+
+let visualizationTypes = ['avg-bank-soc', 'avg-rack-soc', 'avg-bank-power'];
+visualizationTypes.forEach(visualizationType => {
+    let visualizationTypeCamelCaseString = getCamelCaseString(visualizationType);
+
+    visualizationTypesObjects['chartSeries'][visualizationTypeCamelCaseString] = '';
+    visualizationTypesObjects['cardElement'][visualizationTypeCamelCaseString] = document.getElementById(`${visualizationTypeCamelCaseString}Card`);
+    visualizationTypesObjects['chartElement'][visualizationTypeCamelCaseString] = document.getElementById(`${visualizationTypeCamelCaseString}Chart`);
+});
+
+visualizationTypes.forEach(visualizationType => {
+    let startTimeObject = currentDateTime.startOf('day');
+    let startTime = startTimeObject.toFormat(customTimeDesignatorFullDateTimeFormat);
+    let endTime = startTimeObject.plus({ day: 1 }).toFormat(customTimeDesignatorFullDateTimeFormat);
+    let requestUrl;
+
+    if (visualizationType.includes('bank')) {
+        requestUrl = new URL(`${window.location.origin}/api/ess/operating-sites/1/banks/1/stats/${visualizationType}`);
+    }
+
+    if (visualizationType.includes('rack')) {
+        requestUrl = new URL(`${window.location.origin}/api/ess/operating-sites/1/banks/1/racks/1/stats/${visualizationType}`);
+    }
+
+    requestUrl.searchParams.append('time-bucket-width', '1hour');
+    requestUrl.searchParams.append('start-time', startTime);
+    requestUrl.searchParams.append('end-time', endTime);
+
+    loadData(requestUrl)
+    .then(responseData => {
+        let data = responseData.map(element => {
+            let date = new Date(element.time).getTime();
+            let value = element[visualizationType.replaceAll('-', '_')];
+
+            return { date: date, value: value };
+        });
+
+        let visualizationTypeCamelCaseString = getCamelCaseString(visualizationType);
+        let chartString = `${visualizationTypeCamelCaseString}Chart`;
+        let chartOption;
+
+        switch (visualizationType) {
+            case 'avg-bank-soc':
+                chartOption = {
+                    yAxis: {
+                        min: 0,
+                        max: 100
+                    }
+                }
+    
+                visualizationTypesObjects['chartSeries'][visualizationTypeCamelCaseString] = getLineChartSeries(chartString, data, chartOption);
+
+                break;
+            case 'avg-rack-soc':
+                chartOption = {
+                    yAxis: {
+                        min: 0,
+                        max: 100
+                    }
+                }
+    
+                visualizationTypesObjects['chartSeries'][visualizationTypeCamelCaseString] = getLineChartSeries(chartString, data, chartOption);
+
+                break;
+            case 'avg-bank-power':
+                visualizationTypesObjects['chartSeries'][visualizationTypeCamelCaseString] = getLineChartSeries(chartString, data);
+                let chartSeries = visualizationTypesObjects['chartSeries'][visualizationTypeCamelCaseString];
+
+                createAvgChartLine(chartSeries, data);
+
+                break;
+            default:
+                break;
+        }
+
+        visualizationTypesObjects['cardElement'][visualizationTypeCamelCaseString].querySelector('.card-body .spinner-border').classList.add('d-none');
+        visualizationTypesObjects['chartElement'][visualizationTypeCamelCaseString].parentNode.classList.remove('d-none');
+    })
+    .catch(error => console.log(error));
+});
 
 // Create avg bank SoH chart
 let avgBankSoHChartSeries = getAvgSoHChartSeries('avgBankSoHChart');
 
 requestUrl = new URL(`${window.location.origin}/api/ess/stats/avg-soh/operating-sites/1/banks/1/`);
 
-fetch(requestUrl).then(response => {
-    return response.json();
-}).then(responseData => {
+loadData(requestUrl)
+.then(responseData => {
     let chartData = responseData.map(element => {
         return {
             date: DateTime.fromISO(element['date']).toMillis(),
@@ -1641,16 +1650,16 @@ fetch(requestUrl).then(response => {
 
     let avgBankSoHChartElement = document.getElementById('avgBankSoHChart');
     avgBankSoHChartElement.parentNode.classList.remove('d-none');
-}).catch(error => console.log(error));
+})
+.catch(error => console.log(error));
 
 // Create avg rack SoH chart
 let avgRackSoHChartSeries = getAvgSoHChartSeries('avgRackSoHChart');
 
 requestUrl = new URL(`${window.location.origin}/api/ess/stats/avg-soh/operating-sites/1/banks/1/racks/1/`);
 
-fetch(requestUrl).then(response => {
-    return response.json();
-}).then(responseData => {
+loadData(requestUrl)
+.then(responseData => {
     let chartData = responseData.map(element => {
         return {
             date: DateTime.fromISO(element['date']).toMillis(),
@@ -1666,11 +1675,13 @@ fetch(requestUrl).then(response => {
 
     let avgRackSoHChartElement = document.getElementById('avgRackSoHChart');
     avgRackSoHChartElement.parentNode.classList.remove('d-none');
-}).catch(error => console.log(error));
+})
+.catch(error => console.log(error));
 
+// Create forecasting bank SoL chart
 createForecastingBankSoLChart();
 
-// Create forecasting max-min cell voltage chart
+// Create forecasting max-min rack cell charts
 let forecastingMaxRackCellVoltageObject = {
     name: 'forecastingMaxRackCellVoltage',
     urlPath: 'forecasting-max-cell-voltage'
@@ -1698,7 +1709,7 @@ let forecastingObjects = [
     forecastingMinRackCellTemperatureObject,
 ];
 
-let option = {
+let forecastingMaxMinRackCellChartDefaultOption = {
     seriesInfo: [
         {
             name: "Observed",
@@ -1719,28 +1730,48 @@ let option = {
     ]
 }
 
-forecastingObjects.forEach(element => {
-    let forecastingObjectName = element['name'];
+forecastingObjects.forEach(forecastingObject => {
+    let forecastingObjectName = forecastingObject['name'];
     let forecastingObjectCardElementId = `${forecastingObjectName}Card`;
     let forecastingObjectChartElementId = `${forecastingObjectName}Chart`;
 
     // Declare variable with dynamic name in 'window' object
-    window[`${forecastingObjectName}Object`] = element;
-    window[`${forecastingObjectName}ChartSeriesList`] = getSimpleLineSeriesList(forecastingObjectChartElementId, option);
+    window[`${forecastingObjectName}Object`] = forecastingObject;
 
     let endTime = DateTime.now().toFormat(customTimeDesignatorFullDateTimeFormat);
     let startTime = DateTime.fromISO(endTime).minus({hour: 1}).toFormat(customTimeDesignatorFullDateTimeFormat);
     
-    requestUrl = new URL(`${window.location.origin}/api/ess/stats/${element['urlPath']}/operating-sites/1/banks/1/racks/1/`);
+    requestUrl = new URL(`${window.location.origin}/api/ess/stats/${forecastingObject['urlPath']}/operating-sites/1/banks/1/racks/1/`);
     requestUrl.searchParams.append('start-time', startTime);
     requestUrl.searchParams.append('end-time', endTime);
 
     loadData(requestUrl)
-    .then(responseData => {
+    .then(async (responseData) => {
         let chartData = getForecastingChartData(responseData);
 
-        window[`${forecastingObjectName}ChartSeriesList`].forEach(element => {
-            element.data.setAll(chartData);
+        // Set forecastingDiffObject
+        let forecastingDiffObject = {};
+        forecastingMaxMinRackCellChartDefaultOption['seriesInfo'].forEach(seriesInfoItem => {
+            forecastingDiffObject[seriesInfoItem['value']] = [];
+        });
+
+        chartData.forEach(element => {
+            // Check all values exist
+            if (element['value1'] && Object.keys(element).length > 2) {
+                Object.keys(forecastingDiffObject).forEach(forecastingDiffObjectKey => {
+                    let forecastingDiff = Math.abs(element['value1'] - element[forecastingDiffObjectKey]);
+                    
+                    element[`${forecastingDiffObjectKey}Diff`] = forecastingDiff;
+                });
+            }
+        });
+
+        let forecastingMaxMinRackCellChartOption = await getForecastingMaxMinRackCellChartOption(chartData, forecastingMaxMinRackCellChartDefaultOption, forecastingDiffObject);
+        
+        // Create chart
+        window[`${forecastingObjectName}ChartSeriesList`] = getForecastingMaxMinRackCellSeriesList(forecastingObjectChartElementId, forecastingMaxMinRackCellChartOption);
+        window[`${forecastingObjectName}ChartSeriesList`].forEach(chartSeries => {
+            chartSeries.data.setAll(chartData);
         });
 
         // Setup loading UI
