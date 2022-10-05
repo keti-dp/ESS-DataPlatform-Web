@@ -65,13 +65,39 @@ function getInitialLineChart(chartRoot) {
     return chart;
 }
 
-function getLineChartSeries(elementId, data, option = {}) {
+/**
+ * Get line chart series
+ * @param {string} elementId 
+ * @param {object} option 
+ * @returns {object}
+ */
+function getLineChartSeries(elementId, option = {}) {
     let root = getChartRoot(elementId);
     let chart = getInitialLineChart(root);
 
-    let chartData = data;
+    // Create initial axes, series
+    let xAxis = chart.xAxes.push(
+        am5xy.DateAxis.new(root, Object.assign({
+            baseInterval: { timeUnit: "hour", count: 1 },
+            dateFormats: {
+                hour: 'HH:mm',
+                day: customFullDateFormat,
+                week: customFullDateFormat,
+                month: 'yyyy-MM',
+            },
+            renderer: am5xy.AxisRendererX.new(root, {}),
+            periodChangeDateFormats: {
+                hour: 'yyyy-MM-dd HH:mm',
+                day: customFullDateFormat,
+                week: customFullDateFormat,
+            },
+            tooltip: am5.Tooltip.new(root, {
+                themeTags: ["axis"],
+            }),
+            tooltipDateFormat: customFullDateTimeFormat,
+        }, option['xAxis']))
+    );
 
-    // Create Y-axis
     let yAxis = chart.yAxes.push(
         am5xy.ValueAxis.new(root, Object.assign({
             extraTooltipPrecision: 1,
@@ -79,99 +105,81 @@ function getLineChartSeries(elementId, data, option = {}) {
         }, option['yAxis']))
     );
 
-    // Create X-Axis
-    let xAxis = chart.xAxes.push(
-        am5xy.DateAxis.new(root, Object.assign({
-            baseInterval: { timeUnit: "hour", count: 1 },
-            renderer: am5xy.AxisRendererX.new(root, {})
-        }, option['xAxis']))
-    );
-
-    xAxis.get("dateFormats")["hour"] = "HH:mm";
-    xAxis.get("periodChangeDateFormats")["hour"] = "yyyy-MM-dd HH:mm";
-
     let series = chart.series.push(
-        am5xy.LineSeries.new(root, {
-            name: "Series",
+        am5xy.SmoothedXLineSeries.new(root, {
+            name: option['seriesName'],
             xAxis: xAxis,
             yAxis: yAxis,
-            valueYField: "value",
             valueXField: "date",
-            tooltip: am5.Tooltip.new(root, {})
+            valueYField: "value",
+            tooltip: am5.Tooltip.new(root, {
+                labelText: "[bold]{name}[/]\n{valueY.formatNumber('#.000')}"
+            }),
         })
     );
 
-    series.bullets.push(function () {
-        return am5.Bullet.new(root, {
-            sprite: am5.Circle.new(root, {
-                radius: 5,
-                fill: series.get("fill")
-            })
-        });
+    // Customize series
+    series.strokes.template.setAll({
+        strokeWidth: 3,
     });
-
-    series.strokes.template.set("strokeWidth", 2);
-
-    series.get("tooltip").label.set("text", "[bold]{name}[/]\n{valueX.formatDate('yyyy-MM-dd HH:mm')}: {valueY.formatNumber('#.000')}")
-    series.data.setAll(chartData);
-
-    xAxis.set("tooltip", am5.Tooltip.new(root, {
-        themeTags: ["axis"]
-    }));
-
-    yAxis.set("tooltip", am5.Tooltip.new(root, {
-        themeTags: ["axis"]
-    }));
-
+    
     return series;
 }
 
+/**
+ * Get avg SoH chart series
+ * @param {string} elementId 
+ * @returns {object}
+ */
 function getAvgSoHChartSeries(elementId) {
     let root = getChartRoot(elementId);
     let chart = getInitialLineChart(root);
 
-    // Create X-Axis
+    // Create initial axes, series
     let xAxis = chart.xAxes.push(
         am5xy.DateAxis.new(root, {
             baseInterval: { timeUnit: "day", count: 1 },
             renderer: am5xy.AxisRendererX.new(root, {}),
             dateFormats: {
-                day: 'yyyy-MM-dd',
-                month: 'yyyy-MM'
+                day: customFullDateFormat,
+                month: 'yyyy-MM',
             },
             periodChangeDateFormats: {
-                month: 'yyyy-MM'
-            }
+                month: 'yyyy-MM',
+            },
+            tooltip: am5.Tooltip.new(root, {
+                themeTags: ["axis"],
+            }),
+            tooltipDateFormat: customFullDateFormat,
         }),
     );
     
-    // Create Y-axis
     let yAxis = chart.yAxes.push(
         am5xy.ValueAxis.new(root, {
             min: 80,
             max: 100,
             extraTooltipPrecision: 1,
-            renderer: am5xy.AxisRendererY.new(root, {})
+            renderer: am5xy.AxisRendererY.new(root, {}),
         })
     );
     
-    // Create series
     let series = chart.series.push(
-        am5xy.LineSeries.new(root, {
-            name: "Avg SoH",
+        am5xy.SmoothedXLineSeries.new(root, {
+            name: "평균 SoH",
             xAxis: xAxis,
             yAxis: yAxis,
-            valueYField: "value",
             valueXField: "date",
+            valueYField: "value",
+            minDistance: 20,
             tooltip: am5.Tooltip.new(root, {
-                labelText: "[bold]{name}[/]\n{valueX.formatDate('yyyy-MM-dd')}: {valueY.formatNumber('#.000')}"
-            })
+                labelText: "[bold]{name}[/]\n{valueY.formatNumber('#.000')}"
+            }),
         })
     );
 
-    // Setup series
+    // Customize series
     series.strokes.template.setAll({
-        strokeWidth: 3
+        strokeWidth: 3,
     });
 
     return series
@@ -199,14 +207,14 @@ async function createForecastingBankSoLChart() {
         },
         renderer: am5xy.AxisRendererX.new(root, {}),
         dateFormats: {
-            day: 'yyyy-MM-dd',
-            month: 'yyyy-MM'
+            day: customFullDateFormat,
+            month: 'yyyy-MM',
         },
         periodChangeDateFormats: {
-            month: 'yyyy-MM'
+            month: 'yyyy-MM',
         },
         tooltip: am5.Tooltip.new(root, {}),
-        tooltipDateFormat: 'yyyy-MM-dd'
+        tooltipDateFormat: customFullDateFormat
     }));
 
     let yAxis = chart.yAxes.push(am5xy.ValueAxis.new(root, {
@@ -217,8 +225,8 @@ async function createForecastingBankSoLChart() {
         })
     }));
 
-    let observedSoLSeries = chart.series.push(am5xy.LineSeries.new(root, {
-        name: 'Observed SoL',
+    let observedSoLSeries = chart.series.push(am5xy.SmoothedXLineSeries.new(root, {
+        name: '관측 SoL',
         xAxis: xAxis,
         yAxis: yAxis,
         valueYField: 'observedSoL',
@@ -228,19 +236,19 @@ async function createForecastingBankSoLChart() {
         })
     }));
 
-    let forecastingSoLSeries = chart.series.push(am5xy.LineSeries.new(root, {
-        name: 'Forecasting SoL',
+    let forecastingSoLSeries = chart.series.push(am5xy.SmoothedXLineSeries.new(root, {
+        name: '예측 SoL',
         xAxis: xAxis,
         yAxis: yAxis,
         valueYField: 'value',
         valueXField: 'date',
         tooltip: am5.Tooltip.new(root, {
-            labelText: `[bold]{name}[/]\nTop Limit: {topLimitValue}\nForecasting: {valueY}\nBottom Limit: {bottomLimitValue}`,
+            labelText: `[bold]{name}[/]\n상한 예측: {topLimitValue}\n예측: {valueY}\n하한 예측: {bottomLimitValue}`,
         })
     }));
 
-    let forecastingTopLimitSoLSeries = chart.series.push(am5xy.LineSeries.new(root, {
-        name: 'Forecasting Top Limit SoL',
+    let forecastingTopLimitSoLSeries = chart.series.push(am5xy.SmoothedXLineSeries.new(root, {
+        name: '상한 예측 SoL',
         xAxis: xAxis,
         yAxis: yAxis,
         valueYField: 'topLimitValue',
@@ -248,8 +256,8 @@ async function createForecastingBankSoLChart() {
         valueXField: 'date',
     }));
 
-    let forecastingBottomLimitSoLSeries = chart.series.push(am5xy.LineSeries.new(root, {
-        name: 'Forecasting Bottom Limit SoL',
+    let forecastingBottomLimitSoLSeries = chart.series.push(am5xy.SmoothedXLineSeries.new(root, {
+        name: '하한 예측 SoL',
         xAxis: xAxis,
         yAxis: yAxis,
         valueYField: 'bottomLimitValue',
@@ -410,16 +418,23 @@ function getForecastingMaxMinRackCellSeriesList(elementId, option) {
             timeUnit: "second",
             count: 1
         },
+        dateFormats: {
+            hour: 'HH:mm',
+            day: customFullDateFormat,
+            week: customFullDateFormat,
+            month: 'yyyy-MM',
+        },
         renderer: am5xy.AxisRendererX.new(root, {}),
         periodChangeDateFormats: {
-            hour: 'yyyy-MM-dd HH:mm'
+            hour: 'yyyy-MM-dd HH:mm',
+            day: customFullDateFormat,
+            week: customFullDateFormat,
         },
         tooltip: am5.Tooltip.new(root, {})
     }));
     
     let yAxis = chart.yAxes.push(am5xy.ValueAxis.new(root, {
         renderer: am5xy.AxisRendererY.new(root, {}),
-        tooltip: am5.Tooltip.new(root, {})
     }));
 
     
@@ -427,13 +442,13 @@ function getForecastingMaxMinRackCellSeriesList(elementId, option) {
 
     // Add series
     let seriesList = seriesInfo.map(element => {
-        
-        return chart.series.push(am5xy.LineSeries.new(root, {
+        return chart.series.push(am5xy.SmoothedXLineSeries.new(root, {
             name: element['name'],
             xAxis: xAxis,
             yAxis: yAxis,
-            valueYField: element['value'],
             valueXField: 'time',
+            valueYField: element['value'],
+            minDistance: 20,
             tooltip: am5.Tooltip.new(root, {
                 labelText: `값: {valueY} / 차이:{${element['value']}Diff}`,
                 pointerOrientation:"horizontal"
@@ -785,7 +800,7 @@ essBankVisualizationSearchModalFormValidation
 
         loadData(requestUrl)
         .then(responseData => {
-            let data = responseData.map(element => {
+            let chartData = responseData.map(element => {
                 let date = new Date(element.time).getTime();
                 let value = element[visualizationType.replaceAll('-', '_')];
 
@@ -800,32 +815,18 @@ essBankVisualizationSearchModalFormValidation
 
             switch (visualizationType) {
                 case 'avg-bank-soc':
-                    chartOption = {
-                        yAxis: {
-                            min: 0,
-                            max: 100
-                        }
-                    }
-        
                     chartSeries = visualizationTypesObjects['chartSeries'][visualizationTypeCamelCaseString];
-                    chartSeries.data.setAll(data);
+                    chartSeries.data.setAll(chartData);
     
                     break;
                 case 'avg-rack-soc':
-                    chartOption = {
-                        yAxis: {
-                            min: 0,
-                            max: 100
-                        }
-                    }
-        
                     chartSeries = visualizationTypesObjects['chartSeries'][visualizationTypeCamelCaseString];
-                    chartSeries.data.setAll(data);
+                    chartSeries.data.setAll(chartData);
     
                     break;
                 case 'avg-bank-power':                    
                     chartSeries = visualizationTypesObjects['chartSeries'][visualizationTypeCamelCaseString];
-                    chartSeries.data.setAll(data);
+                    chartSeries.data.setAll(chartData);
 
                     // Remove previous avg chart lines
                     let yAxis = chartSeries.get('yAxis');
@@ -833,14 +834,18 @@ essBankVisualizationSearchModalFormValidation
                         yAxis.axisRanges.removeValue(value);
                     });
 
-                    createAvgChartLine(chartSeries, data);
+                    createAvgChartLine(chartSeries, chartData);
     
                     break;
                 default:
                     break;
             }
 
-            visualizationCardElement.querySelector('.card-body .spinner-border').classList.add('d-none');
+            chartSeries.data.setAll(chartData);
+
+            let loadingElement = visualizationCardElement.querySelector('.card-body .spinner-border');
+            loadingElement.classList.add('d-none');
+
             visualizationChartElement.parentNode.classList.remove('d-none');
         })
         .catch(error => console.log(error));
@@ -1577,7 +1582,7 @@ visualizationTypes.forEach(visualizationType => {
 
     loadData(requestUrl)
     .then(responseData => {
-        let data = responseData.map(element => {
+        let chartData = responseData.map(element => {
             let date = new Date(element.time).getTime();
             let value = element[visualizationType.replaceAll('-', '_')];
 
@@ -1585,44 +1590,54 @@ visualizationTypes.forEach(visualizationType => {
         });
 
         let visualizationTypeCamelCaseString = getCamelCaseString(visualizationType);
-        let chartString = `${visualizationTypeCamelCaseString}Chart`;
+        let chartElementId = `${visualizationTypeCamelCaseString}Chart`;
         let chartOption;
 
         switch (visualizationType) {
             case 'avg-bank-soc':
                 chartOption = {
+                    seriesName: '평균 SoC',
                     yAxis: {
                         min: 0,
                         max: 100
                     }
                 }
     
-                visualizationTypesObjects['chartSeries'][visualizationTypeCamelCaseString] = getLineChartSeries(chartString, data, chartOption);
+                visualizationTypesObjects['chartSeries'][visualizationTypeCamelCaseString] = getLineChartSeries(chartElementId, chartOption);
 
                 break;
             case 'avg-rack-soc':
                 chartOption = {
+                    seriesName: '평균 SoC',
                     yAxis: {
                         min: 0,
                         max: 100
                     }
                 }
     
-                visualizationTypesObjects['chartSeries'][visualizationTypeCamelCaseString] = getLineChartSeries(chartString, data, chartOption);
+                visualizationTypesObjects['chartSeries'][visualizationTypeCamelCaseString] = getLineChartSeries(chartElementId, chartOption);
 
                 break;
             case 'avg-bank-power':
-                visualizationTypesObjects['chartSeries'][visualizationTypeCamelCaseString] = getLineChartSeries(chartString, data);
-                let chartSeries = visualizationTypesObjects['chartSeries'][visualizationTypeCamelCaseString];
+                chartOption = {
+                    seriesName: '평균 전력'
+                }
 
-                createAvgChartLine(chartSeries, data);
+                visualizationTypesObjects['chartSeries'][visualizationTypeCamelCaseString] = getLineChartSeries(chartElementId, chartOption);
+
+                createAvgChartLine(visualizationTypesObjects['chartSeries'][visualizationTypeCamelCaseString], chartData);
 
                 break;
             default:
                 break;
         }
 
-        visualizationTypesObjects['cardElement'][visualizationTypeCamelCaseString].querySelector('.card-body .spinner-border').classList.add('d-none');
+        let chartSeries = visualizationTypesObjects['chartSeries'][visualizationTypeCamelCaseString];
+        chartSeries.data.setAll(chartData);
+
+        let loadingElement = visualizationTypesObjects['cardElement'][visualizationTypeCamelCaseString].querySelector('.card-body .spinner-border');
+        loadingElement.classList.add('d-none');
+
         visualizationTypesObjects['chartElement'][visualizationTypeCamelCaseString].parentNode.classList.remove('d-none');
     })
     .catch(error => console.log(error));
