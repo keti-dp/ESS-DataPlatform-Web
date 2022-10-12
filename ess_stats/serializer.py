@@ -7,6 +7,7 @@ from .models import (
     ForecastingMinRackCellVoltage,
     ForecastingMaxRackCellTemperature,
     ForecastingMinRackCellTemperature,
+    SoS,
 )
 
 
@@ -49,4 +50,10 @@ class ForecastingMaxRackCellTemperatureSerializer(serializers.ModelSerializer):
 class ForecastingMinRackCellTemperatureSerializer(serializers.ModelSerializer):
     class Meta:
         model = ForecastingMinRackCellTemperature
+        fields = "__all__"
+
+
+class SoSSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SoS
         fields = "__all__"

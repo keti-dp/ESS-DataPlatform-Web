@@ -2,6 +2,9 @@ const essProtectionMap = JSON.parse(document.getElementById('ess-protection-map'
 const customFullDateFormat = 'yyyy-MM-dd';
 const customFullDateTimeFormat = 'yyyy-MM-dd HH:mm:ss';
 const customTimeDesignatorFullDateTimeFormat = `yyyy-MM-dd'T'HH:mm:ss`;
+const zeta = `\u03B6`;
+const safeLimitSoSValue = 0.8;
+const warningLimitSoSValue = Math.pow(safeLimitSoSValue, 4);
 
 // Luxon alias 'DateTime'
 let DateTime = luxon.DateTime;
@@ -21,41 +24,57 @@ async function loadData(requestUrl) {
     throw new Error(response.status);
 }
 
-function getChartRoot(elementId) {
+function getChartRoot(elementId, option = {}) {
     let root = am5.Root.new(elementId);
-    let customTheme = am5.Theme.new(root);
-    customTheme.rule('ColorSet').set('colors', [
-        // Color naming site: https://www.htmlcsscolor.com/
-        // Color palettes site: https://coolors.co/
-        am5.color(0x00589b), // cobalt
-        am5.color(0x00a0b0), // bondi blue
-        am5.color(0xcf5c78), // cabaret
-        // am5.color(0xf5df4d), // energy yellow
-        // am5.color(0xf0eee9), // romance
-        // am5.color(0x939597), // grey chateau
-        am5.color(0x887244), // shadow
-        am5.color(0xb9f18c), // sulu
-        // am5.color(0xffbd00), // amber
-    ]);
-
-    root.setThemes([
+    let themes = [
         am5themes_Animated.new(root),
-        customTheme,
-    ]);
+    ];
+
+    let customThemes = option['customThemes'];
+
+    if (Array.isArray(customThemes) && customThemes.length > 0) {
+        themes = themes.concat(customThemes.map(element => element.new(root)));
+    } else {
+        let customTheme = am5.Theme.new(root);
+        customTheme.rule('ColorSet').set('colors', [
+            // Color naming site: https://www.htmlcsscolor.com/
+            // Color palettes site: https://coolors.co/
+            am5.color(0x00589b), // cobalt
+            am5.color(0x00a0b0), // bondi blue
+            am5.color(0xcf5c78), // cabaret
+            // am5.color(0xf5df4d), // energy yellow
+            // am5.color(0xf0eee9), // romance
+            // am5.color(0x939597), // grey chateau
+            am5.color(0x887244), // shadow
+            am5.color(0xb9f18c), // sulu
+            // am5.color(0xffbd00), // amber
+            am5.color(0xead5e6), // snuff
+        ]);
+
+        themes.push(customTheme);
+    }
+
+    root.setThemes(themes);
 
     return root;
 }
 
-function getInitialLineChart(chartRoot) {
+/**
+ * Get initial line chart
+ * @param {object} chartRoot 
+ * @param {object} option 
+ * @returns {object}
+ */
+function getInitialLineChart(chartRoot, option = {}) {
     let root = chartRoot;
     let chart = root.container.children.push(
-        am5xy.XYChart.new(root, {
+        am5xy.XYChart.new(root, Object.assign({
             panX: true,
             panY: true,
             wheelX: "panX",
             wheelY: "zoomX",
             layout: root.verticalLayout,
-        })
+        }, option))
     );
 
     chart.set("cursor", am5xy.XYCursor.new(root, {
@@ -364,6 +383,264 @@ async function createForecastingBankSoLChart() {
     
     let forecastingBankSoLChartElement = document.getElementById('forecastingBankSoLChart');
     forecastingBankSoLChartElement.parentNode.classList.remove('d-none');
+}
+
+/**
+ * Get main rack SoS chart series
+ * @param {object} elementId 
+ * @returns {object}
+ */
+ function getMainRackSoSChartSeries(elementId) {
+    let root = getChartRoot(elementId);
+    let chartOption = {
+        paddingRight: 100,
+    };
+    let chart = getInitialLineChart(root, chartOption);
+
+    // Create axes and series
+    let xAxis = chart.xAxes.push(
+        am5xy.DateAxis.new(root, {
+            baseInterval: { 
+                timeUnit: 'second', 
+                count: 1,
+            },
+            dateFormat: {
+                minute: 'HH:mm',
+                hour: 'HH:mm',
+                day: customFullDateFormat,
+                week: customFullDateFormat,
+                month: 'yyyy-MM',
+            },
+            periodChangeDateFormats: {
+                minute: 'HH:mm',
+                hour: 'yyyy-MM-dd HH:mm',
+                day: customFullDateFormat,
+                week: customFullDateFormat,
+            },
+            renderer: am5xy.AxisRendererX.new(root, {}),
+            tooltip: am5.Tooltip.new(root, {
+                themeTags: ["axis"],
+            }),
+            tooltipDateFormat: customFullDateTimeFormat,
+        })
+    );
+
+    let yAxis = chart.yAxes.push(
+        am5xy.ValueAxis.new(root, {
+            min: 0,
+            extraTooltipPrecision: 1,
+            renderer: am5xy.AxisRendererY.new(root, {})
+        })
+    );
+
+    let series = chart.series.push(
+        am5xy.SmoothedXLineSeries.new(root, {
+            name: 'SoS',
+            xAxis: xAxis,
+            yAxis: yAxis,
+            valueXField: 'time',
+            valueYField: 'value',
+            tooltip: am5.Tooltip.new(root, {
+                labelText: "[bold]{name}[/]\n{valueY.formatNumber('#.000')}",
+            }),
+        })
+    );
+
+    // Customize series
+    series.strokes.template.setAll({
+        strokeWidth: 3
+    });
+
+    // Add axis range
+    let safeAxisRange = yAxis.createAxisRange(yAxis.makeDataItem({
+        value: safeLimitSoSValue,
+        endValue: warningLimitSoSValue,
+    }));
+
+    safeAxisRange.get('grid').setAll({
+        stroke: am5.color(0xf5df4d),
+        strokeDasharray: [3],
+        strokeOpacity: 1,
+        strokeWidth: 2,
+    });
+
+    let safeAxisLabel = safeAxisRange.get('label');
+    safeAxisLabel.setAll({
+        html: `Warning(${zeta})<br>(${safeLimitSoSValue})`,
+        background: am5.RoundedRectangle.new(series.root, {
+            fill: am5.color(0xf5df4d),
+        }),
+        inside: true,
+        dx: 80 // Move label additionally right by 80px
+    });
+
+    safeAxisRange.get("label").adapters.add("x", (x, target)=>{
+        return chart.plotContainer.width();
+    });
+
+    safeAxisRange.get('axisFill').setAll({
+        fill: am5.color(0xf5df4d),
+        fillOpacity: 0.2,
+        visible: true,
+    });
+
+    let warningAxisRange = yAxis.createAxisRange(yAxis.makeDataItem({
+        value: warningLimitSoSValue,
+        endValue: 0
+    }));
+
+    warningAxisRange.get('grid').setAll({
+        stroke: am5.color(0xff0000),
+        strokeDasharray: [3],
+        strokeOpacity: 1,
+        strokeWidth: 2,
+    });
+
+    let warningAxisLabel = warningAxisRange.get('label');
+    warningAxisLabel.setAll({
+        html: `Unsafe(${zeta}<sup>4</sup>)<br>(${Math.pow(safeLimitSoSValue, 4).toFixed(4)})`,
+        background: am5.RoundedRectangle.new(series.root, {
+            fill: am5.color(0xff0000),
+        }),
+        inside: true,
+        dx: 80,
+    });
+
+    warningAxisRange.get("label").adapters.add("x", (x, target)=>{
+        return chart.plotContainer.width();
+    });
+
+    warningAxisRange.get('axisFill').setAll({
+        fill: am5.color(0xff0000),
+        fillOpacity: 0.2,
+        visible: true,
+    });
+
+    chart.plotContainer.onPrivate("width", ()=>{
+        safeAxisRange.get("label").markDirtyPosition();
+        warningAxisRange.get("label").markDirtyPosition();
+    });
+
+    return series;
+}
+
+/**
+ * Get detail rack SoS chart series list
+ * @param {object} elementId 
+ * @param {object} option 
+ * @returns {object}
+ */
+function getDetailRackSoSChartSeriesList(elementId, option) {
+    class CustomTheme extends am5.Theme {
+        setupDefaultRules() {
+            this.rule('ColorSet').set('colors', [
+                am5.color(0x00a0b0), // bondi blue
+                am5.color(0xcf5c78), // cabaret
+                am5.color(0x939597), // grey chateau
+                am5.color(0x887244), // shadow
+                am5.color(0xb9f18c), // sulu
+                am5.color(0xffbd00), // amber
+                am5.color(0xead5e6), // snuff
+            ]);
+        }
+    }
+
+    let chartRootOption = {
+        customThemes: [
+            CustomTheme,
+        ]
+    }
+
+    let root = getChartRoot(elementId, chartRootOption);
+    let chart = getInitialLineChart(root);
+
+    chart.leftAxesContainer.set("layout", root.verticalLayout);
+
+    // Create axes and series list
+    let xRenderer = am5xy.AxisRendererX.new(root, { minGridDistance: 70 });
+    xRenderer.labels.template.setAll({
+        multiLocation: 0.5,
+        location: 0.5,
+        centerY: am5.p50,
+        centerX: am5.p50,
+        paddingTop: 10
+    });
+
+    xRenderer.grid.template.set("location", 0.5);
+
+    let xAxis = chart.xAxes.push(
+        am5xy.DateAxis.new(root, {
+            baseInterval: { timeUnit: "second", count: 1 },
+            dateFormats: {
+                minute: 'HH:mm',
+                hour: 'HH:mm',
+                day: customFullDateFormat,
+                week: customFullDateFormat,
+                month: 'yyyy-MM',
+            },
+            periodChangeDateFormats: {
+                minute: 'HH:mm',
+                hour: 'yyyy-MM-dd HH:mm',
+                day: customFullDateFormat,
+                week: customFullDateFormat,
+            },
+            tooltip: am5.Tooltip.new(root, {}),
+            renderer: xRenderer
+        })
+    );
+
+    // xAxis.data.setAll(chartData);
+
+    seriesInfo = option['seriesInfo'];
+
+    let seriesList = seriesInfo.map(seriesInfoItem => {
+        let yAxisDefaultSettings = {
+            renderer: am5xy.AxisRendererY.new(root, {}),
+            tooltip: am5.Tooltip.new(root, {
+                animationDuration: 0,
+            }),
+            x: am5.p100,
+            centerX: am5.p100,
+            marginTop: 40 // this makes gap between axes
+        }
+
+        let yAxis;
+
+        yAxis = chart.yAxes.push(
+            am5xy.ValueAxis.new(root, yAxisDefaultSettings)
+        );
+
+        yAxis.axisHeader.children.push(am5.Label.new(root, {
+            text: seriesInfoItem['name'].toUpperCase(),
+            fontWeight: "500"
+        }));
+
+        return chart.series.push(
+            am5xy.LineSeries.new(root, {
+                name: seriesInfoItem['name'].toUpperCase(),
+                xAxis: xAxis,
+                yAxis: yAxis,
+                valueXField: "time",
+                valueYField: seriesInfoItem['value'],
+                sequencedInterpolation: true,
+                tooltip: am5.Tooltip.new(root, {
+                    pointerOrientation: "vertical",
+                    labelText: "[bold]{name}: {valueY}"
+                })
+            })
+        );
+    });
+
+    // Customize series
+    seriesList.forEach(element => {
+        element.strokes.template.setAll({
+            strokeWidth: 3
+        });
+    })
+
+    xAxis.set("layer", 50);
+
+    return seriesList;
 }
 
 /**
@@ -1325,6 +1602,205 @@ essRackSoHVisualizationSearchModalFormValidation
         avgRackSoHChartElement.parentNode.classList.remove('d-none');
     });
 
+// Search rack SoS
+// Search avg rack SoH card
+let essRackSoSVisualizationSearchModalFormOperatingSiteSelectElement = document.getElementById('essRackSoSVisualizationSearchModalFormOperatingSiteSelect');
+let essRackSoSVisualizationSearchModalFormBankSelectElement = document.getElementById('essRackSoSVisualizationSearchModalFormBankSelect');
+let essRackSoSVisualizationSearchModalFormRackSelectElement = document.getElementById('essRackSoSVisualizationSearchModalFormRackSelect');
+let essRackSoSVisualizationSearchModalFormStartDateTimePickerElement = document.getElementById('essRackSoSVisualizationSearchModalFormStartDateTimePicker');
+let essRackSoSVisualizationSearchModalFormEndDateTimePickerElement = document.getElementById('essRackSoSVisualizationSearchModalFormEndDateTimePicker');
+
+essRackSoSVisualizationSearchModalFormOperatingSiteSelectElement.addEventListener('change', (event) => {
+    essRackSoSVisualizationSearchModalFormBankSelectElement.innerHTML = '';
+    essRackSoSVisualizationSearchModalFormBankSelectElement.insertAdjacentHTML('afterbegin', '<option value="" selected disabled>Bank를 선택해주세요.</option>');
+    essRackSoSVisualizationSearchModalFormBankSelectElement.setAttribute('disabled', '');
+
+    essRackSoSVisualizationSearchModalFormRackSelectElement.innerHTML = '';
+    essRackSoSVisualizationSearchModalFormRackSelectElement.insertAdjacentHTML('afterbegin', '<option value="" selected disabled>Rack을 선택해주세요.</option>');
+    essRackSoSVisualizationSearchModalFormRackSelectElement.setAttribute('disabled', '');
+
+    let operatingSiteId = event.target.value;
+    let essProtectionMapInfoRackCountObject = essProtectionMap['info']['rackCount'];
+
+    if (essProtectionMapInfoRackCountObject[`operatingSite${operatingSiteId}`]) {
+        let bankCount = Object.keys(essProtectionMapInfoRackCountObject[`operatingSite${operatingSiteId}`]).length;
+
+        for (i = 0; i < bankCount; i++) {
+            essRackSoSVisualizationSearchModalFormBankSelectElement.insertAdjacentHTML('beforeend', `<option value="${i + 1}">${i + 1}</option>`)
+        }
+
+        essRackSoSVisualizationSearchModalFormBankSelectElement.removeAttribute('disabled');
+    }
+});
+
+essRackSoSVisualizationSearchModalFormBankSelectElement.addEventListener('change', (event) => {
+    essRackSoSVisualizationSearchModalFormRackSelectElement.innerHTML = '';
+    essRackSoSVisualizationSearchModalFormRackSelectElement.insertAdjacentHTML('afterbegin', '<option value="" selected disabled>Rack을 선택해주세요.</option>')
+
+    let operatingSiteId = essRackSoSVisualizationSearchModalFormOperatingSiteSelectElement.value;
+    let bankId = event.target.value;
+    let essProtectionMapInfoRackCountObject = essProtectionMap['info']['rackCount'];
+
+    if (essProtectionMapInfoRackCountObject[`operatingSite${operatingSiteId}`]) {
+        let rackCount = essProtectionMapInfoRackCountObject[`operatingSite${operatingSiteId}`][`bank${bankId}`];
+
+        for (i = 0; i < rackCount; i++) {
+            essRackSoSVisualizationSearchModalFormRackSelectElement.insertAdjacentHTML('beforeend', `<option value="${i + 1}">${i + 1}</option>`)
+        }
+        essRackSoSVisualizationSearchModalFormRackSelectElement.removeAttribute('disabled');
+    } else {
+        essRackSoSVisualizationSearchModalFormRackSelectElement.setAttribute('disabled', '');
+    }
+});
+
+const essRackSoSVisualizationSearchModalFormStartDateTimeTempusDominus = new tempusDominus.TempusDominus(essRackSoSVisualizationSearchModalFormStartDateTimePickerElement, {
+    display: {
+        components: {
+            seconds: true
+        },
+        sideBySide: true
+    },
+    hooks: {
+        inputFormat: (context, date) => { return DateTime.fromISO(date.toISOString()).toFormat(customFullDateTimeFormat) }
+    }
+});
+
+const essRackSoSVisualizationSearchModalFormEndDateTimeTempusDominus = new tempusDominus.TempusDominus(essRackSoSVisualizationSearchModalFormEndDateTimePickerElement, {
+    display: {
+        components: {
+            seconds: true
+        },
+        sideBySide: true
+    },
+    hooks: {
+        inputFormat: (context, date) => { return DateTime.fromISO(date.toISOString()).toFormat(customFullDateTimeFormat) }
+    },
+    useCurrent: false
+});
+
+essRackSoSVisualizationSearchModalFormStartDateTimePickerElement.addEventListener(tempusDominus.Namespace.events.change, (e) => {
+    essRackSoSVisualizationSearchModalFormEndDateTimeTempusDominus.updateOptions({
+        restrictions: {
+            minDate: e.detail.date
+        },
+    });
+});
+
+const essRackSoSVisualizationSearchModalFormEndDateTimeTempusDominusSubscription = essRackSoSVisualizationSearchModalFormEndDateTimeTempusDominus.subscribe(tempusDominus.Namespace.events.change, (e) => {
+    essRackSoSVisualizationSearchModalFormStartDateTimeTempusDominus.updateOptions({
+        restrictions: {
+            maxDate: e.date
+        }
+    });
+});
+
+const essRackSoSVisualizationSearchModalFormValidation = new JustValidate('#essRackSoSVisualizationSearchModalForm', {
+    errorFieldCssClass: 'is-invalid',
+    focusInvalidField: true,
+    lockForm: true,
+    tooltip: {
+        position: 'right',
+    }
+});
+essRackSoSVisualizationSearchModalFormValidation
+    .addField('#essRackSoSVisualizationSearchModalFormOperatingSiteSelect', [
+        {
+            rule: 'required',
+            errorMessage: '운영 사이트를 선택하세요.'
+        }
+    ])
+    .addField('#essRackSoSVisualizationSearchModalFormBankSelect', [
+        {
+            rule: 'required',
+            errorMessage: 'Bank를 선택하세요.'
+        }
+    ])
+    .addField('#essRackSoSVisualizationSearchModalFormRackSelect', [
+        {
+            rule: 'required',
+            errorMessage: 'Rack을 선택하세요.'
+        }
+    ])
+    .addField('#essRackSoSVisualizationSearchModalFormStartDateTimeInput', [
+        {
+            plugin: JustValidatePluginDate(fields => ({
+                required: true,
+                format: customFullDateTimeFormat
+            })),
+            errorMessage: '시작 시간을 선택하세요.'
+        },
+    ]).addField('#essRackSoSVisualizationSearchModalFormEndDateTimeInput', [
+        {
+            plugin: JustValidatePluginDate(fields => ({
+                required: true,
+                format: customFullDateTimeFormat
+            })),
+            errorMessage: '마지막 시간을 선택하세요.'
+        },
+    ])
+    .onSuccess(async (event) => {
+        let essRackSoSVisualizationSearchModalElement = document.getElementById('essRackSoSVisualizationSearchModal');
+        let rackSoSCardElement = document.getElementById('rackSoSCard');
+        let mainRackSoSChartElement = document.getElementById('mainRackSoSChart');
+        let loadingElement = rackSoSCardElement.querySelector('.card-body .spinner-border');
+
+        // Off modal
+        bootstrap.Modal.getInstance(essRackSoSVisualizationSearchModalElement).hide();
+
+        // Setup loading UI
+        mainRackSoSChartElement.parentNode.parentNode.classList.add('d-none');
+        loadingElement.classList.remove('d-none');
+
+        let operatingSiteId = essRackSoSVisualizationSearchModalFormOperatingSiteSelectElement.value;
+        let bankId = essRackSoSVisualizationSearchModalFormBankSelectElement.value;
+        let rackId = essRackSoSVisualizationSearchModalFormRackSelectElement.value;
+        let startTime = DateTime.fromFormat(essRackSoSVisualizationSearchModalFormStartDateTimeInput.value, customFullDateTimeFormat).toFormat(customTimeDesignatorFullDateTimeFormat);
+        let endTime = DateTime.fromFormat(essRackSoSVisualizationSearchModalFormEndDateTimeInput.value, customFullDateTimeFormat).toFormat(customTimeDesignatorFullDateTimeFormat);
+
+        let requestUrl = new URL(`${window.location.origin}/api/ess/stats/sos/operating-sites/${operatingSiteId}/banks/${bankId}/racks/${rackId}/`);
+        requestUrl.searchParams.append('start-time', startTime);
+        requestUrl.searchParams.append('end-time', endTime);
+
+        let responseData = await loadData(requestUrl);
+
+        let mainSoSChartData = [];
+        let detailSoSChartData = [];
+
+        // Add main & detail SoS data
+        responseData.forEach(element => {
+            let time = DateTime.fromISO(element['time']).toMillis();
+
+            mainSoSChartData.push({
+                time: time,
+                value: element['sos_score'],
+            });
+
+            let detailSoSChartDataItem = {
+                time: time,
+            };
+
+            detailRackSoSChartOption['seriesInfo'].forEach(seriesInfoItem => {
+                detailSoSChartDataItem[seriesInfoItem['value']] = element[seriesInfoItem['name']];
+            });
+
+            detailSoSChartData.push(detailSoSChartDataItem);
+        });
+
+        mainRackSoSChartSeries.data.setAll(mainSoSChartData);
+
+        detailRackSoSChartSeriesList.forEach(detailRackSoSChartSeries => {
+            detailRackSoSChartSeries.data.setAll(detailSoSChartData);
+        });
+
+        rackSoSCardElement.querySelector('.card-body p').textContent = `
+            ${essRackSoSVisualizationSearchModalFormOperatingSiteSelectElement.options[essRackSoSVisualizationSearchModalFormOperatingSiteSelectElement.selectedIndex].text} / Bank ${bankId} / Rack ${rackId}
+        `;
+
+        // Off loading UI
+        rackSoSCardElement.querySelector('.card-body .spinner-border').classList.add('d-none');
+        mainRackSoSChartElement.parentNode.parentNode.classList.remove('d-none');
+    });
+
 // Search forecasting max-min rack cell modal
 let forecastingObjectVisualizationSearchModalElement = document.getElementById('forecastingObjectVisualizationSearchModal');
 forecastingObjectVisualizationSearchModalElement.addEventListener('show.bs.modal', event => {
@@ -1457,7 +1933,7 @@ forecastingObjectVisualizationSearchModalFormValidation
                 required: true,
                 format: customFullDateTimeFormat
             })),
-            errorMessage: '시작 날짜를 선택하세요.'
+            errorMessage: '시작 시간을 선택하세요.'
         },
     ]).addField(`#forecastingObjectVisualizationSearchModalFormEndDateTimeInput`, [
         {
@@ -1465,7 +1941,7 @@ forecastingObjectVisualizationSearchModalFormValidation
                 required: true,
                 format: customFullDateTimeFormat
             })),
-            errorMessage: '마지막 날짜를 선택하세요.'
+            errorMessage: '마지막 시간을 선택하세요.'
         },
     ])
     .onSuccess(async (event) => {
@@ -1695,6 +2171,92 @@ loadData(requestUrl)
 
 // Create forecasting bank SoL chart
 createForecastingBankSoLChart();
+
+// Create rack SoS chart
+let detailRackSoSChartOption= {
+    'seriesInfo': [
+        {
+            name: 'over_voltage',
+            value: 'value1'
+        },
+        {
+            name: 'under_voltage',
+            value: 'value2'
+        },
+        {
+            name: 'voltage_unbalance',
+            value: 'value3'
+        },
+        {
+            name: 'over_current',
+            value: 'value4'
+        },
+        {
+            name: 'over_temperature',
+            value: 'value5'
+        },
+        {
+            name: 'under_temperature',
+            value: 'value6'
+        },
+        {
+            name: 'temperature_unbalance',
+            value: 'value7'
+        },
+    ],
+};
+
+let mainRackSoSChartSeries = getMainRackSoSChartSeries('mainRackSoSChart');
+let detailRackSoSChartSeriesList = getDetailRackSoSChartSeriesList('detailRackSoSChart', detailRackSoSChartOption);
+
+endTime = DateTime.now().toFormat(customTimeDesignatorFullDateTimeFormat);
+startTime = DateTime.fromISO(endTime).minus({ hour: 1 }).toFormat(customTimeDesignatorFullDateTimeFormat);
+
+requestUrl = new URL(`${window.location.origin}/api/ess/stats/sos/operating-sites/1/banks/1/racks/1/`);
+requestUrl.searchParams.append('start-time', startTime);
+requestUrl.searchParams.append('end-time', endTime);
+
+loadData(requestUrl)
+.then(responseData => {
+    const mainRackSoSChartElementId = 'mainRackSoSChart';
+    let rackSoSCardElement = document.getElementById('rackSoSCard');
+    let mainSoSChartData = [];
+    let detailSoSChartData = [];
+
+    // Add main & detail SoS data
+    responseData.forEach(element => {
+        let time = DateTime.fromISO(element['time']).toMillis();
+
+        mainSoSChartData.push({
+            time: time,
+            value: element['sos_score'],
+        });
+
+        let detailSoSChartDataItem = {
+            time: time,
+        };
+
+        detailRackSoSChartOption['seriesInfo'].forEach(seriesInfoItem => {
+            detailSoSChartDataItem[seriesInfoItem['value']] = element[seriesInfoItem['name']];
+        });
+
+        detailSoSChartData.push(detailSoSChartDataItem);
+    });
+
+    mainRackSoSChartSeries.data.setAll(mainSoSChartData);
+
+    detailRackSoSChartSeriesList.forEach(detailRackSoSChartSeries => {
+        detailRackSoSChartSeries.data.setAll(detailSoSChartData);
+    });
+
+    // Setup loading UI
+    let loadingElement = rackSoSCardElement.querySelector('.card-body .spinner-border');
+    loadingElement.classList.add('d-none');
+
+    let mainRackSoSChartElement = document.getElementById(mainRackSoSChartElementId);
+    mainRackSoSChartElement.parentNode.parentNode.classList.remove('d-none');
+})
+.catch(error => console.log(error));
 
 // Create forecasting max-min rack cell charts
 let forecastingMaxRackCellVoltageObject = {
