@@ -1603,7 +1603,6 @@ essRackSoHVisualizationSearchModalFormValidation
     });
 
 // Search rack SoS
-// Search avg rack SoH card
 let essRackSoSVisualizationSearchModalFormOperatingSiteSelectElement = document.getElementById('essRackSoSVisualizationSearchModalFormOperatingSiteSelect');
 let essRackSoSVisualizationSearchModalFormBankSelectElement = document.getElementById('essRackSoSVisualizationSearchModalFormBankSelect');
 let essRackSoSVisualizationSearchModalFormRackSelectElement = document.getElementById('essRackSoSVisualizationSearchModalFormRackSelect');
@@ -1961,7 +1960,7 @@ forecastingObjectVisualizationSearchModalFormValidation
         forecastingObjectCardElement.querySelector('.card-body .spinner-border').classList.remove('d-none');
 
         let operatingSiteId = forecastingObjectVisualizationSearchModalFormOperatingSiteSelectElement.value;
-        let bankId = forecastingObjectVisualizationSearchModalFormOperatingSiteSelectElement.value;
+        let bankId = forecastingObjectVisualizationSearchModalFormBankSelectElement.value;
         let rackId = forecastingObjectVisualizationSearchModalFormRackSelectElement.value;
         let startTime = DateTime.fromFormat(window['forecastingObjectVisualizationSearchModalFormStartDateTimeInput'].value, customFullDateTimeFormat).toFormat(customTimeDesignatorFullDateTimeFormat);
         let endTime = DateTime.fromFormat(window['forecastingObjectVisualizationSearchModalFormEndDateTimeInput'].value, customFullDateTimeFormat).toFormat(customTimeDesignatorFullDateTimeFormat);
