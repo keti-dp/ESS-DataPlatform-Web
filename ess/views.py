@@ -47,6 +47,36 @@ from .ess_collections import (
 )
 
 TIME_BUCKET_TIMEZONE = "Asia/Seoul"
+AVG_ESS_BANK_SOC_LIST_VIEW_QUERY = """
+    SELECT time_bucket(%(time_bucket_width)s, "TIMESTAMP" AT TIME ZONE %(time_bucket_timezone)s) "time", AVG("BANK_SOC") avg_bank_soc 
+    FROM bank 
+    WHERE "BANK_ID" = %(bank_id)s AND "TIMESTAMP" BETWEEN %(start_time)s AND %(end_time)s 
+    GROUP BY "time" ORDER BY "time" 
+"""
+AVG_ESS_RACK_SOC_LIST_VIEW_QUERY = """
+    SELECT time_bucket(%(time_bucket_width)s, "TIMESTAMP" AT TIME ZONE %(time_bucket_timezone)s) "time", AVG("RACK_SOC") avg_rack_soc 
+    FROM rack
+    WHERE ("BANK_ID" = %(bank_id)s AND "RACK_ID" = %(rack_id)s) AND "TIMESTAMP" BETWEEN %(start_time)s AND %(end_time)s 
+    GROUP BY "time" ORDER BY "time" 
+"""
+AVG_ESS_BANK_SOH_LIST_VIEW_QUERY = """
+    SELECT time_bucket(%(time_bucket_width)s, "TIMESTAMP" AT TIME ZONE %(time_bucket_timezone)s) "time", AVG("BANK_SOH") avg_bank_soh 
+    FROM bank 
+    WHERE "BANK_ID" = %(bank_id)s AND "TIMESTAMP" BETWEEN %(start_time)s AND %(end_time)s 
+    GROUP BY "time" ORDER BY "time"
+"""
+AVG_ESS_RACK_SOH_LIST_VIEW_QUERY = """
+    SELECT time_bucket(%(time_bucket_width)s, "TIMESTAMP" AT TIME ZONE %(time_bucket_timezone)s) "time", AVG("RACK_SOH") avg_rack_soh 
+    FROM rack
+    WHERE ("BANK_ID" = %(bank_id)s AND "RACK_ID" = %(rack_id)s) AND "TIMESTAMP" BETWEEN %(start_time)s AND %(end_time)s 
+    GROUP BY "time" ORDER BY "time" 
+"""
+AVG_ESS_BANK_POWER_LIST_VIEW_QUERY = """
+    SELECT time_bucket(%(time_bucket_width)s, "TIMESTAMP" AT TIME ZONE %(time_bucket_timezone)s) "time", AVG("BANK_POWER") avg_bank_power 
+    FROM bank
+    WHERE "BANK_ID" = %(bank_id)s AND "TIMESTAMP" BETWEEN %(start_time)s AND %(end_time)s 
+    GROUP BY "time" ORDER BY "time"
+"""
 
 
 class Echo:
@@ -446,13 +476,7 @@ class AvgESSBankSoCListView(ListAPIView):
             end_time = datetime.strptime(end_time_query_param, "%Y-%m-%dT%H:%M:%S")
 
             with connections[database].cursor() as cursor:
-                query = """
-                    SELECT time_bucket(%(time_bucket_width)s, "TIMESTAMP" AT TIME ZONE %(time_bucket_timezone)s) "time", AVG("BANK_SOC") avg_bank_soc 
-                    FROM bank 
-                    WHERE "BANK_ID" = %(bank_id)s AND "TIMESTAMP" BETWEEN %(start_time)s AND %(end_time)s 
-                    GROUP BY "time" ORDER BY "time" 
-                """
-
+                query = AVG_ESS_BANK_SOC_LIST_VIEW_QUERY
                 params = {
                     "time_bucket_timezone": TIME_BUCKET_TIMEZONE,
                     "time_bucket_width": time_bucket_width,
@@ -517,13 +541,7 @@ class AvgESSRackSoCListView(ListAPIView):
             end_time = datetime.strptime(end_time_query_param, "%Y-%m-%dT%H:%M:%S")
 
             with connections[database].cursor() as cursor:
-                query = """
-                    SELECT time_bucket(%(time_bucket_width)s, "TIMESTAMP" AT TIME ZONE %(time_bucket_timezone)s) "time", AVG("RACK_SOC") avg_rack_soc 
-                    FROM rack
-                    WHERE ("BANK_ID" = %(bank_id)s AND "RACK_ID" = %(rack_id)s) AND "TIMESTAMP" BETWEEN %(start_time)s AND %(end_time)s 
-                    GROUP BY "time" ORDER BY "time" 
-                """
-
+                query = AVG_ESS_RACK_SOC_LIST_VIEW_QUERY
                 params = {
                     "time_bucket_timezone": TIME_BUCKET_TIMEZONE,
                     "time_bucket_width": time_bucket_width,
@@ -588,13 +606,7 @@ class AvgESSBankSoHListView(ListAPIView):
             end_time = datetime.strptime(end_time_query_param, "%Y-%m-%dT%H:%M:%S")
 
             with connections[database].cursor() as cursor:
-                query = """
-                    SELECT time_bucket(%(time_bucket_width)s, "TIMESTAMP" AT TIME ZONE %(time_bucket_timezone)s) "time", AVG("BANK_SOH") avg_bank_soh 
-                    FROM bank 
-                    WHERE "BANK_ID" = %(bank_id)s AND "TIMESTAMP" BETWEEN %(start_time)s AND %(end_time)s 
-                    GROUP BY "time" ORDER BY "time"
-                """
-
+                query = AVG_ESS_BANK_SOH_LIST_VIEW_QUERY
                 params = {
                     "time_bucket_timezone": TIME_BUCKET_TIMEZONE,
                     "time_bucket_width": time_bucket_width,
@@ -659,13 +671,7 @@ class AvgESSRackSoHListView(ListAPIView):
             end_time = datetime.strptime(end_time_query_param, "%Y-%m-%dT%H:%M:%S")
 
             with connections[database].cursor() as cursor:
-                query = """
-                    SELECT time_bucket(%(time_bucket_width)s, "TIMESTAMP" AT TIME ZONE %(time_bucket_timezone)s) "time", AVG("RACK_SOH") avg_rack_soh 
-                    FROM rack
-                    WHERE ("BANK_ID" = %(bank_id)s AND "RACK_ID" = %(rack_id)s) AND "TIMESTAMP" BETWEEN %(start_time)s AND %(end_time)s 
-                    GROUP BY "time" ORDER BY "time" 
-                """
-
+                query = AVG_ESS_RACK_SOH_LIST_VIEW_QUERY
                 params = {
                     "time_bucket_timezone": TIME_BUCKET_TIMEZONE,
                     "time_bucket_width": time_bucket_width,
@@ -730,13 +736,7 @@ class AvgESSBankPowerListView(ListAPIView):
             end_time = datetime.strptime(end_time_query_param, "%Y-%m-%dT%H:%M:%S")
 
             with connections[database].cursor() as cursor:
-                query = """
-                    SELECT time_bucket(%(time_bucket_width)s, "TIMESTAMP" AT TIME ZONE %(time_bucket_timezone)s) "time", AVG("BANK_POWER") avg_bank_power 
-                    FROM bank
-                    WHERE "BANK_ID" = %(bank_id)s AND "TIMESTAMP" BETWEEN %(start_time)s AND %(end_time)s 
-                    GROUP BY "time" ORDER BY "time"
-                """
-
+                query = AVG_ESS_BANK_POWER_LIST_VIEW_QUERY
                 params = {
                     "time_bucket_timezone": TIME_BUCKET_TIMEZONE,
                     "time_bucket_width": time_bucket_width,
