@@ -364,6 +364,7 @@
                             </div>
                         </div>
 
+
                         <h5 id="itemVoltage">전압</h5>
                         <div class="row">
                             <div class="col-xl-6 col-md-12">
@@ -402,6 +403,12 @@
                                             </div>
                                         </div>
                                     </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-xl-6 col-md-12">
+
                                 </div>
                             </div>
 
@@ -445,6 +452,41 @@
                             </div>
                         </div>
 
+                        <!-- 전압차 s -->
+                        <div class="row">
+                            <div class="col-xl-6 col-md-12">
+                                <div id="avgBankPowerCard" class="card mx-2">
+                                    <div class="card-header">
+                                        <div class="row">
+                                            <div class="col-8 my-auto">
+                                                <h5>시간별 Rack Cell의 전압차</h5>
+                                            </div>
+                                            <div class="col-4 text-right">
+
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="card-body">
+                                        <!-- Loading -->
+                                        <div class="row d-none">
+                                            <div class="text-center">
+                                                <div class="spinner-border" role="status">
+                                                    <span class="visually-hidden">Loading...</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <p>시온유 태양광 / Bank1 / Rack1 </p>
+                                            <div id="differencePowerChart" class="visualization-chart"></div>
+
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- <button type="button" onclick="generateData()">button</button> -->
+                        </div>
+                        <!-- 전압차 e -->
+                        <!-- 전압 -->
                         <h5 id="itemTemperature">온도</h5>
                         <div class="row">
                             <div class="col-xl-6 col-md-12">
@@ -528,6 +570,8 @@
                             </div>
                         </div>
                     </div>
+
+
                     <!-- [Etc] end -->
 
                 </div>
@@ -971,6 +1015,80 @@
                 </div>
             </div>
         </div>
+
+        <!-- rack Gap search modal -->
+        <div class="modal fade" id="essBankVoltageGapSearchModal" tabindex="-1"
+            aria-labelledby="essBankVoltageGapSearchModalFormLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="essBankVoltageGapSearchModalFormLabel">검색</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form action="#" id="essBankVoltageGapSearchModalForm" autocomplete="off">
+                            <div class="form-group">
+                                <label class='form-label'>구성:</label>
+                                <div class="input-group m-b-10">
+                                    <select id="essBankVoltageGapSearchModalFormOperatingSiteSelect"
+                                        class="form-select">
+                                        <option value="" selected disabled>운영 사이트를 선택해주세요.</option>
+                                        <option value="1">시온유 태양광</option>
+                                        <option value="2">판리 태양광</option>
+                                    </select>
+                                </div>
+                                <div class="input-group m-b-10">
+                                    <select name="" id="essBankVoltageGapSearchModalFormBankSelect" class="form-select"
+                                        disabled>
+                                        <option value="" selected disabled>Bank를 선택해주세요.</option>
+                                    </select>
+                                </div>
+                                <div class="input-group m-b-10">
+                                    <select id="essBankVoltageGapSearchModalFormRackSelect" class="form-select"
+                                        disabled>
+                                        <option value="" selected disabled>Rack를 선택해주세요.</option>
+                                    </select>
+                                </div>
+                                <label class='form-label'>시간:</label>
+                                <div class='input-group log-event m-b-10'
+                                    id='essBankVoltageGapSearchModalFormStartDateTimePicker'
+                                    data-td-target-input='nearest' data-td-target-toggle='nearest'>
+                                    <input id='essBankVoltageGapSearchModalFormStartDateTimeInput' type='text'
+                                        class='form-control'
+                                        data-td-target='#essBankVoltageGapSearchModalFormStartDateTimePicker'
+                                        placeholder="시작 시간을 선택해주세요" />
+                                    <span class='input-group-text'
+                                        data-td-target='#essBankVoltageGapSearchModalFormStartDateTimePicker'
+                                        data-td-toggle='datetimepicker'>
+                                        <span class='fas fa-calendar'></span>
+                                    </span>
+                                </div>
+                                <div class='input-group log-event'
+                                    id='essBankVoltageGapSearchModalFormEndDateTimePicker'
+                                    data-td-target-input='nearest' data-td-target-toggle='nearest'>
+                                    <input id='essBankVoltageGapSearchModalFormEndDateTimeInput' type='text'
+                                        class='form-control'
+                                        data-td-target='#essBankVoltageGapSearchModalFormEndDateTimePicker'
+                                        placeholder="마지막 시간을 선택해주세요" />
+                                    <span class='input-group-text'
+                                        data-td-target='#essBankVoltageGapSearchModalFormEndDateTimePicker'
+                                        data-td-toggle='datetimepicker'>
+                                        <span class='fas fa-calendar'></span>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <button type="submit" class="btn btn-primary">검색</button>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- [ Modal ] end -->
         <!-- [ Main Content ] end -->
     </div>
@@ -993,6 +1111,7 @@
 <!-- Tensorflow JavaScript -->
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@2.0.0/dist/tf.min.js"></script>
 <script src="{% static 'js/custom/index.js' %}"></script>
+
 <script>
     // Tooltip
     let tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
