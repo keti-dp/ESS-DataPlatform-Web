@@ -89,7 +89,7 @@ class BankTestCase(TestCase):
             start_time = ESS_DATA_DATE[TEST_DATABASE]
             end_time = datetime.strptime(start_time, "%Y-%m-%d") + timedelta(days=1)
 
-            query = AVG_ESS_BANK_SOH_LIST_VIEW_QUERY
+            query = AVG_ESS_BANK_SOC_LIST_VIEW_QUERY
             params = {
                 "time_bucket_timezone": TIME_BUCKET_TIMEZONE,
                 "time_bucket_width": "1hour",
@@ -109,7 +109,7 @@ class BankTestCase(TestCase):
             start_time = ESS_DATA_DATE[TEST_DATABASE]
             end_time = datetime.strptime(start_time, "%Y-%m-%d") + timedelta(days=1)
 
-            query = AVG_ESS_BANK_POWER_LIST_VIEW_QUERY
+            query = AVG_ESS_BANK_SOH_LIST_VIEW_QUERY
             params = {
                 "time_bucket_timezone": TIME_BUCKET_TIMEZONE,
                 "time_bucket_width": "1hour",
@@ -129,7 +129,7 @@ class BankTestCase(TestCase):
             start_time = ESS_DATA_DATE[TEST_DATABASE]
             end_time = datetime.strptime(start_time, "%Y-%m-%d") + timedelta(days=1)
 
-            query = AVG_ESS_BANK_SOC_LIST_VIEW_QUERY
+            query = AVG_ESS_BANK_POWER_LIST_VIEW_QUERY
             params = {
                 "time_bucket_timezone": TIME_BUCKET_TIMEZONE,
                 "time_bucket_width": "1hour",
