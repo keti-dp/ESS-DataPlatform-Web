@@ -2370,41 +2370,42 @@ forecastingObjects.forEach(forecastingObject => {
 // y축 varchart과 연결
 // Create root element
 // https://www.amcharts.com/docs/v5/getting-started/#Root_element
-var root = am5.Root.new("differencePowerChart");
+function getInitialLineChart(cgartRoot, option = {}) {
+    const root = am5.Root.new("differencePowerChart");
 
-// Set themes
-// https://www.amcharts.com/docs/v5/concepts/themes/
-root.setThemes([
-    am5themes_Animated.new(root)
-]);
+    // Set themes
+    // https://www.amcharts.com/docs/v5/concepts/themes/
+    root.setThemes([
+        am5themes_Animated.new(root)
+    ]);
 
 
 
-// Create chart
-// https://www.amcharts.com/docs/v5/charts/xy-chart/
-var chart1 = root.container.children.push(
-    am5xy.XYChart.new(root, {
-        panX: true,
-        panY: true,
-        wheelX: "panX",
-        wheelY: "zoomX",
-        pinchZoomX: true,
+    // Create chart
+    // https://www.amcharts.com/docs/v5/charts/xy-chart/
+    let chart1 = root.container.children.push(
+        am5xy.XYChart.new(root, {
+            panX: true,
+            panY: true,
+            wheelX: "panX",
+            wheelY: "zoomX",
+            pinchZoomX: true,
+        }));
+
+
+
+
+    // Add cursor
+    // https://www.amcharts.com/docs/v5/charts/xy-chart/cursor/
+    let cursor = chart1.set("cursor", am5xy.XYCursor.new(root, {
+        behavior: "none"
     }));
-
-
-
-
-// Add cursor
-// https://www.amcharts.com/docs/v5/charts/xy-chart/cursor/
-var cursor = chart1.set("cursor", am5xy.XYCursor.new(root, {
-    behavior: "none"
-}));
-cursor.lineY.set("visible", false);
-
+    cursor.lineY.set("visible", false);
+}
 
 // Create axes
 // https://www.amcharts.com/docs/v5/charts/xy-chart/axes/
-var xAxis = chart1.xAxes.push(
+let xAxis = chart1.xAxes.push(
     am5xy.DateAxis.new(root, {
         maxDeviation: 0.5,
         baseInterval: { timeUnit: "second", count: 1 },
@@ -2412,18 +2413,18 @@ var xAxis = chart1.xAxes.push(
         tooltip: am5.Tooltip.new(root, {})
     }));
 
-var yAxis = chart1.yAxes.push(
+let yAxis = chart1.yAxes.push(
     am5xy.ValueAxis.new(root, {
         maxDeviation: 1,
         renderer: am5xy.AxisRendererY.new(root, { pan: "zoom" })
     }));
 
 
-var min_rack_cell = chart1.series.push(am5xy.LineSeries.new(root, {
-    name: "min_rack_cell",
+let minRackCellSeries = chart1.series.push(am5xy.LineSeries.new(root, {
+    name: "minRackCellSeries",
     xAxis: xAxis,
     yAxis: yAxis,
-    valueYField: "min_rack",
+    valueYField: "minRack",
     valueXField: "timestamp",
     stroke: am5.color(0x00589b),
     fill: am5.color("#0x00589b"),
@@ -2433,12 +2434,12 @@ var min_rack_cell = chart1.series.push(am5xy.LineSeries.new(root, {
     })
 }));
 
-var max_rack_cell = chart1.series.push(am5xy.LineSeries.new(root, {
-    name: "max_rack_cell",
+let maxRackCellSeries = chart1.series.push(am5xy.LineSeries.new(root, {
+    name: "maxRackCellSeries",
     xAxis: xAxis,
     yAxis: yAxis,
-    valueYField: "max_rack",
-    openValueYField: "min_rack",
+    valueYField: "maxRack",
+    openValueYField: "minRack",
     valueXField: "timestamp",
     stroke: min_rack_cell.get("stroke"),
     stroke: am5.color("#0x00589b"),
@@ -2450,31 +2451,33 @@ var max_rack_cell = chart1.series.push(am5xy.LineSeries.new(root, {
     })
 }));
 
-function getDateFormat() {
+function getTodayDateFormat() {
     let today = new Date().toISOString().split('T')[0];
     return today
 }
+
+gapRequestUrl = new URL(`${window.location.origin}/api/ess/operating-sites/1/banks/1/racks/1/?fields=timestamp,rack_max_cell_voltage,rack_min_cell_voltage&date=${getTodayDateFormat()}&no_page`)
+
 // Generate data
-fetch(`${window.location.origin}/api/ess/operating-sites/1/banks/1/racks/1/?fields=timestamp,rack_max_cell_voltage,rack_min_cell_voltage&date=${getDateFormat()}&no_page`)
+fetch(gapRequestUrl)
     .then((response) => response.json())
     .then((data) => {
         let results = data.map(x => {
-            return { timestamp: new Date(x['timestamp']).getTime(), min_rack: x["rack_min_cell_voltage"], max_rack: x["rack_max_cell_voltage"] }
+            return { timestamp: new Date(x['timestamp']).getTime(), minRack: x["rack_min_cell_voltage"], maxRack: x["rack_max_cell_voltage"] }
         })
-        min_rack_cell.data.setAll(results);
-        max_rack_cell.data.setAll(results);
+        minRackCellSeries.data.setAll(results);
+        maxRackCellSeries.data.setAll(results);
     })
 
 
-max_rack_cell.fills.template.setAll({
+maxRackCellSeries.fills.template.setAll({
     fillOpacity: 0.3,
     visible: true
 });
 
-min_rack_cell.strokes.template.set("strokeWidth", 2);
-max_rack_cell.strokes.template.set("strokeWidth", 2);
+minRackCellSeries.strokes.template.set("strokeWidth", 2);
+maxRackCellSeries.strokes.template.set("strokeWidth", 2);
 
-min_rack_cell.appear(1000);
-max_rack_cell.appear(1000);
+minRackCellSeries.appear(1000);
+maxRackCellSeries.appear(1000);
 chart1.appear(1000, 100);
-
