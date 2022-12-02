@@ -141,7 +141,7 @@ function getLineChartSeries(elementId, option = {}) {
     series.strokes.template.setAll({
         strokeWidth: 3,
     });
-    
+
     return series;
 }
 
@@ -172,7 +172,7 @@ function getAvgSoHChartSeries(elementId) {
             tooltipDateFormat: customFullDateFormat,
         }),
     );
-    
+
     let yAxis = chart.yAxes.push(
         am5xy.ValueAxis.new(root, {
             min: 80,
@@ -181,7 +181,7 @@ function getAvgSoHChartSeries(elementId) {
             renderer: am5xy.AxisRendererY.new(root, {}),
         })
     );
-    
+
     let series = chart.series.push(
         am5xy.SmoothedXLineSeries.new(root, {
             name: "평균 SoH",
@@ -295,7 +295,7 @@ async function createForecastingBankSoLChart() {
         fillOpacity: 0.3,
         visible: true
     });
-    
+
     root.dateFormatter.setAll({
         dateFormat: customFullDateFormat,
         dateFields: ['valueX']
@@ -328,7 +328,7 @@ async function createForecastingBankSoLChart() {
             if (element['top_limit_value'] >= 0) {
                 item['topLimitValue'] = Math.round(element['top_limit_value'] * 10) / 10;
             }
-    
+
             if (element['bottom_limit_value'] >= 0) {
                 item['bottomLimitValue'] = Math.round(element['bottom_limit_value'] * 10) / 10;
             }
@@ -380,7 +380,7 @@ async function createForecastingBankSoLChart() {
     // Setup loading UI
     let forecastingBankSoLCardElement = document.getElementById('forecastingBankSoLCard');
     forecastingBankSoLCardElement.querySelector('.spinner-border').classList.add('d-none');
-    
+
     let forecastingBankSoLChartElement = document.getElementById('forecastingBankSoLChart');
     forecastingBankSoLChartElement.parentNode.classList.remove('d-none');
 }
@@ -390,7 +390,7 @@ async function createForecastingBankSoLChart() {
  * @param {object} elementId 
  * @returns {object}
  */
- function getMainRackSoSChartSeries(elementId) {
+function getMainRackSoSChartSeries(elementId) {
     let root = getChartRoot(elementId);
     let chartOption = {
         paddingRight: 100,
@@ -400,8 +400,8 @@ async function createForecastingBankSoLChart() {
     // Create axes and series
     let xAxis = chart.xAxes.push(
         am5xy.DateAxis.new(root, {
-            baseInterval: { 
-                timeUnit: 'second', 
+            baseInterval: {
+                timeUnit: 'second',
                 count: 1,
             },
             dateFormat: {
@@ -474,7 +474,7 @@ async function createForecastingBankSoLChart() {
         dx: 80 // Move label additionally right by 80px
     });
 
-    safeAxisRange.get("label").adapters.add("x", (x, target)=>{
+    safeAxisRange.get("label").adapters.add("x", (x, target) => {
         return chart.plotContainer.width();
     });
 
@@ -506,7 +506,7 @@ async function createForecastingBankSoLChart() {
         dx: 80,
     });
 
-    warningAxisRange.get("label").adapters.add("x", (x, target)=>{
+    warningAxisRange.get("label").adapters.add("x", (x, target) => {
         return chart.plotContainer.width();
     });
 
@@ -516,7 +516,7 @@ async function createForecastingBankSoLChart() {
         visible: true,
     });
 
-    chart.plotContainer.onPrivate("width", ()=>{
+    chart.plotContainer.onPrivate("width", () => {
         safeAxisRange.get("label").markDirtyPosition();
         warningAxisRange.get("label").markDirtyPosition();
     });
@@ -709,12 +709,12 @@ function getForecastingMaxMinRackCellSeriesList(elementId, option) {
         },
         tooltip: am5.Tooltip.new(root, {})
     }));
-    
+
     let yAxis = chart.yAxes.push(am5xy.ValueAxis.new(root, {
         renderer: am5xy.AxisRendererY.new(root, {}),
     }));
 
-    
+
     let seriesInfo = option['seriesInfo'];
 
     // Add series
@@ -728,7 +728,7 @@ function getForecastingMaxMinRackCellSeriesList(elementId, option) {
             minDistance: 20,
             tooltip: am5.Tooltip.new(root, {
                 labelText: `값: {valueY} / 차이:{${element['value']}Diff}`,
-                pointerOrientation:"horizontal"
+                pointerOrientation: "horizontal"
             })
         }));
     });
@@ -743,7 +743,7 @@ function getForecastingMaxMinRackCellSeriesList(elementId, option) {
             strokeWidth: 3
         });
     });
-  
+
     // Set date fields
     root.dateFormatter.setAll({
         dateFormat: 'HH:mm',
@@ -762,13 +762,13 @@ function getForecastingMaxMinRackCellSeriesList(elementId, option) {
 
     // Event legend
     // When legend item container is hovered, dim all the series except the hovered one
-    legend.itemContainers.template.events.on("pointerover", function(e) {
+    legend.itemContainers.template.events.on("pointerover", function (e) {
         let itemContainer = e.target;
-    
+
         // As series list is data of a legend, dataContext is series
         let series = itemContainer.dataItem.dataContext;
-    
-        chart.series.each(function(chartSeries) {
+
+        chart.series.each(function (chartSeries) {
             if (chartSeries != series) {
                 chartSeries.strokes.template.setAll({
                     strokeOpacity: 0.15,
@@ -776,15 +776,15 @@ function getForecastingMaxMinRackCellSeriesList(elementId, option) {
                 });
             } else {
                 chartSeries.strokes.template.setAll({
-                strokeWidth: 3
+                    strokeWidth: 3
                 });
             }
         });
     });
-    
+
     // When legend item container is unhovered, make all series as they are
-    legend.itemContainers.template.events.on("pointerout", function(e) {
-        chart.series.each(function(chartSeries) {
+    legend.itemContainers.template.events.on("pointerout", function (e) {
+        chart.series.each(function (chartSeries) {
             chartSeries.strokes.template.setAll({
                 strokeOpacity: 1,
                 strokeWidth: 3,
@@ -819,7 +819,7 @@ function getForecastingChartData(data) {
             }
         }
 
-        dataObject[`${timeObject.plus({minute: 10}).toMillis()}`] = {
+        dataObject[`${timeObject.plus({ minute: 10 }).toMillis()}`] = {
             value2: element['values']['catboost'],
             value3: element['values']['linear'],
             value4: element['values']['lightgbm'],
@@ -867,7 +867,7 @@ async function getForecastingMaxMinRackCellChartOption(chartData, defaultOption,
             const meanAbsoluteError = tf.metrics.meanAbsoluteError(observedValues, predictionValues).dataSync()[0];
             const meanSquaredError = tf.metrics.meanSquaredError(observedValues, predictionValues).dataSync()[0];
             const rootMeanSquaredError = Math.sqrt(meanSquaredError);
-            
+
             let optionSeriesInfoIndex = defaultOption['seriesInfo'].findIndex(optionSeriesInfoItem => optionSeriesInfoItem['value'] === forecastingDiffObjectKey);
             let name = defaultOption['seriesInfo'][optionSeriesInfoIndex]['name'];
             forecastingMaxMinRackCellChartOption['seriesInfo'][optionSeriesInfoIndex]['name'] = `${name}(MAE: ${meanAbsoluteError.toFixed(4)}, RMSE: ${rootMeanSquaredError.toFixed(4)})`;
@@ -1076,56 +1076,56 @@ essBankVisualizationSearchModalFormValidation
         requestUrl.searchParams.append('end-time', endTime);
 
         loadData(requestUrl)
-        .then(responseData => {
-            let chartData = responseData.map(element => {
-                let date = new Date(element.time).getTime();
-                let value = element[visualizationType.replaceAll('-', '_')];
+            .then(responseData => {
+                let chartData = responseData.map(element => {
+                    let date = new Date(element.time).getTime();
+                    let value = element[visualizationType.replaceAll('-', '_')];
 
-                return { date: date, value: value };
-            });
+                    return { date: date, value: value };
+                });
 
-            visualizationCardElement.querySelector('.card-body p').textContent = `
+                visualizationCardElement.querySelector('.card-body p').textContent = `
                 ${essBankVisualizationSearchModalFormOperatingSiteSelectElement.options[essBankVisualizationSearchModalFormOperatingSiteSelectElement.selectedIndex].text} / Bank ${bankId}
             `;
 
-            let chartSeries;
+                let chartSeries;
 
-            switch (visualizationType) {
-                case 'avg-bank-soc':
-                    chartSeries = visualizationTypesObjects['chartSeries'][visualizationTypeCamelCaseString];
-                    chartSeries.data.setAll(chartData);
-    
-                    break;
-                case 'avg-rack-soc':
-                    chartSeries = visualizationTypesObjects['chartSeries'][visualizationTypeCamelCaseString];
-                    chartSeries.data.setAll(chartData);
-    
-                    break;
-                case 'avg-bank-power':                    
-                    chartSeries = visualizationTypesObjects['chartSeries'][visualizationTypeCamelCaseString];
-                    chartSeries.data.setAll(chartData);
+                switch (visualizationType) {
+                    case 'avg-bank-soc':
+                        chartSeries = visualizationTypesObjects['chartSeries'][visualizationTypeCamelCaseString];
+                        chartSeries.data.setAll(chartData);
 
-                    // Remove previous avg chart lines
-                    let yAxis = chartSeries.get('yAxis');
-                    yAxis.axisRanges.each(value => {
-                        yAxis.axisRanges.removeValue(value);
-                    });
+                        break;
+                    case 'avg-rack-soc':
+                        chartSeries = visualizationTypesObjects['chartSeries'][visualizationTypeCamelCaseString];
+                        chartSeries.data.setAll(chartData);
 
-                    createAvgChartLine(chartSeries, chartData);
-    
-                    break;
-                default:
-                    break;
-            }
+                        break;
+                    case 'avg-bank-power':
+                        chartSeries = visualizationTypesObjects['chartSeries'][visualizationTypeCamelCaseString];
+                        chartSeries.data.setAll(chartData);
 
-            chartSeries.data.setAll(chartData);
+                        // Remove previous avg chart lines
+                        let yAxis = chartSeries.get('yAxis');
+                        yAxis.axisRanges.each(value => {
+                            yAxis.axisRanges.removeValue(value);
+                        });
 
-            let loadingElement = visualizationCardElement.querySelector('.card-body .spinner-border');
-            loadingElement.classList.add('d-none');
+                        createAvgChartLine(chartSeries, chartData);
 
-            visualizationChartElement.parentNode.classList.remove('d-none');
-        })
-        .catch(error => console.log(error));
+                        break;
+                    default:
+                        break;
+                }
+
+                chartSeries.data.setAll(chartData);
+
+                let loadingElement = visualizationCardElement.querySelector('.card-body .spinner-border');
+                loadingElement.classList.add('d-none');
+
+                visualizationChartElement.parentNode.classList.remove('d-none');
+            })
+            .catch(error => console.log(error));
     });
 
 // - Validation ess rack type modal
@@ -2023,7 +2023,7 @@ forecastingObjectVisualizationSearchModalFormValidation
 // Create initial visualization chart
 // - Assign variable collection for dynamic names
 let visualizationTypesObjects = {
-    chartSeries: {}, 
+    chartSeries: {},
     cardElement: {},
     chartElement: {},
 };
@@ -2056,66 +2056,66 @@ visualizationTypes.forEach(visualizationType => {
     requestUrl.searchParams.append('end-time', endTime);
 
     loadData(requestUrl)
-    .then(responseData => {
-        let chartData = responseData.map(element => {
-            let date = new Date(element.time).getTime();
-            let value = element[visualizationType.replaceAll('-', '_')];
+        .then(responseData => {
+            let chartData = responseData.map(element => {
+                let date = new Date(element.time).getTime();
+                let value = element[visualizationType.replaceAll('-', '_')];
 
-            return { date: date, value: value };
-        });
+                return { date: date, value: value };
+            });
 
-        let visualizationTypeCamelCaseString = getCamelCaseString(visualizationType);
-        let chartElementId = `${visualizationTypeCamelCaseString}Chart`;
-        let chartOption;
+            let visualizationTypeCamelCaseString = getCamelCaseString(visualizationType);
+            let chartElementId = `${visualizationTypeCamelCaseString}Chart`;
+            let chartOption;
 
-        switch (visualizationType) {
-            case 'avg-bank-soc':
-                chartOption = {
-                    seriesName: '평균 SoC',
-                    yAxis: {
-                        min: 0,
-                        max: 100
+            switch (visualizationType) {
+                case 'avg-bank-soc':
+                    chartOption = {
+                        seriesName: '평균 SoC',
+                        yAxis: {
+                            min: 0,
+                            max: 100
+                        }
                     }
-                }
-    
-                visualizationTypesObjects['chartSeries'][visualizationTypeCamelCaseString] = getLineChartSeries(chartElementId, chartOption);
 
-                break;
-            case 'avg-rack-soc':
-                chartOption = {
-                    seriesName: '평균 SoC',
-                    yAxis: {
-                        min: 0,
-                        max: 100
+                    visualizationTypesObjects['chartSeries'][visualizationTypeCamelCaseString] = getLineChartSeries(chartElementId, chartOption);
+
+                    break;
+                case 'avg-rack-soc':
+                    chartOption = {
+                        seriesName: '평균 SoC',
+                        yAxis: {
+                            min: 0,
+                            max: 100
+                        }
                     }
-                }
-    
-                visualizationTypesObjects['chartSeries'][visualizationTypeCamelCaseString] = getLineChartSeries(chartElementId, chartOption);
 
-                break;
-            case 'avg-bank-power':
-                chartOption = {
-                    seriesName: '평균 전력'
-                }
+                    visualizationTypesObjects['chartSeries'][visualizationTypeCamelCaseString] = getLineChartSeries(chartElementId, chartOption);
 
-                visualizationTypesObjects['chartSeries'][visualizationTypeCamelCaseString] = getLineChartSeries(chartElementId, chartOption);
+                    break;
+                case 'avg-bank-power':
+                    chartOption = {
+                        seriesName: '평균 전력'
+                    }
 
-                createAvgChartLine(visualizationTypesObjects['chartSeries'][visualizationTypeCamelCaseString], chartData);
+                    visualizationTypesObjects['chartSeries'][visualizationTypeCamelCaseString] = getLineChartSeries(chartElementId, chartOption);
 
-                break;
-            default:
-                break;
-        }
+                    createAvgChartLine(visualizationTypesObjects['chartSeries'][visualizationTypeCamelCaseString], chartData);
 
-        let chartSeries = visualizationTypesObjects['chartSeries'][visualizationTypeCamelCaseString];
-        chartSeries.data.setAll(chartData);
+                    break;
+                default:
+                    break;
+            }
 
-        let loadingElement = visualizationTypesObjects['cardElement'][visualizationTypeCamelCaseString].querySelector('.card-body .spinner-border');
-        loadingElement.classList.add('d-none');
+            let chartSeries = visualizationTypesObjects['chartSeries'][visualizationTypeCamelCaseString];
+            chartSeries.data.setAll(chartData);
 
-        visualizationTypesObjects['chartElement'][visualizationTypeCamelCaseString].parentNode.classList.remove('d-none');
-    })
-    .catch(error => console.log(error));
+            let loadingElement = visualizationTypesObjects['cardElement'][visualizationTypeCamelCaseString].querySelector('.card-body .spinner-border');
+            loadingElement.classList.add('d-none');
+
+            visualizationTypesObjects['chartElement'][visualizationTypeCamelCaseString].parentNode.classList.remove('d-none');
+        })
+        .catch(error => console.log(error));
 });
 
 // Create avg bank SoH chart
@@ -2124,24 +2124,24 @@ let avgBankSoHChartSeries = getAvgSoHChartSeries('avgBankSoHChart');
 requestUrl = new URL(`${window.location.origin}/api/ess/stats/avg-soh/operating-sites/1/banks/1/`);
 
 loadData(requestUrl)
-.then(responseData => {
-    let chartData = responseData.map(element => {
-        return {
-            date: DateTime.fromISO(element['date']).toMillis(),
-            value: element['value']
-        }
-    });
-    
-    avgBankSoHChartSeries.data.setAll(chartData);
+    .then(responseData => {
+        let chartData = responseData.map(element => {
+            return {
+                date: DateTime.fromISO(element['date']).toMillis(),
+                value: element['value']
+            }
+        });
 
-    // Off loading UI
-    let avgBankSoHCardElement = document.getElementById('avgBankSoHCard');
-    avgBankSoHCardElement.querySelector('.spinner-border').classList.add('d-none');
+        avgBankSoHChartSeries.data.setAll(chartData);
 
-    let avgBankSoHChartElement = document.getElementById('avgBankSoHChart');
-    avgBankSoHChartElement.parentNode.classList.remove('d-none');
-})
-.catch(error => console.log(error));
+        // Off loading UI
+        let avgBankSoHCardElement = document.getElementById('avgBankSoHCard');
+        avgBankSoHCardElement.querySelector('.spinner-border').classList.add('d-none');
+
+        let avgBankSoHChartElement = document.getElementById('avgBankSoHChart');
+        avgBankSoHChartElement.parentNode.classList.remove('d-none');
+    })
+    .catch(error => console.log(error));
 
 // Create avg rack SoH chart
 let avgRackSoHChartSeries = getAvgSoHChartSeries('avgRackSoHChart');
@@ -2149,30 +2149,30 @@ let avgRackSoHChartSeries = getAvgSoHChartSeries('avgRackSoHChart');
 requestUrl = new URL(`${window.location.origin}/api/ess/stats/avg-soh/operating-sites/1/banks/1/racks/1/`);
 
 loadData(requestUrl)
-.then(responseData => {
-    let chartData = responseData.map(element => {
-        return {
-            date: DateTime.fromISO(element['date']).toMillis(),
-            value: element['value']
-        }
-    });
-    
-    avgRackSoHChartSeries.data.setAll(chartData);
+    .then(responseData => {
+        let chartData = responseData.map(element => {
+            return {
+                date: DateTime.fromISO(element['date']).toMillis(),
+                value: element['value']
+            }
+        });
 
-    // Off loading UI
-    let avgRackSoHCardElement = document.getElementById('avgRackSoHCard');
-    avgRackSoHCardElement.querySelector('.spinner-border').classList.add('d-none');
+        avgRackSoHChartSeries.data.setAll(chartData);
 
-    let avgRackSoHChartElement = document.getElementById('avgRackSoHChart');
-    avgRackSoHChartElement.parentNode.classList.remove('d-none');
-})
-.catch(error => console.log(error));
+        // Off loading UI
+        let avgRackSoHCardElement = document.getElementById('avgRackSoHCard');
+        avgRackSoHCardElement.querySelector('.spinner-border').classList.add('d-none');
+
+        let avgRackSoHChartElement = document.getElementById('avgRackSoHChart');
+        avgRackSoHChartElement.parentNode.classList.remove('d-none');
+    })
+    .catch(error => console.log(error));
 
 // Create forecasting bank SoL chart
 createForecastingBankSoLChart();
 
 // Create rack SoS chart
-let detailRackSoSChartOption= {
+let detailRackSoSChartOption = {
     'seriesInfo': [
         {
             name: 'over_voltage',
@@ -2216,46 +2216,46 @@ requestUrl.searchParams.append('start-time', startTime);
 requestUrl.searchParams.append('end-time', endTime);
 
 loadData(requestUrl)
-.then(responseData => {
-    const mainRackSoSChartElementId = 'mainRackSoSChart';
-    let rackSoSCardElement = document.getElementById('rackSoSCard');
-    let mainSoSChartData = [];
-    let detailSoSChartData = [];
+    .then(responseData => {
+        const mainRackSoSChartElementId = 'mainRackSoSChart';
+        let rackSoSCardElement = document.getElementById('rackSoSCard');
+        let mainSoSChartData = [];
+        let detailSoSChartData = [];
 
-    // Add main & detail SoS data
-    responseData.forEach(element => {
-        let time = DateTime.fromISO(element['time']).toMillis();
+        // Add main & detail SoS data
+        responseData.forEach(element => {
+            let time = DateTime.fromISO(element['time']).toMillis();
 
-        mainSoSChartData.push({
-            time: time,
-            value: element['sos_score'],
+            mainSoSChartData.push({
+                time: time,
+                value: element['sos_score'],
+            });
+
+            let detailSoSChartDataItem = {
+                time: time,
+            };
+
+            detailRackSoSChartOption['seriesInfo'].forEach(seriesInfoItem => {
+                detailSoSChartDataItem[seriesInfoItem['value']] = element[seriesInfoItem['name']];
+            });
+
+            detailSoSChartData.push(detailSoSChartDataItem);
         });
 
-        let detailSoSChartDataItem = {
-            time: time,
-        };
+        mainRackSoSChartSeries.data.setAll(mainSoSChartData);
 
-        detailRackSoSChartOption['seriesInfo'].forEach(seriesInfoItem => {
-            detailSoSChartDataItem[seriesInfoItem['value']] = element[seriesInfoItem['name']];
+        detailRackSoSChartSeriesList.forEach(detailRackSoSChartSeries => {
+            detailRackSoSChartSeries.data.setAll(detailSoSChartData);
         });
 
-        detailSoSChartData.push(detailSoSChartDataItem);
-    });
+        // Setup loading UI
+        let loadingElement = rackSoSCardElement.querySelector('.card-body .spinner-border');
+        loadingElement.classList.add('d-none');
 
-    mainRackSoSChartSeries.data.setAll(mainSoSChartData);
-
-    detailRackSoSChartSeriesList.forEach(detailRackSoSChartSeries => {
-        detailRackSoSChartSeries.data.setAll(detailSoSChartData);
-    });
-
-    // Setup loading UI
-    let loadingElement = rackSoSCardElement.querySelector('.card-body .spinner-border');
-    loadingElement.classList.add('d-none');
-
-    let mainRackSoSChartElement = document.getElementById(mainRackSoSChartElementId);
-    mainRackSoSChartElement.parentNode.parentNode.classList.remove('d-none');
-})
-.catch(error => console.log(error));
+        let mainRackSoSChartElement = document.getElementById(mainRackSoSChartElementId);
+        mainRackSoSChartElement.parentNode.parentNode.classList.remove('d-none');
+    })
+    .catch(error => console.log(error));
 
 // Create forecasting max-min rack cell charts
 let forecastingMaxRackCellVoltageObject = {
@@ -2290,16 +2290,16 @@ let forecastingMaxMinRackCellChartDefaultOption = {
         {
             name: "Observed",
             value: 'value1'
-        },{
+        }, {
             name: "CatBoost",
             value: 'value2'
-        },{
+        }, {
             name: "Linear",
             value: 'value3'
-        },{
+        }, {
             name: "LightGBM",
             value: 'value4'
-        },{
+        }, {
             name: "XGBoost",
             value: 'value5'
         },
@@ -2315,47 +2315,169 @@ forecastingObjects.forEach(forecastingObject => {
     window[`${forecastingObjectName}Object`] = forecastingObject;
 
     let endTime = DateTime.now().toFormat(customTimeDesignatorFullDateTimeFormat);
-    let startTime = DateTime.fromISO(endTime).minus({hour: 1}).toFormat(customTimeDesignatorFullDateTimeFormat);
-    
+    let startTime = DateTime.fromISO(endTime).minus({ hour: 1 }).toFormat(customTimeDesignatorFullDateTimeFormat);
+
     requestUrl = new URL(`${window.location.origin}/api/ess/stats/${forecastingObject['urlPath']}/operating-sites/1/banks/1/racks/1/`);
     requestUrl.searchParams.append('start-time', startTime);
     requestUrl.searchParams.append('end-time', endTime);
 
     loadData(requestUrl)
-    .then(async (responseData) => {
-        let chartData = getForecastingChartData(responseData);
+        .then(async (responseData) => {
+            let chartData = getForecastingChartData(responseData);
 
-        // Set forecastingDiffObject
-        let forecastingDiffObject = {};
-        forecastingMaxMinRackCellChartDefaultOption['seriesInfo'].forEach(seriesInfoItem => {
-            forecastingDiffObject[seriesInfoItem['value']] = [];
-        });
+            // Set forecastingDiffObject
+            let forecastingDiffObject = {};
+            forecastingMaxMinRackCellChartDefaultOption['seriesInfo'].forEach(seriesInfoItem => {
+                forecastingDiffObject[seriesInfoItem['value']] = [];
+            });
 
-        chartData.forEach(element => {
-            // Check all values exist
-            if (element['value1'] && Object.keys(element).length > 2) {
-                Object.keys(forecastingDiffObject).forEach(forecastingDiffObjectKey => {
-                    let forecastingDiff = Math.abs(element['value1'] - element[forecastingDiffObjectKey]);
-                    
-                    element[`${forecastingDiffObjectKey}Diff`] = forecastingDiff;
-                });
-            }
-        });
+            chartData.forEach(element => {
+                // Check all values exist
+                if (element['value1'] && Object.keys(element).length > 2) {
+                    Object.keys(forecastingDiffObject).forEach(forecastingDiffObjectKey => {
+                        let forecastingDiff = Math.abs(element['value1'] - element[forecastingDiffObjectKey]);
 
-        let forecastingMaxMinRackCellChartOption = await getForecastingMaxMinRackCellChartOption(chartData, forecastingMaxMinRackCellChartDefaultOption, forecastingDiffObject);
-        
-        // Create chart
-        window[`${forecastingObjectName}ChartSeriesList`] = getForecastingMaxMinRackCellSeriesList(forecastingObjectChartElementId, forecastingMaxMinRackCellChartOption);
-        window[`${forecastingObjectName}ChartSeriesList`].forEach(chartSeries => {
-            chartSeries.data.setAll(chartData);
-        });
+                        element[`${forecastingDiffObjectKey}Diff`] = forecastingDiff;
+                    });
+                }
+            });
 
-        // Setup loading UI
-        let forecastingObjectCardElement = document.getElementById(forecastingObjectCardElementId);
-        forecastingObjectCardElement.querySelector('.spinner-border').classList.add('d-none');
+            let forecastingMaxMinRackCellChartOption = await getForecastingMaxMinRackCellChartOption(chartData, forecastingMaxMinRackCellChartDefaultOption, forecastingDiffObject);
 
-        let forecastingObjectChartElement = document.getElementById(forecastingObjectChartElementId);
-        forecastingObjectChartElement.parentNode.classList.remove('d-none');
-    })
-    .catch(error => console.log(error));
+            // Create chart
+            window[`${forecastingObjectName}ChartSeriesList`] = getForecastingMaxMinRackCellSeriesList(forecastingObjectChartElementId, forecastingMaxMinRackCellChartOption);
+            window[`${forecastingObjectName}ChartSeriesList`].forEach(chartSeries => {
+                chartSeries.data.setAll(chartData);
+            });
+
+            // Setup loading UI
+            let forecastingObjectCardElement = document.getElementById(forecastingObjectCardElementId);
+            forecastingObjectCardElement.querySelector('.spinner-border').classList.add('d-none');
+
+            let forecastingObjectChartElement = document.getElementById(forecastingObjectChartElementId);
+            forecastingObjectChartElement.parentNode.classList.remove('d-none');
+        })
+        .catch(error => console.log(error));
 });
+
+
+
+//GAP chart
+//차트 생성
+//마우스 커서일때 이벤트
+// 날짜AXIS 데이터받음
+//x축 varchart과 연결
+// y축 varchart과 연결
+// Create root element
+// https://www.amcharts.com/docs/v5/getting-started/#Root_element
+function getInitialLineChart(cgartRoot, option = {}) {
+    const root = am5.Root.new("differencePowerChart");
+
+    // Set themes
+    // https://www.amcharts.com/docs/v5/concepts/themes/
+    root.setThemes([
+        am5themes_Animated.new(root)
+    ]);
+
+
+
+    // Create chart
+    // https://www.amcharts.com/docs/v5/charts/xy-chart/
+    let chart1 = root.container.children.push(
+        am5xy.XYChart.new(root, {
+            panX: true,
+            panY: true,
+            wheelX: "panX",
+            wheelY: "zoomX",
+            pinchZoomX: true,
+        }));
+
+
+
+
+    // Add cursor
+    // https://www.amcharts.com/docs/v5/charts/xy-chart/cursor/
+    let cursor = chart1.set("cursor", am5xy.XYCursor.new(root, {
+        behavior: "none"
+    }));
+    cursor.lineY.set("visible", false);
+}
+
+// Create axes
+// https://www.amcharts.com/docs/v5/charts/xy-chart/axes/
+let xAxis = chart1.xAxes.push(
+    am5xy.DateAxis.new(root, {
+        maxDeviation: 0.5,
+        baseInterval: { timeUnit: "second", count: 1 },
+        renderer: am5xy.AxisRendererX.new(root, { pan: "zoom" }),
+        tooltip: am5.Tooltip.new(root, {})
+    }));
+
+let yAxis = chart1.yAxes.push(
+    am5xy.ValueAxis.new(root, {
+        maxDeviation: 1,
+        renderer: am5xy.AxisRendererY.new(root, { pan: "zoom" })
+    }));
+
+
+let minRackCellSeries = chart1.series.push(am5xy.LineSeries.new(root, {
+    name: "minRackCellSeries",
+    xAxis: xAxis,
+    yAxis: yAxis,
+    valueYField: "minRack",
+    valueXField: "timestamp",
+    stroke: am5.color(0x00589b),
+    fill: am5.color("#0x00589b"),
+    tooltip: am5.Tooltip.new(root, {
+        labelText: "최소 전압 값 : {valueY} V",
+        pointerOrientation: "horizontal"
+    })
+}));
+
+let maxRackCellSeries = chart1.series.push(am5xy.LineSeries.new(root, {
+    name: "maxRackCellSeries",
+    xAxis: xAxis,
+    yAxis: yAxis,
+    valueYField: "maxRack",
+    openValueYField: "minRack",
+    valueXField: "timestamp",
+    stroke: min_rack_cell.get("stroke"),
+    stroke: am5.color("#0x00589b"),
+    fill: min_rack_cell.get("stroke"),
+    fill: am5.color("#0x00589b"),
+    tooltip: am5.Tooltip.new(root, {
+        labelText: "최대 전압 값 : {valueY} V",
+        pointerOrientation: "horizontal"
+    })
+}));
+
+function getTodayDateFormat() {
+    let today = new Date().toISOString().split('T')[0];
+    return today
+}
+
+gapRequestUrl = new URL(`${window.location.origin}/api/ess/operating-sites/1/banks/1/racks/1/?fields=timestamp,rack_max_cell_voltage,rack_min_cell_voltage&date=${getTodayDateFormat()}&no_page`)
+
+// Generate data
+fetch(gapRequestUrl)
+    .then((response) => response.json())
+    .then((data) => {
+        let results = data.map(x => {
+            return { timestamp: new Date(x['timestamp']).getTime(), minRack: x["rack_min_cell_voltage"], maxRack: x["rack_max_cell_voltage"] }
+        })
+        minRackCellSeries.data.setAll(results);
+        maxRackCellSeries.data.setAll(results);
+    })
+
+
+maxRackCellSeries.fills.template.setAll({
+    fillOpacity: 0.3,
+    visible: true
+});
+
+minRackCellSeries.strokes.template.set("strokeWidth", 2);
+maxRackCellSeries.strokes.template.set("strokeWidth", 2);
+
+minRackCellSeries.appear(1000);
+maxRackCellSeries.appear(1000);
+chart1.appear(1000, 100);
