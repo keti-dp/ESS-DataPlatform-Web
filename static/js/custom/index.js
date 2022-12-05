@@ -2369,9 +2369,15 @@ forecastingObjects.forEach(forecastingObject => {
 //x축 varchart과 연결
 // y축 varchart과 연결
 // Create root element
-// https://www.amcharts.com/docs/v5/getting-started/#Root_element
-function getInitialLineChart(cgartRoot, option = {}) {
-    const root = am5.Root.new("differencePowerChart");
+
+/**
+ * Get chart's root object
+ * @param {string} elementId 
+ * @returns {object}
+ */
+function getVoltageGapChartRoot(elementId) {
+    // https://www.amcharts.com/docs/v5/getting-started/#Root_element
+    let root = am5.Root.new(elementId);
 
     // Set themes
     // https://www.amcharts.com/docs/v5/concepts/themes/
@@ -2379,12 +2385,20 @@ function getInitialLineChart(cgartRoot, option = {}) {
         am5themes_Animated.new(root)
     ]);
 
+    return root;
+}
 
-
+/**
+ * Get chart object
+ * @param {object} chartRoot 
+ * @param {object} option 
+ * @returns {object}
+ */
+function getVoltageGapChart(chartRoot, option = {}) {
     // Create chart
     // https://www.amcharts.com/docs/v5/charts/xy-chart/
-    let chart1 = root.container.children.push(
-        am5xy.XYChart.new(root, {
+    let chart = chartRoot.container.children.push(
+        am5xy.XYChart.new(chartRoot, {
             panX: true,
             panY: true,
             wheelX: "panX",
@@ -2392,92 +2406,103 @@ function getInitialLineChart(cgartRoot, option = {}) {
             pinchZoomX: true,
         }));
 
-
-
-
     // Add cursor
     // https://www.amcharts.com/docs/v5/charts/xy-chart/cursor/
-    let cursor = chart1.set("cursor", am5xy.XYCursor.new(root, {
+    let cursor = chart.set("cursor", am5xy.XYCursor.new(chartRoot, {
         behavior: "none"
     }));
     cursor.lineY.set("visible", false);
+
+    return chart
 }
 
-// Create axes
+/**
+ * Get today's string
+ * @returns {string} Format: 'YYYY-MM-DD'
+ */
+function getTodayDateFormat() {
+    let today = new Date().toISOString().split('T')[0];
+
+    return today;
+}
+
+// Create voltageGap chart's series
+let voltageGapChartRoot = getVoltageGapChartRoot('differencePowerChart');
+let voltageGapChart = getVoltageGapChart(voltageGapChartRoot);
+
+// - Create axes
 // https://www.amcharts.com/docs/v5/charts/xy-chart/axes/
-let xAxis = chart1.xAxes.push(
-    am5xy.DateAxis.new(root, {
+let voltageGapChartXAxis = voltageGapChart.xAxes.push(
+    am5xy.DateAxis.new(voltageGapChartRoot, {
         maxDeviation: 0.5,
         baseInterval: { timeUnit: "second", count: 1 },
-        renderer: am5xy.AxisRendererX.new(root, { pan: "zoom" }),
-        tooltip: am5.Tooltip.new(root, {})
+        renderer: am5xy.AxisRendererX.new(voltageGapChartRoot, { pan: "zoom" }),
+        tooltip: am5.Tooltip.new(voltageGapChartRoot, {})
     }));
 
-let yAxis = chart1.yAxes.push(
-    am5xy.ValueAxis.new(root, {
+let voltageGapChartYAxis = voltageGapChart.yAxes.push(
+    am5xy.ValueAxis.new(voltageGapChartRoot, {
         maxDeviation: 1,
-        renderer: am5xy.AxisRendererY.new(root, { pan: "zoom" })
+        renderer: am5xy.AxisRendererY.new(voltageGapChartRoot, { pan: "zoom" })
     }));
 
-
-let minRackCellSeries = chart1.series.push(am5xy.LineSeries.new(root, {
-    name: "minRackCellSeries",
-    xAxis: xAxis,
-    yAxis: yAxis,
-    valueYField: "minRack",
+let minRackCellVoltageSeries = voltageGapChart.series.push(am5xy.LineSeries.new(voltageGapChartRoot, {
+    name: "minRackCellVoltageSeries",
+    xAxis: voltageGapChartXAxis,
+    yAxis: voltageGapChartYAxis,
+    valueYField: "minRackCellVoltage",
     valueXField: "timestamp",
-    stroke: am5.color(0x00589b),
-    fill: am5.color("#0x00589b"),
-    tooltip: am5.Tooltip.new(root, {
+    stroke: am5.color(0x00589b), // 'cobalt' color
+    fill: am5.color(0x00589b),
+    tooltip: am5.Tooltip.new(voltageGapChartRoot, {
         labelText: "최소 전압 값 : {valueY} V",
         pointerOrientation: "horizontal"
     })
 }));
 
-let maxRackCellSeries = chart1.series.push(am5xy.LineSeries.new(root, {
-    name: "maxRackCellSeries",
-    xAxis: xAxis,
-    yAxis: yAxis,
-    valueYField: "maxRack",
-    openValueYField: "minRack",
+let maxRackCellVoltageSeries = voltageGapChart.series.push(am5xy.LineSeries.new(voltageGapChartRoot, {
+    name: "maxRackCellVoltageSeries",
+    xAxis: voltageGapChartXAxis,
+    yAxis: voltageGapChartYAxis,
+    valueYField: "maxRackCellVoltage",
+    openValueYField: "minRackCellVoltage",
     valueXField: "timestamp",
-    stroke: min_rack_cell.get("stroke"),
+    stroke: minRackCellVoltageSeries.get("stroke"),
     stroke: am5.color("#0x00589b"),
-    fill: min_rack_cell.get("stroke"),
+    fill: minRackCellVoltageSeries.get("stroke"),
     fill: am5.color("#0x00589b"),
-    tooltip: am5.Tooltip.new(root, {
+    tooltip: am5.Tooltip.new(voltageGapChartRoot, {
         labelText: "최대 전압 값 : {valueY} V",
         pointerOrientation: "horizontal"
     })
 }));
 
-function getTodayDateFormat() {
-    let today = new Date().toISOString().split('T')[0];
-    return today
-}
+// Create voltageGap chart
+requestUrl = new URL(`${window.location.origin}/api/ess/operating-sites/1/banks/1/racks/1/?fields=timestamp,rack_max_cell_voltage,rack_min_cell_voltage&date=${getTodayDateFormat()}&no_page`)
 
-gapRequestUrl = new URL(`${window.location.origin}/api/ess/operating-sites/1/banks/1/racks/1/?fields=timestamp,rack_max_cell_voltage,rack_min_cell_voltage&date=${getTodayDateFormat()}&no_page`)
-
-// Generate data
-fetch(gapRequestUrl)
+fetch(requestUrl)
     .then((response) => response.json())
-    .then((data) => {
-        let results = data.map(x => {
-            return { timestamp: new Date(x['timestamp']).getTime(), minRack: x["rack_min_cell_voltage"], maxRack: x["rack_max_cell_voltage"] }
+    .then((responseData) => {
+        let data = responseData.map(element => {
+            return { 
+                timestamp: new Date(element['timestamp']).getTime(),
+                minRackCellVoltage: element["rack_min_cell_voltage"],
+                maxRackCellVoltage: element["rack_max_cell_voltage"],
+            }
         })
-        minRackCellSeries.data.setAll(results);
-        maxRackCellSeries.data.setAll(results);
+
+        minRackCellVoltageSeries.data.setAll(data);
+        maxRackCellVoltageSeries.data.setAll(data);
+
+        maxRackCellVoltageSeries.fills.template.setAll({
+            fillOpacity: 0.3,
+            visible: true
+        });
+        
+        minRackCellVoltageSeries.strokes.template.set("strokeWidth", 2);
+        maxRackCellVoltageSeries.strokes.template.set("strokeWidth", 2);
+        
+        minRackCellVoltageSeries.appear(1000);
+        maxRackCellVoltageSeries.appear(1000);
+        voltageGapChart.appear(1000, 100);
     })
-
-
-maxRackCellSeries.fills.template.setAll({
-    fillOpacity: 0.3,
-    visible: true
-});
-
-minRackCellSeries.strokes.template.set("strokeWidth", 2);
-maxRackCellSeries.strokes.template.set("strokeWidth", 2);
-
-minRackCellSeries.appear(1000);
-maxRackCellSeries.appear(1000);
-chart1.appear(1000, 100);
