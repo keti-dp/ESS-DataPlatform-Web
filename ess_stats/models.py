@@ -130,3 +130,17 @@ class SoS(models.Model):
     class Meta:
         managed = False
         db_table = "ess_sos"
+
+
+class ExSoS(models.Model):
+    time = models.DateTimeField(db_column="TIMESTAMP", primary_key=True)
+    mode = models.IntegerField(db_column="MODE")
+    operating_site = models.IntegerField(db_column="OPERATING_SITE")
+    bank_id = models.IntegerField(db_column="BANK_ID")
+    rack_id = models.IntegerField(db_column="RACK_ID")
+    time_intervar = models.FloatField(db_column="TIME_INTERVAL")
+    integrated_safety = models.FloatField(db_column="INTEGRATED_SAFETY")
+
+    class Meta:
+        managed = False
+        db_table = "ess_exsos"

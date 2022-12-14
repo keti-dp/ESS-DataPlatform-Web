@@ -10,6 +10,7 @@ from .views import (
     ForecastingMaxRackCellTemperatureViewSet,
     ForecastingMinRackCellTemperatureViewSet,
     SoSViewSet,
+    ExSosViewSet,
 )
 
 router = SimpleRouter()
@@ -40,6 +41,10 @@ forecasting_min_rack_cell_temperature_router.register(
 sos_router = SimpleRouter()
 sos_router.register(r"racks", SoSViewSet, basename="racks")
 
+ex_sos_router = SimpleRouter()
+ex_sos_router.register(r"", ExSosViewSet, basename="backs")
+ex_sos_router.register(r"racks", ExSosViewSet, basename="racks")
+
 
 urlpatterns = [
     path("avg-soh/operating-sites/<int:operating_site_id>/", include(nested_router.urls)),
@@ -64,5 +69,9 @@ urlpatterns = [
     path(
         "sos/operating-sites/<int:operating_site_id>/banks/<int:bank_id>/",
         include(sos_router.urls),
+    ),
+    path(
+        "ex-sos/operating-sites/<int:operating_site_id>/banks/<int:bank_id>/",
+        include(ex_sos_router.urls),
     ),
 ]

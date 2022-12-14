@@ -9,6 +9,7 @@ from .models import (
     ForecastingMaxRackCellTemperature,
     ForecastingMinRackCellTemperature,
     SoS,
+    ExSoS,
 )
 from .filters import CustomDateFilterBackend, CustomDateTimeFilterBackend
 from .serializer import (
@@ -20,6 +21,7 @@ from .serializer import (
     ForecastingMaxRackCellTemperatureSerializer,
     ForecastingMinRackCellTemperatureSerializer,
     SoSSerializer,
+    ExSosSerializer,
 )
 
 
@@ -203,5 +205,30 @@ class SoSViewSet(ReadOnlyModelViewSet):
         queryset = self.get_queryset().filter(rack_id=rack_id)
         filter_queryset = self.filter_queryset(queryset)
         serializer = SoSSerializer(filter_queryset, many=True)
+
+        return Response(serializer.data)
+
+
+class ExSosViewSet(ReadOnlyModelViewSet):
+    serializer_class = ExSosSerializer
+    filter_backends = [CustomDateTimeFilterBackend]  # query= start_time,end_time
+
+    def get_queryset(self):
+        operating_site_id = self.kwargs["operating_site_id"]
+        bank_id = self.kwargs["bank_id"]
+        mode = self.request.query_params.get("mode")
+        queryset = ExSoS.objects.filter(operating_site=operating_site_id, bank_id=bank_id, mode=mode).order_by(
+            "rack_id", "time"
+        )
+        return queryset
+
+    def paginate_queryset(self, queryset):
+        return None
+
+    def retrieve(self, request, *args, **kwargs) -> list:
+        rack_id = kwargs["pk"]
+        queryset = self.get_queryset().filter(rack_id=rack_id)
+        filter_queryset = self.filter_queryset(queryset)
+        serializer = ExSosSerializer(filter_queryset, many=True)
 
         return Response(serializer.data)
