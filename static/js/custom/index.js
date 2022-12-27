@@ -2484,7 +2484,7 @@ fetch(requestUrl)
     .then((response) => response.json())
     .then((responseData) => {
         let data = responseData.map(element => {
-            return { 
+            return {
                 timestamp: new Date(element['timestamp']).getTime(),
                 minRackCellVoltage: element["rack_min_cell_voltage"],
                 maxRackCellVoltage: element["rack_max_cell_voltage"],
@@ -2498,10 +2498,10 @@ fetch(requestUrl)
             fillOpacity: 0.3,
             visible: true
         });
-        
+
         minRackCellVoltageSeries.strokes.template.set("strokeWidth", 2);
         maxRackCellVoltageSeries.strokes.template.set("strokeWidth", 2);
-        
+
         minRackCellVoltageSeries.appear(1000);
         maxRackCellVoltageSeries.appear(1000);
         voltageGapChart.appear(1000, 100);

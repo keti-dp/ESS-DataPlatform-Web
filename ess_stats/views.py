@@ -21,7 +21,7 @@ from .serializer import (
     ForecastingMaxRackCellTemperatureSerializer,
     ForecastingMinRackCellTemperatureSerializer,
     SoSSerializer,
-    ExSosSerializer,
+    ExSoSSerializer,
 )
 
 
@@ -209,16 +209,39 @@ class SoSViewSet(ReadOnlyModelViewSet):
         return Response(serializer.data)
 
 
-class ExSosViewSet(ReadOnlyModelViewSet):
-    serializer_class = ExSosSerializer
-    filter_backends = [CustomDateTimeFilterBackend]  # query= start_time,end_time
+class BankExSoSViewSet(ReadOnlyModelViewSet):
+    serializer_class = ExSoSSerializer
+    filter_backends = [CustomDateTimeFilterBackend]
 
     def get_queryset(self):
         operating_site_id = self.kwargs["operating_site_id"]
-        bank_id = self.kwargs["bank_id"]
-        mode = self.request.query_params.get("mode")
-        queryset = ExSoS.objects.filter(operating_site=operating_site_id, bank_id=bank_id, mode=mode).order_by(
-            "rack_id", "time"
+
+        queryset = ExSoS.objects.filter(operating_site=operating_site_id).order_by("bank_id", "time")
+
+        return queryset
+
+    def paginate_queryset(self, queryset):
+        return None
+
+    def retrieve(self, request, *args, **kwargs) -> list:
+        bank_id = kwargs["pk"]
+        queryset = self.get_queryset().filter(bank_id=bank_id)
+        filter_queryset = self.filter_queryset(queryset)
+        serializer = ExSoSSerializer(filter_queryset, many=True)
+
+        return Response(serializer.data)
+
+
+class RackExSoSViewSet(ReadOnlyModelViewSet):
+    serializer_class = ExSoSSerializer
+    filter_backends = [CustomDateTimeFilterBackend]
+
+    def get_queryset(self):
+        operating_site_id = self.kwargs["operating_site_id"]
+        bank_id = self.kwargs["bank_pk"]
+
+        queryset = ExSoS.objects.filter(operating_site=operating_site_id, bank_id=bank_id).order_by(
+            "bank_id", "rack_id", "time"
         )
         return queryset
 
@@ -229,6 +252,6 @@ class ExSosViewSet(ReadOnlyModelViewSet):
         rack_id = kwargs["pk"]
         queryset = self.get_queryset().filter(rack_id=rack_id)
         filter_queryset = self.filter_queryset(queryset)
-        serializer = ExSosSerializer(filter_queryset, many=True)
+        serializer = ExSoSSerializer(filter_queryset, many=True)
 
         return Response(serializer.data)

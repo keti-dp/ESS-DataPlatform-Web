@@ -60,7 +60,7 @@ class SoSSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class ExSosSerializer(serializers.ModelSerializer):
+class ExSoSSerializer(serializers.ModelSerializer):
     class Meta:
         model = ExSoS
         fields = "__all__"

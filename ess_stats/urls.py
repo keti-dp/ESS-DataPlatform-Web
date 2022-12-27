@@ -10,7 +10,8 @@ from .views import (
     ForecastingMaxRackCellTemperatureViewSet,
     ForecastingMinRackCellTemperatureViewSet,
     SoSViewSet,
-    ExSosViewSet,
+    BankExSoSViewSet,
+    RackExSoSViewSet,
 )
 
 router = SimpleRouter()
@@ -41,9 +42,11 @@ forecasting_min_rack_cell_temperature_router.register(
 sos_router = SimpleRouter()
 sos_router.register(r"racks", SoSViewSet, basename="racks")
 
-ex_sos_router = SimpleRouter()
-ex_sos_router.register(r"", ExSosViewSet, basename="backs")
-ex_sos_router.register(r"racks", ExSosViewSet, basename="racks")
+ex_sos_router = nested_routers.SimpleRouter()
+
+ex_sos_router.register(r"banks", BankExSoSViewSet, basename="banks")
+ex_sos_racks_router = nested_routers.NestedSimpleRouter(ex_sos_router, r"banks", lookup="bank")
+ex_sos_racks_router.register(r"racks", RackExSoSViewSet, basename="bank-racks")
 
 
 urlpatterns = [
@@ -71,7 +74,8 @@ urlpatterns = [
         include(sos_router.urls),
     ),
     path(
-        "ex-sos/operating-sites/<int:operating_site_id>/banks/<int:bank_id>/",
+        "ex-sos/operating-sites/<int:operating_site_id>/",
         include(ex_sos_router.urls),
     ),
+    path("ex-sos/operating-sites/<int:operating_site_id>/", include(ex_sos_racks_router.urls)),
 ]
