@@ -2,6 +2,13 @@ const essProtectionMap = JSON.parse(document.getElementById('ess-protection-map'
 const customFullDateFormat = 'yyyy-MM-dd';
 const customFullDateTimeFormat = 'yyyy-MM-dd HH:mm:ss';
 const customTimeDesignatorFullDateTimeFormat = `yyyy-MM-dd'T'HH:mm:ss`;
+const zeta = `\u03B6`;
+const safeLimitSoSValue = 0.8;
+const warningLimitSoSValue = Math.pow(safeLimitSoSValue, 4);
+
+// Luxon alias 'DateTime'
+let DateTime = luxon.DateTime;
+let currentDateTime = DateTime.now();
 
 function getCamelCaseString(text, seperator = '-') {
     return text.split(seperator).map((element, index) => index > 0 ? element.charAt(0).toUpperCase() + element.substr(1) : element).join('');
@@ -17,38 +24,99 @@ async function loadData(requestUrl) {
     throw new Error(response.status);
 }
 
-function getChartRoot(elementId) {
+function getChartRoot(elementId, option = {}) {
     let root = am5.Root.new(elementId);
-    root.setThemes([
-        am5themes_Animated.new(root)
-    ]);
+    let themes = [
+        am5themes_Animated.new(root),
+    ];
+
+    let customThemes = option['customThemes'];
+
+    if (Array.isArray(customThemes) && customThemes.length > 0) {
+        themes = themes.concat(customThemes.map(element => element.new(root)));
+    } else {
+        let customTheme = am5.Theme.new(root);
+        customTheme.rule('ColorSet').set('colors', [
+            // Color naming site: https://www.htmlcsscolor.com/
+            // Color palettes site: https://coolors.co/
+            am5.color(0x00589b), // cobalt
+            am5.color(0x00a0b0), // bondi blue
+            am5.color(0xcf5c78), // cabaret
+            // am5.color(0xf5df4d), // energy yellow
+            // am5.color(0xf0eee9), // romance
+            // am5.color(0x939597), // grey chateau
+            am5.color(0x887244), // shadow
+            am5.color(0xb9f18c), // sulu
+            // am5.color(0xffbd00), // amber
+            am5.color(0xead5e6), // snuff
+        ]);
+
+        themes.push(customTheme);
+    }
+
+    root.setThemes(themes);
 
     return root;
 }
 
-function getInitialLineChart(chartRoot) {
+/**
+ * Get initial line chart
+ * @param {object} chartRoot 
+ * @param {object} option 
+ * @returns {object}
+ */
+function getInitialLineChart(chartRoot, option = {}) {
     let root = chartRoot;
     let chart = root.container.children.push(
-        am5xy.XYChart.new(root, {
-            panY: false,
+        am5xy.XYChart.new(root, Object.assign({
+            panX: true,
+            panY: true,
+            wheelX: "panX",
             wheelY: "zoomX",
             layout: root.verticalLayout,
-        })
+        }, option))
     );
+
     chart.set("cursor", am5xy.XYCursor.new(root, {
-        behavior: "zoomXY",
+        behavior: "none",
     }));
 
     return chart;
 }
 
-function getSimpleLineChart(elementId, data, option = {}) {
+/**
+ * Get line chart series
+ * @param {string} elementId 
+ * @param {object} option 
+ * @returns {object}
+ */
+function getLineChartSeries(elementId, option = {}) {
     let root = getChartRoot(elementId);
     let chart = getInitialLineChart(root);
 
-    let chartData = data;
+    // Create initial axes, series
+    let xAxis = chart.xAxes.push(
+        am5xy.DateAxis.new(root, Object.assign({
+            baseInterval: { timeUnit: "hour", count: 1 },
+            dateFormats: {
+                hour: 'HH:mm',
+                day: customFullDateFormat,
+                week: customFullDateFormat,
+                month: 'yyyy-MM',
+            },
+            renderer: am5xy.AxisRendererX.new(root, {}),
+            periodChangeDateFormats: {
+                hour: 'yyyy-MM-dd HH:mm',
+                day: customFullDateFormat,
+                week: customFullDateFormat,
+            },
+            tooltip: am5.Tooltip.new(root, {
+                themeTags: ["axis"],
+            }),
+            tooltipDateFormat: customFullDateTimeFormat,
+        }, option['xAxis']))
+    );
 
-    // Create Y-axis
     let yAxis = chart.yAxes.push(
         am5xy.ValueAxis.new(root, Object.assign({
             extraTooltipPrecision: 1,
@@ -56,55 +124,568 @@ function getSimpleLineChart(elementId, data, option = {}) {
         }, option['yAxis']))
     );
 
-    // Create X-Axis
-    let xAxis = chart.xAxes.push(
-        am5xy.DateAxis.new(root, Object.assign({
-            baseInterval: { timeUnit: "hour", count: 1 },
-            renderer: am5xy.AxisRendererX.new(root, {})
-        }, option['xAxis']))
-    );
-
-    xAxis.get("dateFormats")["hour"] = "HH:mm";
-    xAxis.get("periodChangeDateFormats")["hour"] = "yyyy-MM-dd HH:mm";
-
     let series = chart.series.push(
-        am5xy.LineSeries.new(root, {
-            name: "Series",
+        am5xy.SmoothedXLineSeries.new(root, {
+            name: option['seriesName'],
             xAxis: xAxis,
             yAxis: yAxis,
-            valueYField: "value",
             valueXField: "date",
-            tooltip: am5.Tooltip.new(root, {})
+            valueYField: "value",
+            tooltip: am5.Tooltip.new(root, {
+                labelText: "[bold]{name}[/]\n{valueY.formatNumber('#.000')}"
+            }),
         })
     );
 
-    series.bullets.push(function () {
-        return am5.Bullet.new(root, {
-            sprite: am5.Circle.new(root, {
-                radius: 5,
-                fill: series.get("fill")
-            })
-        });
+    // Customize series
+    series.strokes.template.setAll({
+        strokeWidth: 3,
     });
-
-    series.strokes.template.set("strokeWidth", 2);
-
-    series.get("tooltip").label.set("text", "[bold]{name}[/]\n{valueX.formatDate('yyyy-MM-dd HH:mm')}: {valueY.formatNumber('#.000')}")
-    series.data.setAll(chartData);
-
-    xAxis.set("tooltip", am5.Tooltip.new(root, {
-        themeTags: ["axis"]
-    }));
-
-    yAxis.set("tooltip", am5.Tooltip.new(root, {
-        themeTags: ["axis"]
-    }));
 
     return series;
 }
 
-// Create chart series list
-function getSimpleLineSeriesList(elementId, option) {
+/**
+ * Get avg SoH chart series
+ * @param {string} elementId 
+ * @returns {object}
+ */
+function getAvgSoHChartSeries(elementId) {
+    let root = getChartRoot(elementId);
+    let chart = getInitialLineChart(root);
+
+    // Create initial axes, series
+    let xAxis = chart.xAxes.push(
+        am5xy.DateAxis.new(root, {
+            baseInterval: { timeUnit: "day", count: 1 },
+            renderer: am5xy.AxisRendererX.new(root, {}),
+            dateFormats: {
+                day: customFullDateFormat,
+                month: 'yyyy-MM',
+            },
+            periodChangeDateFormats: {
+                month: 'yyyy-MM',
+            },
+            tooltip: am5.Tooltip.new(root, {
+                themeTags: ["axis"],
+            }),
+            tooltipDateFormat: customFullDateFormat,
+        }),
+    );
+
+    let yAxis = chart.yAxes.push(
+        am5xy.ValueAxis.new(root, {
+            min: 80,
+            max: 100,
+            extraTooltipPrecision: 1,
+            renderer: am5xy.AxisRendererY.new(root, {}),
+        })
+    );
+
+    let series = chart.series.push(
+        am5xy.SmoothedXLineSeries.new(root, {
+            name: "평균 SoH",
+            xAxis: xAxis,
+            yAxis: yAxis,
+            valueXField: "date",
+            valueYField: "value",
+            minDistance: 20,
+            tooltip: am5.Tooltip.new(root, {
+                labelText: "[bold]{name}[/]\n{valueY.formatNumber('#.000')}"
+            }),
+        })
+    );
+
+    // Customize series
+    series.strokes.template.setAll({
+        strokeWidth: 3,
+    });
+
+    return series
+}
+
+/**
+ * Create forecasting bank SoL chart
+ */
+async function createForecastingBankSoLChart() {
+    let root = getChartRoot('forecastingBankSoLChart');
+    let chart = getInitialLineChart(root);
+
+    // Change chart colors
+    chart.get('colors').set('colors', [
+        am5.color(0x00589b), // cobalt
+        am5.color(0x00a0b0), // bondi blue
+        am5.color(0x00adbd), // iris blue
+        am5.color(0x00adbd), // iris blue
+    ]);
+
+    let xAxis = chart.xAxes.push(am5xy.DateAxis.new(root, {
+        baseInterval: {
+            timeUnit: 'day',
+            count: 1
+        },
+        renderer: am5xy.AxisRendererX.new(root, {}),
+        dateFormats: {
+            day: customFullDateFormat,
+            month: 'yyyy-MM',
+        },
+        periodChangeDateFormats: {
+            month: 'yyyy-MM',
+        },
+        tooltip: am5.Tooltip.new(root, {}),
+        tooltipDateFormat: customFullDateFormat
+    }));
+
+    let yAxis = chart.yAxes.push(am5xy.ValueAxis.new(root, {
+        min: 0,
+        max: 100,
+        renderer: am5xy.AxisRendererY.new(root, {
+            minGridDistance: 30
+        })
+    }));
+
+    let observedSoLSeries = chart.series.push(am5xy.SmoothedXLineSeries.new(root, {
+        name: '관측 SoL',
+        xAxis: xAxis,
+        yAxis: yAxis,
+        valueYField: 'observedSoL',
+        valueXField: 'date',
+        tooltip: am5.Tooltip.new(root, {
+            labelText: '[bold]{name}[/]\n{valueY}',
+        })
+    }));
+
+    let forecastingSoLSeries = chart.series.push(am5xy.SmoothedXLineSeries.new(root, {
+        name: '예측 SoL',
+        xAxis: xAxis,
+        yAxis: yAxis,
+        valueYField: 'value',
+        valueXField: 'date',
+        tooltip: am5.Tooltip.new(root, {
+            labelText: `[bold]{name}[/]\n상한 예측: {topLimitValue}\n예측: {valueY}\n하한 예측: {bottomLimitValue}`,
+        })
+    }));
+
+    let forecastingTopLimitSoLSeries = chart.series.push(am5xy.SmoothedXLineSeries.new(root, {
+        name: '상한 예측 SoL',
+        xAxis: xAxis,
+        yAxis: yAxis,
+        valueYField: 'topLimitValue',
+        openValueYField: 'bottomLimitValue',
+        valueXField: 'date',
+    }));
+
+    let forecastingBottomLimitSoLSeries = chart.series.push(am5xy.SmoothedXLineSeries.new(root, {
+        name: '하한 예측 SoL',
+        xAxis: xAxis,
+        yAxis: yAxis,
+        valueYField: 'bottomLimitValue',
+        valueXField: 'date',
+    }));
+
+    observedSoLSeries.strokes.template.setAll({
+        strokeWidth: 3
+    });
+
+    forecastingSoLSeries.strokes.template.setAll({
+        strokeWidth: 3
+    });
+
+    forecastingTopLimitSoLSeries.fills.template.setAll({
+        fillOpacity: 0.3,
+        visible: true
+    });
+
+    root.dateFormatter.setAll({
+        dateFormat: customFullDateFormat,
+        dateFields: ['valueX']
+    });
+
+    let chartData = [];
+
+    let requestUrl = new URL(`${window.location.origin}/api/ess/stats/avg-soh/operating-sites/1/banks/1/`);
+
+    let avgBankSoHData = await loadData(requestUrl);
+    avgBankSoHData.forEach(element => {
+        chartData.push({
+            date: DateTime.fromISO(element['date']).toMillis(),
+            observedSoL: (element['value'] - 80) * 5
+        });
+    });
+
+    // - Save forecasting SoL
+    requestUrl = new URL(`${window.location.origin}/api/ess/stats/forecasting-sol/operating-sites/1/banks/1/`);
+
+    let forecastingBankSoLData = await loadData(requestUrl);
+
+    for (const element of forecastingBankSoLData) {
+        let item = {};
+
+        if (element['value'] >= 0) {
+            item['date'] = DateTime.fromISO(element['date']).toMillis();
+            item['value'] = Math.round(element['value'] * 10) / 10;
+
+            if (element['top_limit_value'] >= 0) {
+                item['topLimitValue'] = Math.round(element['top_limit_value'] * 10) / 10;
+            }
+
+            if (element['bottom_limit_value'] >= 0) {
+                item['bottomLimitValue'] = Math.round(element['bottom_limit_value'] * 10) / 10;
+            }
+
+            chartData.push(item);
+        } else {
+            break;
+        }
+    }
+
+    // Setup chart series
+    observedSoLSeries.data.setAll(chartData);
+    forecastingSoLSeries.data.setAll(chartData);
+    forecastingTopLimitSoLSeries.data.setAll(chartData);
+    forecastingBottomLimitSoLSeries.data.setAll(chartData);
+
+    // Add guide line
+    let rangeDataItem = xAxis.makeDataItem({
+        value: currentDateTime.toMillis()
+    });
+
+    xAxis.createAxisRange(rangeDataItem);
+
+    rangeDataItem.get('grid').setAll({
+        strokeWidth: 3,
+        strokeOpacity: 0.5,
+        strokeDasharray: [3]
+    });
+
+    // Add legend
+    // - Remove legend of forecasting SoL top & bottom limit
+    let seriesValuesCopy = chart.series.values.slice();
+    seriesValuesCopy.pop();
+    seriesValuesCopy.pop();
+
+    let legend = chart.children.push(am5.Legend.new(root, {
+        centerX: am5.percent(50),
+        x: am5.percent(50)
+    }));
+    legend.data.setAll(seriesValuesCopy);
+
+    // Chart animation
+    observedSoLSeries.appear(1000);
+    forecastingSoLSeries.appear(1000);
+    forecastingTopLimitSoLSeries.appear(1000);
+    forecastingBottomLimitSoLSeries.appear(1000);
+    chart.appear(1000, 100);
+
+    // Setup loading UI
+    let forecastingBankSoLCardElement = document.getElementById('forecastingBankSoLCard');
+    forecastingBankSoLCardElement.querySelector('.spinner-border').classList.add('d-none');
+
+    let forecastingBankSoLChartElement = document.getElementById('forecastingBankSoLChart');
+    forecastingBankSoLChartElement.parentNode.classList.remove('d-none');
+}
+
+/**
+ * Get main rack SoS chart series
+ * @param {object} elementId 
+ * @returns {object}
+ */
+function getMainRackSoSChartSeries(elementId) {
+    let root = getChartRoot(elementId);
+    let chartOption = {
+        paddingRight: 100,
+    };
+    let chart = getInitialLineChart(root, chartOption);
+
+    // Create axes and series
+    let xAxis = chart.xAxes.push(
+        am5xy.DateAxis.new(root, {
+            baseInterval: {
+                timeUnit: 'second',
+                count: 1,
+            },
+            dateFormat: {
+                minute: 'HH:mm',
+                hour: 'HH:mm',
+                day: customFullDateFormat,
+                week: customFullDateFormat,
+                month: 'yyyy-MM',
+            },
+            periodChangeDateFormats: {
+                minute: 'HH:mm',
+                hour: 'yyyy-MM-dd HH:mm',
+                day: customFullDateFormat,
+                week: customFullDateFormat,
+            },
+            renderer: am5xy.AxisRendererX.new(root, {}),
+            tooltip: am5.Tooltip.new(root, {
+                themeTags: ["axis"],
+            }),
+            tooltipDateFormat: customFullDateTimeFormat,
+        })
+    );
+
+    let yAxis = chart.yAxes.push(
+        am5xy.ValueAxis.new(root, {
+            min: 0,
+            extraTooltipPrecision: 1,
+            renderer: am5xy.AxisRendererY.new(root, {})
+        })
+    );
+
+    let series = chart.series.push(
+        am5xy.SmoothedXLineSeries.new(root, {
+            name: 'SoS',
+            xAxis: xAxis,
+            yAxis: yAxis,
+            valueXField: 'time',
+            valueYField: 'value',
+            tooltip: am5.Tooltip.new(root, {
+                labelText: "[bold]{name}[/]\n{valueY.formatNumber('#.000')}",
+            }),
+        })
+    );
+
+    // Customize series
+    series.strokes.template.setAll({
+        strokeWidth: 3
+    });
+
+    // Add axis range
+    let safeAxisRange = yAxis.createAxisRange(yAxis.makeDataItem({
+        value: safeLimitSoSValue,
+        endValue: warningLimitSoSValue,
+    }));
+
+    safeAxisRange.get('grid').setAll({
+        stroke: am5.color(0xf5df4d),
+        strokeDasharray: [3],
+        strokeOpacity: 1,
+        strokeWidth: 2,
+    });
+
+    let safeAxisLabel = safeAxisRange.get('label');
+    safeAxisLabel.setAll({
+        html: `Warning(${zeta})<br>(${safeLimitSoSValue})`,
+        background: am5.RoundedRectangle.new(series.root, {
+            fill: am5.color(0xf5df4d),
+        }),
+        inside: true,
+        dx: 80 // Move label additionally right by 80px
+    });
+
+    safeAxisRange.get("label").adapters.add("x", (x, target) => {
+        return chart.plotContainer.width();
+    });
+
+    safeAxisRange.get('axisFill').setAll({
+        fill: am5.color(0xf5df4d),
+        fillOpacity: 0.2,
+        visible: true,
+    });
+
+    let warningAxisRange = yAxis.createAxisRange(yAxis.makeDataItem({
+        value: warningLimitSoSValue,
+        endValue: 0
+    }));
+
+    warningAxisRange.get('grid').setAll({
+        stroke: am5.color(0xff0000),
+        strokeDasharray: [3],
+        strokeOpacity: 1,
+        strokeWidth: 2,
+    });
+
+    let warningAxisLabel = warningAxisRange.get('label');
+    warningAxisLabel.setAll({
+        html: `Unsafe(${zeta}<sup>4</sup>)<br>(${Math.pow(safeLimitSoSValue, 4).toFixed(4)})`,
+        background: am5.RoundedRectangle.new(series.root, {
+            fill: am5.color(0xff0000),
+        }),
+        inside: true,
+        dx: 80,
+    });
+
+    warningAxisRange.get("label").adapters.add("x", (x, target) => {
+        return chart.plotContainer.width();
+    });
+
+    warningAxisRange.get('axisFill').setAll({
+        fill: am5.color(0xff0000),
+        fillOpacity: 0.2,
+        visible: true,
+    });
+
+    chart.plotContainer.onPrivate("width", () => {
+        safeAxisRange.get("label").markDirtyPosition();
+        warningAxisRange.get("label").markDirtyPosition();
+    });
+
+    return series;
+}
+
+/**
+ * Get detail rack SoS chart series list
+ * @param {object} elementId 
+ * @param {object} option 
+ * @returns {object}
+ */
+function getDetailRackSoSChartSeriesList(elementId, option) {
+    class CustomTheme extends am5.Theme {
+        setupDefaultRules() {
+            this.rule('ColorSet').set('colors', [
+                am5.color(0x00a0b0), // bondi blue
+                am5.color(0xcf5c78), // cabaret
+                am5.color(0x939597), // grey chateau
+                am5.color(0x887244), // shadow
+                am5.color(0xb9f18c), // sulu
+                am5.color(0xffbd00), // amber
+                am5.color(0xead5e6), // snuff
+            ]);
+        }
+    }
+
+    let chartRootOption = {
+        customThemes: [
+            CustomTheme,
+        ]
+    }
+
+    let root = getChartRoot(elementId, chartRootOption);
+    let chart = getInitialLineChart(root);
+
+    chart.leftAxesContainer.set("layout", root.verticalLayout);
+
+    // Create axes and series list
+    let xRenderer = am5xy.AxisRendererX.new(root, { minGridDistance: 70 });
+    xRenderer.labels.template.setAll({
+        multiLocation: 0.5,
+        location: 0.5,
+        centerY: am5.p50,
+        centerX: am5.p50,
+        paddingTop: 10
+    });
+
+    xRenderer.grid.template.set("location", 0.5);
+
+    let xAxis = chart.xAxes.push(
+        am5xy.DateAxis.new(root, {
+            baseInterval: { timeUnit: "second", count: 1 },
+            dateFormats: {
+                minute: 'HH:mm',
+                hour: 'HH:mm',
+                day: customFullDateFormat,
+                week: customFullDateFormat,
+                month: 'yyyy-MM',
+            },
+            periodChangeDateFormats: {
+                minute: 'HH:mm',
+                hour: 'yyyy-MM-dd HH:mm',
+                day: customFullDateFormat,
+                week: customFullDateFormat,
+            },
+            tooltip: am5.Tooltip.new(root, {}),
+            renderer: xRenderer
+        })
+    );
+
+    // xAxis.data.setAll(chartData);
+
+    seriesInfo = option['seriesInfo'];
+
+    let seriesList = seriesInfo.map(seriesInfoItem => {
+        let yAxisDefaultSettings = {
+            renderer: am5xy.AxisRendererY.new(root, {}),
+            tooltip: am5.Tooltip.new(root, {
+                animationDuration: 0,
+            }),
+            x: am5.p100,
+            centerX: am5.p100,
+            marginTop: 40 // this makes gap between axes
+        }
+
+        let yAxis;
+
+        yAxis = chart.yAxes.push(
+            am5xy.ValueAxis.new(root, yAxisDefaultSettings)
+        );
+
+        yAxis.axisHeader.children.push(am5.Label.new(root, {
+            text: seriesInfoItem['name'].toUpperCase(),
+            fontWeight: "500"
+        }));
+
+        return chart.series.push(
+            am5xy.LineSeries.new(root, {
+                name: seriesInfoItem['name'].toUpperCase(),
+                xAxis: xAxis,
+                yAxis: yAxis,
+                valueXField: "time",
+                valueYField: seriesInfoItem['value'],
+                sequencedInterpolation: true,
+                tooltip: am5.Tooltip.new(root, {
+                    pointerOrientation: "vertical",
+                    labelText: "[bold]{name}: {valueY}"
+                })
+            })
+        );
+    });
+
+    // Customize series
+    seriesList.forEach(element => {
+        element.strokes.template.setAll({
+            strokeWidth: 3
+        });
+    })
+
+    xAxis.set("layer", 50);
+
+    return seriesList;
+}
+
+/**
+ * Create avg chart line
+ * @param {object} chartSeries 
+ */
+function createAvgChartLine(chartSeries, data) {
+    let totalValue = 0;
+
+    data.forEach(element => {
+        totalValue += element['value'];
+    });
+
+    let avgValue = totalValue / data.length;
+
+    let yAxis = chartSeries.get('yAxis');
+    let avgAxisRange = yAxis.createAxisRange(yAxis.makeDataItem({
+        value: avgValue
+    }));
+
+    avgAxisRange.get('grid').setAll({
+        stroke: am5.color(0xf5df4d),
+        strokeDasharray: [3],
+        strokeOpacity: 1,
+        strokeWidth: 2,
+    });
+
+    let avgAxisLabel = avgAxisRange.get('label');
+    avgAxisLabel.setAll({
+        text: `평균 ${avgAxisRange.get('value').toFixed(2)}`,
+        background: am5.RoundedRectangle.new(chartSeries.root, {
+            fill: am5.color(0xf5df4d),
+        }),
+    });
+
+    avgAxisLabel.zIndex = 10000;
+}
+
+/**
+ * Get forecasting max-min rack cell chart series list
+ * @param {string} elementId 
+ * @param {object} option 
+ * @returns {Array}
+ */
+function getForecastingMaxMinRackCellSeriesList(elementId, option) {
     let root = getChartRoot(elementId);
     let chart = getInitialLineChart(root);
 
@@ -114,187 +695,266 @@ function getSimpleLineSeriesList(elementId, option) {
             timeUnit: "second",
             count: 1
         },
+        dateFormats: {
+            hour: 'HH:mm',
+            day: customFullDateFormat,
+            week: customFullDateFormat,
+            month: 'yyyy-MM',
+        },
         renderer: am5xy.AxisRendererX.new(root, {}),
         periodChangeDateFormats: {
-            hour: 'yyyy-MM-dd HH:mm'
+            hour: 'yyyy-MM-dd HH:mm',
+            day: customFullDateFormat,
+            week: customFullDateFormat,
         },
         tooltip: am5.Tooltip.new(root, {})
     }));
-    
+
     let yAxis = chart.yAxes.push(am5xy.ValueAxis.new(root, {
         renderer: am5xy.AxisRendererY.new(root, {}),
-        tooltip: am5.Tooltip.new(root, {})
     }));
 
-    
+
     let seriesInfo = option['seriesInfo'];
 
     // Add series
     let seriesList = seriesInfo.map(element => {
-        return chart.series.push(am5xy.LineSeries.new(root, {
+        return chart.series.push(am5xy.SmoothedXLineSeries.new(root, {
             name: element['name'],
             xAxis: xAxis,
             yAxis: yAxis,
-            valueYField: element['value'],
             valueXField: 'time',
+            valueYField: element['value'],
+            minDistance: 3,
             tooltip: am5.Tooltip.new(root, {
-                labelText: "{valueY}",
-                pointerOrientation:"horizontal"
+                labelText: `값: {valueY}`,
+                pointerOrientation: "horizontal"
             })
         }));
     });
 
+    let firstForecastingModelName = seriesList[1].get('name');
+
     seriesList.forEach(element => {
-        element.strokes.template.setAll({
+        let strokesTemplateOption = {
             strokeWidth: 3
-        });
+        };
+
+        // 'Observed' series is in front of everything
+        if (element.get('name') == 'Observed') {
+            element.toFront();
+        } else {
+            if (element.get('name') != firstForecastingModelName) {
+                element.hide();
+            }
+        }
+
+        element.strokes.template.setAll(strokesTemplateOption);
     });
-  
+
     // Set date fields
     root.dateFormatter.setAll({
-        dateFormat: customTimeDesignatorFullDateTimeFormat,
+        dateFormat: 'HH:mm',
         dateFields: ["valueX"]
+    });
+
+    // Set axis ranges
+    let rangeDataItem = xAxis.makeDataItem(option['axisRangeInfo']);
+    let range = xAxis.createAxisRange(rangeDataItem);
+
+    rangeDataItem.get("grid").setAll({
+        stroke: am5.color(0x999999), // 'nobel' color
+        strokeOpacity: 0.5,
+        strokeDasharray: [3]
+    });
+      
+      rangeDataItem.get("axisFill").setAll({
+        fill: am5.color(0x999999),
+        fillOpacity: 0.2,
+        visible:true
     });
 
     // Set legend
     let legend = chart.children.push(am5.Legend.new(root, {
         centerX: am5.percent(50),
-        x: am5.percent(50)
+        x: am5.percent(50),
+        layout: am5.GridLayout.new(root, {
+            maxColumns: 2,
+            fixedWidthGrid: true
+        })
     }));
+
+    // Event legend
+    // When legend item container is hovered, dim all the series except the hovered one
+    legend.itemContainers.template.events.on("pointerover", function (e) {
+        let itemContainer = e.target;
+
+        // As series list is data of a legend, dataContext is series
+        let series = itemContainer.dataItem.dataContext;
+
+        chart.series.each(function (chartSeries) {
+            if (chartSeries != series) {
+                chartSeries.strokes.template.setAll({
+                    strokeOpacity: 0.15,
+                    stroke: am5.color(0x000000)
+                });
+            } else {
+                chartSeries.strokes.template.setAll({
+                    strokeWidth: 3
+                });
+            }
+        });
+    });
+
+    // When legend item container is unhovered, make all series as they are
+    legend.itemContainers.template.events.on("pointerout", function (e) {
+        chart.series.each(function (chartSeries) {
+            chartSeries.strokes.template.setAll({
+                strokeOpacity: 1,
+                strokeWidth: 3,
+                stroke: chartSeries.get("fill")
+            });
+        });
+    })
+
     legend.data.setAll(chart.series.values);
 
     return seriesList;
 }
 
-function getAvgSoHChartSeries(elementId) {
-    let root = getChartRoot(elementId);
-    let chart = getInitialLineChart(root);
+/**
+ * Get initial forecasting max-min rack cell chart data
+ * @param {Array} data 
+ * @returns {Array}
+ */
+function getInitialForecastingMaxMinRackCellChartData(data) {
+    // Set observed and forecasting data objects
+    let dataObject = {};
+    let lastElementTimeObjectOfData = DateTime.fromISO(data[data.length - 1]['time']);
 
-    // Create X-Axis
-    let xAxis = chart.xAxes.push(
-        am5xy.DateAxis.new(root, {
-            baseInterval: { timeUnit: "day", count: 1 },
-            renderer: am5xy.AxisRendererX.new(root, {}),
-            dateFormats: {
-                day: 'yyyy-MM-dd',
-                month: 'yyyy-MM'
-            },
-            periodChangeDateFormats: {
-                month: 'yyyy-MM'
+    data.forEach(element => {
+        let timeObject = DateTime.fromISO(element['time']);
+
+        if (dataObject[`${timeObject.toMillis()}`]) {
+            dataObject[`${timeObject.toMillis()}`]['value1'] = element['values']['observed'];
+        } else {
+            dataObject[`${timeObject.toMillis()}`] = {
+                value1: element['values']['observed'],
             }
-        }),
-    );
-    
-    // Create Y-axis
-    let yAxis = chart.yAxes.push(
-        am5xy.ValueAxis.new(root, {
-            min: 80,
-            max: 100,
-            extraTooltipPrecision: 1,
-            renderer: am5xy.AxisRendererY.new(root, {})
-        })
-    );
-    
-    // Create series
-    let series = chart.series.push(
-        am5xy.LineSeries.new(root, {
-            name: "Avg SoH",
-            xAxis: xAxis,
-            yAxis: yAxis,
-            valueYField: "value",
-            valueXField: "date",
-            tooltip: am5.Tooltip.new(root, {
-                labelText: "[bold]{name}[/]\n{valueX.formatDate('yyyy-MM-dd')}: {valueY.formatNumber('#.000')}"
-            })
-        })
-    );
+        }
 
-    // Setup series
-    series.strokes.template.setAll({
-        strokeWidth: 3
+        let plusTenMinuteTimeObject = timeObject.plus({ minute: 10 });
+        if (plusTenMinuteTimeObject.toMillis() >= lastElementTimeObjectOfData.toMillis()) {
+            dataObject[`${plusTenMinuteTimeObject.toMillis()}`] = {
+                value2: element['values']['catboost'],
+                value3: element['values']['linear'],
+                value4: element['values']['lightgbm'],
+                value5: element['values']['xgboost'],
+            }
+        }
     });
 
-    return series
+    // Starting points of forecasting series list are ending point of observing series
+    for(valueNumber = 2; valueNumber <= 5; valueNumber++) {
+        dataObject[lastElementTimeObjectOfData.toMillis()][`value${valueNumber}`] = dataObject[lastElementTimeObjectOfData.toMillis()]['value1'];
+    }
+
+    // Set chart data
+    let chartData = Object.keys(dataObject).map(element => {
+        return {
+            time: Number(element),
+            ...dataObject[element],
+        }
+    });
+
+    chartData.sort((a, b) => a['time'] - b['time']);
+
+    return chartData;
 }
 
-// <!-- Create initial chart -->
+/**
+ * Get forecasting max-min rack cell chart data
+ * @param {Array} data 
+ * @returns {Array}
+ */
+function getForecastingMaxMinRackCellChartData(data) {
+    // Set observed and forecasting data objects
+    let dataObject = {};
 
-// Luxon alias 'DateTime'
-let DateTime = luxon.DateTime;
-let currentDateTime = DateTime.now();
-let startTimeObject = currentDateTime.startOf('day');
-let startTime = startTimeObject.toFormat(customTimeDesignatorFullDateTimeFormat);
-let endTime = startTimeObject.plus({ day: 1 }).toFormat(customTimeDesignatorFullDateTimeFormat);
+    data.forEach(element => {
+        let timeObject = DateTime.fromISO(element['time']);
 
-let visualizationTypes = ['avg-bank-soc', 'avg-rack-soc', 'avg-bank-power'];
-
-// Assign variable collection for dynamic names
-let visualizationTypesObjects = {
-    chart: {},
-    cardElement: {},
-    chartElement: {},
-};
-visualizationTypes.forEach(element => {
-    let visualizationTypeCamelCaseString = getCamelCaseString(element);
-
-    visualizationTypesObjects['chart'][visualizationTypeCamelCaseString] = '';
-    visualizationTypesObjects['cardElement'][visualizationTypeCamelCaseString] = document.getElementById(`${visualizationTypeCamelCaseString}Card`);
-    visualizationTypesObjects['chartElement'][visualizationTypeCamelCaseString] = document.getElementById(`${visualizationTypeCamelCaseString}Chart`);
-});
-
-// Create initial visualization chart
-visualizationTypes.forEach(visualizationType => {
-    let requestUrl;
-
-    if (visualizationType.includes('bank')) {
-        requestUrl = new URL(`${window.location.origin}/api/ess/operating-sites/1/banks/1/stats/${visualizationType}`);
-    }
-
-    if (visualizationType.includes('rack')) {
-        requestUrl = new URL(`${window.location.origin}/api/ess/operating-sites/1/banks/1/racks/1/stats/${visualizationType}`);
-    }
-
-    requestUrl.searchParams.append('time-bucket-width', '1hour');
-    requestUrl.searchParams.append('start-time', startTime);
-    requestUrl.searchParams.append('end-time', endTime);
-
-    fetch(requestUrl).then(response => {
-        if (response.ok) {
-            return response.json();
-        }
-
-        throw new Error(response.statusText);
-    }).then(responseData => {
-        let data = responseData.map(element => {
-            let date = new Date(element.time).getTime();
-            let value = element[visualizationType.replaceAll('-', '_')];
-
-            return { date: date, value: value };
-        });
-
-        let visualizationTypeCamelCaseString = getCamelCaseString(visualizationType);
-        let chartString = `${visualizationTypeCamelCaseString}Chart`;
-
-        if (visualizationType.includes('soc') || visualizationType.includes('soh')) {
-            let chartOption = {
-                yAxis: {
-                    min: 0,
-                    max: 100
-                }
-            }
-
-            visualizationTypesObjects['chart'][visualizationTypeCamelCaseString] = getSimpleLineChart(chartString, data, chartOption);
+        if (dataObject[`${timeObject.toMillis()}`]) {
+            dataObject[`${timeObject.toMillis()}`]['value1'] = element['values']['observed'];
         } else {
-            visualizationTypesObjects['chart'][visualizationTypeCamelCaseString] = getSimpleLineChart(chartString, data);
+            dataObject[`${timeObject.toMillis()}`] = {
+                value1: element['values']['observed'],
+            }
         }
 
-        visualizationTypesObjects['cardElement'][visualizationTypeCamelCaseString].querySelector('.card-body .spinner-border').classList.add('d-none');
-        visualizationTypesObjects['chartElement'][visualizationTypeCamelCaseString].parentNode.classList.remove('d-none');
-    }).catch(error => console.log(error));
-});
+        dataObject[`${timeObject.plus({ minute: 10 }).toMillis()}`] = {
+            value2: element['values']['catboost'],
+            value3: element['values']['linear'],
+            value4: element['values']['lightgbm'],
+            value5: element['values']['xgboost'],
+        }
+    });
 
-// Event
-// - Search visualization card
+    // Set chart data
+    let chartData = Object.keys(dataObject).map(element => {
+        return {
+            time: Number(element),
+            ...dataObject[element],
+        }
+    });
+
+    chartData.sort((a, b) => a['time'] - b['time']);
+
+    return chartData;
+}
+
+/**
+ * Get forecasting max-min rack cell chart option with prediction error
+ * @param {Array} chartData 
+ * @param {object} defaultOption 
+ * @param {object} forecastingDiffObject 
+ * @returns 
+ */
+async function getForecastingMaxMinRackCellChartOption(chartData, defaultOption, forecastingDiffObject) {
+    // - Deep copy
+    let forecastingMaxMinRackCellChartOption = JSON.parse(JSON.stringify(defaultOption));
+
+    chartData.forEach(element => {
+        // Check all values exist
+        if (element['value1'] && Object.keys(element).length > 2) {
+            Object.keys(forecastingDiffObject).forEach(forecastingDiffObjectKey => {
+                forecastingDiffObject[forecastingDiffObjectKey].push(element[forecastingDiffObjectKey]);
+            });
+        }
+    });
+
+    Object.keys(forecastingDiffObject).forEach((forecastingDiffObjectKey) => {
+        if (forecastingDiffObjectKey !== 'value1') {
+            const observedValues = tf.tensor(forecastingDiffObject['value1']);
+            const predictionValues = tf.tensor(forecastingDiffObject[forecastingDiffObjectKey]);
+            const meanAbsoluteError = tf.metrics.meanAbsoluteError(observedValues, predictionValues).dataSync()[0];
+            const meanSquaredError = tf.metrics.meanSquaredError(observedValues, predictionValues).dataSync()[0];
+            const rootMeanSquaredError = Math.sqrt(meanSquaredError);
+
+            let optionSeriesInfoIndex = defaultOption['seriesInfo'].findIndex(optionSeriesInfoItem => optionSeriesInfoItem['value'] === forecastingDiffObjectKey);
+            let name = defaultOption['seriesInfo'][optionSeriesInfoIndex]['name'];
+            forecastingMaxMinRackCellChartOption['seriesInfo'][optionSeriesInfoIndex]['name'] = `${name}(MAE: ${meanAbsoluteError.toFixed(4)}, RMSE: ${rootMeanSquaredError.toFixed(4)})`;
+        }
+    });
+
+    return forecastingMaxMinRackCellChartOption;
+}
+
+/**
+ * Events
+ */
+
+// Search visualization card
 let essBankVisualizationSearchModalElement = document.getElementById('essBankVisualizationSearchModal');
 essBankVisualizationSearchModalElement.addEventListener('show.bs.modal', event => {
     let button = event.relatedTarget;
@@ -386,7 +1046,7 @@ essRackVisualizationSearchModalFormBankSelectElement.addEventListener('change', 
     }
 });
 
-// -- Validation ess bank type modal
+// - Validation ess bank type modal
 const essBankVisualizationSearchModalFormStartDateTimeTempusDominus = new tempusDominus.TempusDominus(essBankVisualizationSearchModalFormStartDateTimePickerElement, {
     display: {
         components: {
@@ -412,7 +1072,7 @@ const essBankVisualizationSearchModalFormEndDateTimeTempusDominus = new tempusDo
     useCurrent: false
 });
 
-// Using event listeners
+// -- Using event listeners
 essBankVisualizationSearchModalFormStartDateTimePickerElement.addEventListener(tempusDominus.Namespace.events.change, (e) => {
     essBankVisualizationSearchModalFormEndDateTimeTempusDominus.updateOptions({
         restrictions: {
@@ -421,7 +1081,7 @@ essBankVisualizationSearchModalFormStartDateTimePickerElement.addEventListener(t
     });
 });
 
-// Using subscribe method
+// -- Using subscribe method
 const essBankVisualizationSearchModalFormEndDateTimeTempusDominusSubscription = essBankVisualizationSearchModalFormEndDateTimeTempusDominus.subscribe(tempusDominus.Namespace.events.change, (e) => {
     essBankVisualizationSearchModalFormStartDateTimeTempusDominus.updateOptions({
         restrictions: {
@@ -488,33 +1148,60 @@ essBankVisualizationSearchModalFormValidation
         requestUrl.searchParams.append('start-time', startTime);
         requestUrl.searchParams.append('end-time', endTime);
 
-        fetch(requestUrl).then(response => {
-            if (response.ok) {
-                return response.json();
-            }
+        loadData(requestUrl)
+            .then(responseData => {
+                let chartData = responseData.map(element => {
+                    let date = new Date(element.time).getTime();
+                    let value = element[visualizationType.replaceAll('-', '_')];
 
-            throw new Error(response.statusText);
-        }).then(responseData => {
-            let data = responseData.map(element => {
-                let date = new Date(element.time).getTime();
-                let value = element[visualizationType.replaceAll('-', '_')];
+                    return { date: date, value: value };
+                });
 
-                return { date: date, value: value };
-            });
-
-            visualizationCardElement.querySelector('.card-body p').textContent = `
-                ${essBankVisualizationSearchModalFormOperatingSiteSelectElement.options[essBankVisualizationSearchModalFormOperatingSiteSelectElement.selectedIndex].text} > Bank ${bankId}
+                visualizationCardElement.querySelector('.card-body p').textContent = `
+                ${essBankVisualizationSearchModalFormOperatingSiteSelectElement.options[essBankVisualizationSearchModalFormOperatingSiteSelectElement.selectedIndex].text} / Bank ${bankId}
             `;
 
-            let chart = visualizationTypesObjects['chart'][visualizationTypeCamelCaseString];
-            chart.data.setAll(data);
+                let chartSeries;
 
-            visualizationCardElement.querySelector('.card-body .spinner-border').classList.add('d-none');
-            visualizationChartElement.parentNode.classList.remove('d-none');
-        }).catch(error => console.log(error));
+                switch (visualizationType) {
+                    case 'avg-bank-soc':
+                        chartSeries = visualizationTypesObjects['chartSeries'][visualizationTypeCamelCaseString];
+                        chartSeries.data.setAll(chartData);
+
+                        break;
+                    case 'avg-rack-soc':
+                        chartSeries = visualizationTypesObjects['chartSeries'][visualizationTypeCamelCaseString];
+                        chartSeries.data.setAll(chartData);
+
+                        break;
+                    case 'avg-bank-power':
+                        chartSeries = visualizationTypesObjects['chartSeries'][visualizationTypeCamelCaseString];
+                        chartSeries.data.setAll(chartData);
+
+                        // Remove previous avg chart lines
+                        let yAxis = chartSeries.get('yAxis');
+                        yAxis.axisRanges.each(value => {
+                            yAxis.axisRanges.removeValue(value);
+                        });
+
+                        createAvgChartLine(chartSeries, chartData);
+
+                        break;
+                    default:
+                        break;
+                }
+
+                chartSeries.data.setAll(chartData);
+
+                let loadingElement = visualizationCardElement.querySelector('.card-body .spinner-border');
+                loadingElement.classList.add('d-none');
+
+                visualizationChartElement.parentNode.classList.remove('d-none');
+            })
+            .catch(error => console.log(error));
     });
 
-// -- Validation ess rack type modal
+// - Validation ess rack type modal
 const essRackVisualizationSearchModalFormStartDateTimeTempusDominus = new tempusDominus.TempusDominus(essRackVisualizationSearchModalFormStartDateTimePickerElement, {
     display: {
         components: {
@@ -540,7 +1227,7 @@ const essRackVisualizationSearchModalFormEndDateTimeTempusDominus = new tempusDo
     useCurrent: false
 });
 
-// Using event listeners
+
 essRackVisualizationSearchModalFormStartDateTimePickerElement.addEventListener(tempusDominus.Namespace.events.change, (e) => {
     essRackVisualizationSearchModalFormEndDateTimeTempusDominus.updateOptions({
         restrictions: {
@@ -549,7 +1236,6 @@ essRackVisualizationSearchModalFormStartDateTimePickerElement.addEventListener(t
     });
 });
 
-// Using subscribe method
 const essRackVisualizationSearchModalFormEndDateTimeTempusDominusSubscription = essRackVisualizationSearchModalFormEndDateTimeTempusDominus.subscribe(tempusDominus.Namespace.events.change, (e) => {
     essBankVisualizationSearchModalFormStartDateTimeTempusDominus.updateOptions({
         restrictions: {
@@ -638,254 +1324,16 @@ essRackVisualizationSearchModalFormValidation
             });
 
             visualizationCardElement.querySelector('.card-body p').textContent = `
-                ${essRackVisualizationSearchModalFormOperatingSiteSelectElement.options[essRackVisualizationSearchModalFormOperatingSiteSelectElement.selectedIndex].text} > Bank ${bankId} > Rack ${rackId}
+                ${essRackVisualizationSearchModalFormOperatingSiteSelectElement.options[essRackVisualizationSearchModalFormOperatingSiteSelectElement.selectedIndex].text} / Bank ${bankId} / Rack ${rackId}
             `;
 
-            let chart = visualizationTypesObjects['chart'][visualizationTypeCamelCaseString];
+            let chart = visualizationTypesObjects['chartSeries'][visualizationTypeCamelCaseString];
             chart.data.setAll(data);
 
             visualizationCardElement.querySelector('.card-body .spinner-border').classList.add('d-none');
             visualizationChartElement.parentNode.classList.remove('d-none');
         }).catch(error => console.log(error));
     });
-
-// Create forecasting bank SoL chart
-async function createForecastingBankSoLChart() {
-    let root = getChartRoot('forecastingBankSoLChart');
-    let chart = getInitialLineChart(root);
-
-    let xAxis = chart.xAxes.push(am5xy.DateAxis.new(root, {
-        baseInterval: {
-            timeUnit: 'day',
-            count: 1
-        },
-        renderer: am5xy.AxisRendererX.new(root, {}),
-        dateFormats: {
-            day: 'yyyy-MM-dd',
-            month: 'yyyy-MM'
-        },
-        periodChangeDateFormats: {
-            month: 'yyyy-MM'
-        },
-        tooltip: am5.Tooltip.new(root, {}),
-        tooltipDateFormat: 'yyyy-MM-dd'
-    }));
-
-    let yAxis = chart.yAxes.push(am5xy.ValueAxis.new(root, {
-        min: 0,
-        max: 100,
-        renderer: am5xy.AxisRendererY.new(root, {
-            minGridDistance: 30
-        })
-    }));
-
-    let observedSoLSeries = chart.series.push(am5xy.LineSeries.new(root, {
-        name: 'Observed SoL',
-        xAxis: xAxis,
-        yAxis: yAxis,
-        valueYField: 'observedSoL',
-        valueXField: 'date',
-        tooltip: am5.Tooltip.new(root, {
-            labelText: '[bold]{name}[/]\n{valueY}',
-        })
-    }));
-
-    let forecastingSoLSeries = chart.series.push(am5xy.LineSeries.new(root, {
-        name: 'Forecasting SoL',
-        xAxis: xAxis,
-        yAxis: yAxis,
-        valueYField: 'value',
-        valueXField: 'date',
-        tooltip: am5.Tooltip.new(root, {
-            labelText: `[bold]{name}[/]\nTop Limit: {topLimitValue}\nForecasting: {valueY}\nBottom Limit: {bottomLimitValue}`,
-        })
-    }));
-
-    let forecastingTopLimitSoLSeries = chart.series.push(am5xy.LineSeries.new(root, {
-        name: 'Forecasting Top Limit SoL',
-        xAxis: xAxis,
-        yAxis: yAxis,
-        valueYField: 'topLimitValue',
-        openValueYField: 'bottomLimitValue',
-        valueXField: 'date',
-    }));
-
-    let forecastingBottomLimitSoLSeries = chart.series.push(am5xy.LineSeries.new(root, {
-        name: 'Forecasting Bottom Limit SoL',
-        xAxis: xAxis,
-        yAxis: yAxis,
-        valueYField: 'bottomLimitValue',
-        valueXField: 'date',
-    }));
-
-    observedSoLSeries.strokes.template.setAll({
-        strokeWidth: 3
-    });
-
-    forecastingSoLSeries.strokes.template.setAll({
-        strokeWidth: 3
-    });
-
-    forecastingTopLimitSoLSeries.fills.template.setAll({
-        fillOpacity: 0.3,
-        visible: true
-    });
-    
-    root.dateFormatter.setAll({
-        dateFormat: customFullDateFormat,
-        dateFields: ['valueX']
-    });
-
-    let chartData = [];
-
-    let requestUrl = new URL(`${window.location.origin}/api/ess/stats/avg-soh/operating-sites/1/banks/1/`);
-
-    let avgBankSoHData = await loadData(requestUrl);
-    avgBankSoHData.forEach(element => {
-        chartData.push({
-            date: DateTime.fromISO(element['date']).toMillis(),
-            observedSoL: (element['value'] - 80) * 5
-        });
-    });
-
-    // - Save forecasting SoL
-    requestUrl = new URL(`${window.location.origin}/api/ess/stats/forecasting-sol/operating-sites/1/banks/1/`);
-
-    let forecastingBankSoLData = await loadData(requestUrl);
-
-    for (const element of forecastingBankSoLData) {
-        let item = {};
-
-        if (element['value'] >= 0) {
-            item['date'] = DateTime.fromISO(element['date']).toMillis();
-            item['value'] = Math.round(element['value'] * 10) / 10;
-
-            if (element['top_limit_value'] >= 0) {
-                item['topLimitValue'] = Math.round(element['top_limit_value'] * 10) / 10;
-            }
-    
-            if (element['bottom_limit_value'] >= 0) {
-                item['bottomLimitValue'] = Math.round(element['bottom_limit_value'] * 10) / 10;
-            }
-
-            chartData.push(item);
-        } else {
-            break;
-        }
-    }
-
-    // Setup chart series
-    observedSoLSeries.data.setAll(chartData);
-    forecastingSoLSeries.data.setAll(chartData);
-    forecastingTopLimitSoLSeries.data.setAll(chartData);
-    forecastingBottomLimitSoLSeries.data.setAll(chartData);
-
-    // Add guide line
-    let rangeDataItem = xAxis.makeDataItem({
-        value: currentDateTime.toMillis()
-    });
-
-    xAxis.createAxisRange(rangeDataItem);
-
-    rangeDataItem.get('grid').setAll({
-        strokeWidth: 3,
-        strokeOpacity: 0.5,
-        strokeDasharray: [3]
-    });
-
-    // Add legend
-    // - Remove legend of forecasting SoL top & bottom limit
-    let seriesValuesCopy = chart.series.values.slice();
-    seriesValuesCopy.pop();
-    seriesValuesCopy.pop();
-
-    let legend = chart.children.push(am5.Legend.new(root, {
-        centerX: am5.percent(50),
-        x: am5.percent(50)
-    }));
-    legend.data.setAll(seriesValuesCopy);
-
-    // Chart animation
-    observedSoLSeries.appear(1000);
-    forecastingSoLSeries.appear(1000);
-    forecastingTopLimitSoLSeries.appear(1000);
-    forecastingBottomLimitSoLSeries.appear(1000);
-    chart.appear(1000, 100);
-
-    // Setup loading UI
-    let forecastingBankSoLCardElement = document.getElementById('forecastingBankSoLCard');
-    forecastingBankSoLCardElement.querySelector('.spinner-border').classList.add('d-none');
-    
-    let forecastingBankSoLChartElement = document.getElementById('forecastingBankSoLChart');
-    forecastingBankSoLChartElement.parentNode.classList.remove('d-none');
-}
-
-// Create forecasting max rack cell voltage chart
-function getForecastingMaxRackCellVoltageChartSeriesList(elementId, option) {
-    let root = getChartRoot(elementId);
-    let chart = getInitialLineChart(root);
-
-    // Create axes
-    let xAxis = chart.xAxes.push(am5xy.DateAxis.new(root, {
-        baseInterval: {
-            timeUnit: "second",
-            count: 1
-        },
-        renderer: am5xy.AxisRendererX.new(root, {}),
-        periodChangeDateFormats: {
-            hour: 'yyyy-MM-dd HH:mm'
-        },
-        tooltip: am5.Tooltip.new(root, {})
-    }));
-    
-    let yAxis = chart.yAxes.push(am5xy.ValueAxis.new(root, {
-        renderer: am5xy.AxisRendererY.new(root, {}),
-        tooltip: am5.Tooltip.new(root, {})
-    }));
-
-    
-    let seriesInfo = option['seriesInfo'];
-
-    // Add series
-    let seriesList = seriesInfo.map(element => {
-        return chart.series.push(am5xy.LineSeries.new(root, {
-            name: element['name'],
-            xAxis: xAxis,
-            yAxis: yAxis,
-            valueYField: element['value'],
-            valueXField: 'time',
-            tooltip: am5.Tooltip.new(root, {
-                labelText: "{valueY}",
-                pointerOrientation:"horizontal"
-            })
-        }));
-    });
-
-    seriesList.forEach(element => {
-        element.strokes.template.setAll({
-            strokeWidth: 3
-        });
-    });
-  
-    // Set date fields
-    root.dateFormatter.setAll({
-        dateFormat: customTimeDesignatorFullDateTimeFormat,
-        dateFields: ["valueX"]
-    });
-
-    // Set legend
-    let legend = chart.children.push(am5.Legend.new(root, {
-        centerX: am5.percent(50),
-        x: am5.percent(50)
-    }));
-    legend.data.setAll(chart.series.values);
-
-    return seriesList;
-}
-
-/*
- * Event
- */ 
 
 // Avg bank SoH search modal
 let essBankSoHVisualizationSearchModalFormStartDateTimePickerElement = document.getElementById('essBankSoHVisualizationSearchModalFormStartDateTimePicker');
@@ -1030,7 +1478,7 @@ essBankSoHVisualizationSearchModalFormValidation
         });
 
         avgBankSoHCardElement.querySelector('.card-body p').textContent = `
-            ${essBankSoHVisualizationSearchModalFormOperatingSiteSelectElement.options[essBankSoHVisualizationSearchModalFormOperatingSiteSelectElement.selectedIndex].text} > Bank ${bankId}
+            ${essBankSoHVisualizationSearchModalFormOperatingSiteSelectElement.options[essBankSoHVisualizationSearchModalFormOperatingSiteSelectElement.selectedIndex].text} / Bank ${bankId}
         `;
 
         avgBankSoHChartSeries.data.setAll(chartData);
@@ -1040,7 +1488,7 @@ essBankSoHVisualizationSearchModalFormValidation
         avgBankSoHChartElement.parentNode.classList.remove('d-none');
     });
 
-// Avg rack SoH search modal
+// Search avg rack SoH card
 let essRackSoHVisualizationSearchModalFormOperatingSiteSelectElement = document.getElementById('essRackSoHVisualizationSearchModalFormOperatingSiteSelect');
 let essRackSoHVisualizationSearchModalFormBankSelectElement = document.getElementById('essRackSoHVisualizationSearchModalFormBankSelect');
 let essRackSoHVisualizationSearchModalFormRackSelectElement = document.getElementById('essRackSoHVisualizationSearchModalFormRackSelect');
@@ -1217,7 +1665,7 @@ essRackSoHVisualizationSearchModalFormValidation
         });
 
         avgRackSoHCardElement.querySelector('.card-body p').textContent = `
-            ${essRackSoHVisualizationSearchModalFormOperatingSiteSelectElement.options[essRackSoHVisualizationSearchModalFormOperatingSiteSelectElement.selectedIndex].text} > Bank ${bankId} > Rack ${rackId}
+            ${essRackSoHVisualizationSearchModalFormOperatingSiteSelectElement.options[essRackSoHVisualizationSearchModalFormOperatingSiteSelectElement.selectedIndex].text} / Bank ${bankId} / Rack ${rackId}
         `;
 
         avgRackSoHChartSeries.data.setAll(chartData);
@@ -1227,8 +1675,205 @@ essRackSoHVisualizationSearchModalFormValidation
         avgRackSoHChartElement.parentNode.classList.remove('d-none');
     });
 
-// Forecasting max-min cell voltage search modal
-// - Search visualization card
+// Search rack SoS
+let essRackSoSVisualizationSearchModalFormOperatingSiteSelectElement = document.getElementById('essRackSoSVisualizationSearchModalFormOperatingSiteSelect');
+let essRackSoSVisualizationSearchModalFormBankSelectElement = document.getElementById('essRackSoSVisualizationSearchModalFormBankSelect');
+let essRackSoSVisualizationSearchModalFormRackSelectElement = document.getElementById('essRackSoSVisualizationSearchModalFormRackSelect');
+let essRackSoSVisualizationSearchModalFormStartDateTimePickerElement = document.getElementById('essRackSoSVisualizationSearchModalFormStartDateTimePicker');
+let essRackSoSVisualizationSearchModalFormEndDateTimePickerElement = document.getElementById('essRackSoSVisualizationSearchModalFormEndDateTimePicker');
+
+essRackSoSVisualizationSearchModalFormOperatingSiteSelectElement.addEventListener('change', (event) => {
+    essRackSoSVisualizationSearchModalFormBankSelectElement.innerHTML = '';
+    essRackSoSVisualizationSearchModalFormBankSelectElement.insertAdjacentHTML('afterbegin', '<option value="" selected disabled>Bank를 선택해주세요.</option>');
+    essRackSoSVisualizationSearchModalFormBankSelectElement.setAttribute('disabled', '');
+
+    essRackSoSVisualizationSearchModalFormRackSelectElement.innerHTML = '';
+    essRackSoSVisualizationSearchModalFormRackSelectElement.insertAdjacentHTML('afterbegin', '<option value="" selected disabled>Rack을 선택해주세요.</option>');
+    essRackSoSVisualizationSearchModalFormRackSelectElement.setAttribute('disabled', '');
+
+    let operatingSiteId = event.target.value;
+    let essProtectionMapInfoRackCountObject = essProtectionMap['info']['rackCount'];
+
+    if (essProtectionMapInfoRackCountObject[`operatingSite${operatingSiteId}`]) {
+        let bankCount = Object.keys(essProtectionMapInfoRackCountObject[`operatingSite${operatingSiteId}`]).length;
+
+        for (i = 0; i < bankCount; i++) {
+            essRackSoSVisualizationSearchModalFormBankSelectElement.insertAdjacentHTML('beforeend', `<option value="${i + 1}">${i + 1}</option>`)
+        }
+
+        essRackSoSVisualizationSearchModalFormBankSelectElement.removeAttribute('disabled');
+    }
+});
+
+essRackSoSVisualizationSearchModalFormBankSelectElement.addEventListener('change', (event) => {
+    essRackSoSVisualizationSearchModalFormRackSelectElement.innerHTML = '';
+    essRackSoSVisualizationSearchModalFormRackSelectElement.insertAdjacentHTML('afterbegin', '<option value="" selected disabled>Rack을 선택해주세요.</option>')
+
+    let operatingSiteId = essRackSoSVisualizationSearchModalFormOperatingSiteSelectElement.value;
+    let bankId = event.target.value;
+    let essProtectionMapInfoRackCountObject = essProtectionMap['info']['rackCount'];
+
+    if (essProtectionMapInfoRackCountObject[`operatingSite${operatingSiteId}`]) {
+        let rackCount = essProtectionMapInfoRackCountObject[`operatingSite${operatingSiteId}`][`bank${bankId}`];
+
+        for (i = 0; i < rackCount; i++) {
+            essRackSoSVisualizationSearchModalFormRackSelectElement.insertAdjacentHTML('beforeend', `<option value="${i + 1}">${i + 1}</option>`)
+        }
+        essRackSoSVisualizationSearchModalFormRackSelectElement.removeAttribute('disabled');
+    } else {
+        essRackSoSVisualizationSearchModalFormRackSelectElement.setAttribute('disabled', '');
+    }
+});
+
+const essRackSoSVisualizationSearchModalFormStartDateTimeTempusDominus = new tempusDominus.TempusDominus(essRackSoSVisualizationSearchModalFormStartDateTimePickerElement, {
+    display: {
+        components: {
+            seconds: true
+        },
+        sideBySide: true
+    },
+    hooks: {
+        inputFormat: (context, date) => { return DateTime.fromISO(date.toISOString()).toFormat(customFullDateTimeFormat) }
+    }
+});
+
+const essRackSoSVisualizationSearchModalFormEndDateTimeTempusDominus = new tempusDominus.TempusDominus(essRackSoSVisualizationSearchModalFormEndDateTimePickerElement, {
+    display: {
+        components: {
+            seconds: true
+        },
+        sideBySide: true
+    },
+    hooks: {
+        inputFormat: (context, date) => { return DateTime.fromISO(date.toISOString()).toFormat(customFullDateTimeFormat) }
+    },
+    useCurrent: false
+});
+
+essRackSoSVisualizationSearchModalFormStartDateTimePickerElement.addEventListener(tempusDominus.Namespace.events.change, (e) => {
+    essRackSoSVisualizationSearchModalFormEndDateTimeTempusDominus.updateOptions({
+        restrictions: {
+            minDate: e.detail.date
+        },
+    });
+});
+
+const essRackSoSVisualizationSearchModalFormEndDateTimeTempusDominusSubscription = essRackSoSVisualizationSearchModalFormEndDateTimeTempusDominus.subscribe(tempusDominus.Namespace.events.change, (e) => {
+    essRackSoSVisualizationSearchModalFormStartDateTimeTempusDominus.updateOptions({
+        restrictions: {
+            maxDate: e.date
+        }
+    });
+});
+
+const essRackSoSVisualizationSearchModalFormValidation = new JustValidate('#essRackSoSVisualizationSearchModalForm', {
+    errorFieldCssClass: 'is-invalid',
+    focusInvalidField: true,
+    lockForm: true,
+    tooltip: {
+        position: 'right',
+    }
+});
+essRackSoSVisualizationSearchModalFormValidation
+    .addField('#essRackSoSVisualizationSearchModalFormOperatingSiteSelect', [
+        {
+            rule: 'required',
+            errorMessage: '운영 사이트를 선택하세요.'
+        }
+    ])
+    .addField('#essRackSoSVisualizationSearchModalFormBankSelect', [
+        {
+            rule: 'required',
+            errorMessage: 'Bank를 선택하세요.'
+        }
+    ])
+    .addField('#essRackSoSVisualizationSearchModalFormRackSelect', [
+        {
+            rule: 'required',
+            errorMessage: 'Rack을 선택하세요.'
+        }
+    ])
+    .addField('#essRackSoSVisualizationSearchModalFormStartDateTimeInput', [
+        {
+            plugin: JustValidatePluginDate(fields => ({
+                required: true,
+                format: customFullDateTimeFormat
+            })),
+            errorMessage: '시작 시간을 선택하세요.'
+        },
+    ]).addField('#essRackSoSVisualizationSearchModalFormEndDateTimeInput', [
+        {
+            plugin: JustValidatePluginDate(fields => ({
+                required: true,
+                format: customFullDateTimeFormat
+            })),
+            errorMessage: '마지막 시간을 선택하세요.'
+        },
+    ])
+    .onSuccess(async (event) => {
+        let essRackSoSVisualizationSearchModalElement = document.getElementById('essRackSoSVisualizationSearchModal');
+        let rackSoSCardElement = document.getElementById('rackSoSCard');
+        let mainRackSoSChartElement = document.getElementById('mainRackSoSChart');
+        let loadingElement = rackSoSCardElement.querySelector('.card-body .spinner-border');
+
+        // Off modal
+        bootstrap.Modal.getInstance(essRackSoSVisualizationSearchModalElement).hide();
+
+        // Setup loading UI
+        mainRackSoSChartElement.parentNode.parentNode.classList.add('d-none');
+        loadingElement.classList.remove('d-none');
+
+        let operatingSiteId = essRackSoSVisualizationSearchModalFormOperatingSiteSelectElement.value;
+        let bankId = essRackSoSVisualizationSearchModalFormBankSelectElement.value;
+        let rackId = essRackSoSVisualizationSearchModalFormRackSelectElement.value;
+        let startTime = DateTime.fromFormat(essRackSoSVisualizationSearchModalFormStartDateTimeInput.value, customFullDateTimeFormat).toFormat(customTimeDesignatorFullDateTimeFormat);
+        let endTime = DateTime.fromFormat(essRackSoSVisualizationSearchModalFormEndDateTimeInput.value, customFullDateTimeFormat).toFormat(customTimeDesignatorFullDateTimeFormat);
+
+        let requestUrl = new URL(`${window.location.origin}/api/ess/stats/sos/operating-sites/${operatingSiteId}/banks/${bankId}/racks/${rackId}/`);
+        requestUrl.searchParams.append('start-time', startTime);
+        requestUrl.searchParams.append('end-time', endTime);
+
+        let responseData = await loadData(requestUrl);
+
+        let mainSoSChartData = [];
+        let detailSoSChartData = [];
+
+        // Add main & detail SoS data
+        responseData.forEach(element => {
+            let time = DateTime.fromISO(element['time']).toMillis();
+
+            mainSoSChartData.push({
+                time: time,
+                value: element['sos_score'],
+            });
+
+            let detailSoSChartDataItem = {
+                time: time,
+            };
+
+            detailRackSoSChartOption['seriesInfo'].forEach(seriesInfoItem => {
+                detailSoSChartDataItem[seriesInfoItem['value']] = element[seriesInfoItem['name']];
+            });
+
+            detailSoSChartData.push(detailSoSChartDataItem);
+        });
+
+        mainRackSoSChartSeries.data.setAll(mainSoSChartData);
+
+        detailRackSoSChartSeriesList.forEach(detailRackSoSChartSeries => {
+            detailRackSoSChartSeries.data.setAll(detailSoSChartData);
+        });
+
+        rackSoSCardElement.querySelector('.card-body p').textContent = `
+            ${essRackSoSVisualizationSearchModalFormOperatingSiteSelectElement.options[essRackSoSVisualizationSearchModalFormOperatingSiteSelectElement.selectedIndex].text} / Bank ${bankId} / Rack ${rackId}
+        `;
+
+        // Off loading UI
+        rackSoSCardElement.querySelector('.card-body .spinner-border').classList.add('d-none');
+        mainRackSoSChartElement.parentNode.parentNode.classList.remove('d-none');
+    });
+
+// Search forecasting max-min rack cell modal
 let forecastingObjectVisualizationSearchModalElement = document.getElementById('forecastingObjectVisualizationSearchModal');
 forecastingObjectVisualizationSearchModalElement.addEventListener('show.bs.modal', event => {
     let button = event.relatedTarget;
@@ -1360,7 +2005,7 @@ forecastingObjectVisualizationSearchModalFormValidation
                 required: true,
                 format: customFullDateTimeFormat
             })),
-            errorMessage: '시작 날짜를 선택하세요.'
+            errorMessage: '시작 시간을 선택하세요.'
         },
     ]).addField(`#forecastingObjectVisualizationSearchModalFormEndDateTimeInput`, [
         {
@@ -1368,7 +2013,7 @@ forecastingObjectVisualizationSearchModalFormValidation
                 required: true,
                 format: customFullDateTimeFormat
             })),
-            errorMessage: '마지막 날짜를 선택하세요.'
+            errorMessage: '마지막 시간을 선택하세요.'
         },
     ])
     .onSuccess(async (event) => {
@@ -1388,7 +2033,7 @@ forecastingObjectVisualizationSearchModalFormValidation
         forecastingObjectCardElement.querySelector('.card-body .spinner-border').classList.remove('d-none');
 
         let operatingSiteId = forecastingObjectVisualizationSearchModalFormOperatingSiteSelectElement.value;
-        let bankId = forecastingObjectVisualizationSearchModalFormOperatingSiteSelectElement.value;
+        let bankId = forecastingObjectVisualizationSearchModalFormBankSelectElement.value;
         let rackId = forecastingObjectVisualizationSearchModalFormRackSelectElement.value;
         let startTime = DateTime.fromFormat(window['forecastingObjectVisualizationSearchModalFormStartDateTimeInput'].value, customFullDateTimeFormat).toFormat(customTimeDesignatorFullDateTimeFormat);
         let endTime = DateTime.fromFormat(window['forecastingObjectVisualizationSearchModalFormEndDateTimeInput'].value, customFullDateTimeFormat).toFormat(customTimeDesignatorFullDateTimeFormat);
@@ -1399,23 +2044,44 @@ forecastingObjectVisualizationSearchModalFormValidation
 
         let responseData = await loadData(requestUrl);
 
-        let chartData = responseData.map(element => {
-            return {
-                time: DateTime.fromISO(element['time']).toMillis(),
-                value1: element['values']['observed'],
-                value2: element['values']['catboost'],
-                value3: element['values']['linear'],
-                value4: element['values']['lightgbm'],
-                value5: element['values']['xgboost'],
-            }
-        });
+        let chartData = getForecastingMaxMinRackCellChartData(responseData);
 
         forecastingObjectCardElement.querySelector('.card-body p').textContent = `
             ${forecastingObjectVisualizationSearchModalFormOperatingSiteSelectElement.options[forecastingObjectVisualizationSearchModalFormOperatingSiteSelectElement.selectedIndex].text} / Bank ${bankId} / Rack ${rackId}
         `;
 
-        window[`${forecastingObjectName}ChartSeriesList`].forEach(element => {
-            element.data.setAll(chartData);
+        // Set forecastingDiffObject
+        let forecastingDiffObject = {};
+        forecastingMaxMinRackCellChartDefaultOption['seriesInfo'].forEach(seriesInfoItem => {
+            forecastingDiffObject[seriesInfoItem['value']] = [];
+        });
+
+        chartData.forEach(element => {
+            // Check object with all models
+            if (element['value1'] && Object.keys(element).length > 2) {
+                Object.keys(forecastingDiffObject).forEach(forecastingDiffObjectKey => {
+                    let forecastingDiff = Math.abs(element['value1'] - element[forecastingDiffObjectKey]);
+
+                    element[`${forecastingDiffObjectKey}Diff`] = forecastingDiff;
+                });
+            }
+        });
+
+        let forecastingMaxMinRackCellChartOption = await getForecastingMaxMinRackCellChartOption(chartData, forecastingMaxMinRackCellChartDefaultOption, forecastingDiffObject);
+
+        window[`${forecastingObjectName}ChartSeriesList`].forEach(chartSeries => {
+            chartSeries.data.setAll(chartData);
+
+            // Change legend's name
+            forecastingMaxMinRackCellChartDefaultOption['seriesInfo'].forEach(forecastingMaxMinRackCellChartDefaultOptionSeriesInfoItem => {
+                if (chartSeries.get('name').includes(forecastingMaxMinRackCellChartDefaultOptionSeriesInfoItem['name'])) {
+                    forecastingMaxMinRackCellChartOption['seriesInfo'].forEach(forecastingMaxMinRackCellChartOptionSeriesInfoItem => {
+                        if (forecastingMaxMinRackCellChartOptionSeriesInfoItem['name'].includes(forecastingMaxMinRackCellChartDefaultOptionSeriesInfoItem['name'])) {
+                            chartSeries.set('name', forecastingMaxMinRackCellChartOptionSeriesInfoItem['name']);
+                        }
+                    });
+                }
+            });
         });
 
         // Off loading UI
@@ -1424,62 +2090,247 @@ forecastingObjectVisualizationSearchModalFormValidation
     });
 
 /* 
- * Initial task
+ * Initial tasks
  */
+
+// Create initial visualization chart
+// - Assign variable collection for dynamic names
+let visualizationTypesObjects = {
+    chartSeries: {},
+    cardElement: {},
+    chartElement: {},
+};
+
+let visualizationTypes = ['avg-bank-soc', 'avg-rack-soc', 'avg-bank-power'];
+visualizationTypes.forEach(visualizationType => {
+    let visualizationTypeCamelCaseString = getCamelCaseString(visualizationType);
+
+    visualizationTypesObjects['chartSeries'][visualizationTypeCamelCaseString] = '';
+    visualizationTypesObjects['cardElement'][visualizationTypeCamelCaseString] = document.getElementById(`${visualizationTypeCamelCaseString}Card`);
+    visualizationTypesObjects['chartElement'][visualizationTypeCamelCaseString] = document.getElementById(`${visualizationTypeCamelCaseString}Chart`);
+});
+
+visualizationTypes.forEach(visualizationType => {
+    let startTimeObject = currentDateTime.startOf('day');
+    let startTime = startTimeObject.toFormat(customTimeDesignatorFullDateTimeFormat);
+    let endTime = startTimeObject.plus({ day: 1 }).toFormat(customTimeDesignatorFullDateTimeFormat);
+    let requestUrl;
+
+    if (visualizationType.includes('bank')) {
+        requestUrl = new URL(`${window.location.origin}/api/ess/operating-sites/1/banks/1/stats/${visualizationType}`);
+    }
+
+    if (visualizationType.includes('rack')) {
+        requestUrl = new URL(`${window.location.origin}/api/ess/operating-sites/1/banks/1/racks/1/stats/${visualizationType}`);
+    }
+
+    requestUrl.searchParams.append('time-bucket-width', '1hour');
+    requestUrl.searchParams.append('start-time', startTime);
+    requestUrl.searchParams.append('end-time', endTime);
+
+    loadData(requestUrl)
+        .then(responseData => {
+            let chartData = responseData.map(element => {
+                let date = new Date(element.time).getTime();
+                let value = element[visualizationType.replaceAll('-', '_')];
+
+                return { date: date, value: value };
+            });
+
+            let visualizationTypeCamelCaseString = getCamelCaseString(visualizationType);
+            let chartElementId = `${visualizationTypeCamelCaseString}Chart`;
+            let chartOption;
+
+            switch (visualizationType) {
+                case 'avg-bank-soc':
+                    chartOption = {
+                        seriesName: '평균 SoC',
+                        yAxis: {
+                            min: 0,
+                            max: 100
+                        }
+                    }
+
+                    visualizationTypesObjects['chartSeries'][visualizationTypeCamelCaseString] = getLineChartSeries(chartElementId, chartOption);
+
+                    break;
+                case 'avg-rack-soc':
+                    chartOption = {
+                        seriesName: '평균 SoC',
+                        yAxis: {
+                            min: 0,
+                            max: 100
+                        }
+                    }
+
+                    visualizationTypesObjects['chartSeries'][visualizationTypeCamelCaseString] = getLineChartSeries(chartElementId, chartOption);
+
+                    break;
+                case 'avg-bank-power':
+                    chartOption = {
+                        seriesName: '평균 전력'
+                    }
+
+                    visualizationTypesObjects['chartSeries'][visualizationTypeCamelCaseString] = getLineChartSeries(chartElementId, chartOption);
+
+                    createAvgChartLine(visualizationTypesObjects['chartSeries'][visualizationTypeCamelCaseString], chartData);
+
+                    break;
+                default:
+                    break;
+            }
+
+            let chartSeries = visualizationTypesObjects['chartSeries'][visualizationTypeCamelCaseString];
+            chartSeries.data.setAll(chartData);
+
+            let loadingElement = visualizationTypesObjects['cardElement'][visualizationTypeCamelCaseString].querySelector('.card-body .spinner-border');
+            loadingElement.classList.add('d-none');
+
+            visualizationTypesObjects['chartElement'][visualizationTypeCamelCaseString].parentNode.classList.remove('d-none');
+        })
+        .catch(error => console.log(error));
+});
 
 // Create avg bank SoH chart
 let avgBankSoHChartSeries = getAvgSoHChartSeries('avgBankSoHChart');
 
-let requestUrl = new URL(`${window.location.origin}/api/ess/stats/avg-soh/operating-sites/1/banks/1/`);
+requestUrl = new URL(`${window.location.origin}/api/ess/stats/avg-soh/operating-sites/1/banks/1/`);
 
-fetch(requestUrl).then(response => {
-    return response.json();
-}).then(responseData => {
-    let chartData = responseData.map(element => {
-        return {
-            date: DateTime.fromISO(element['date']).toMillis(),
-            value: element['value']
-        }
-    });
-    
-    avgBankSoHChartSeries.data.setAll(chartData);
+loadData(requestUrl)
+    .then(responseData => {
+        let chartData = responseData.map(element => {
+            return {
+                date: DateTime.fromISO(element['date']).toMillis(),
+                value: element['value']
+            }
+        });
 
-    // Off loading UI
-    let avgBankSoHCardElement = document.getElementById('avgBankSoHCard');
-    avgBankSoHCardElement.querySelector('.spinner-border').classList.add('d-none');
+        avgBankSoHChartSeries.data.setAll(chartData);
 
-    let avgBankSoHChartElement = document.getElementById('avgBankSoHChart');
-    avgBankSoHChartElement.parentNode.classList.remove('d-none');
-}).catch(error => console.log(error));
+        // Off loading UI
+        let avgBankSoHCardElement = document.getElementById('avgBankSoHCard');
+        avgBankSoHCardElement.querySelector('.spinner-border').classList.add('d-none');
+
+        let avgBankSoHChartElement = document.getElementById('avgBankSoHChart');
+        avgBankSoHChartElement.parentNode.classList.remove('d-none');
+    })
+    .catch(error => console.log(error));
 
 // Create avg rack SoH chart
 let avgRackSoHChartSeries = getAvgSoHChartSeries('avgRackSoHChart');
 
 requestUrl = new URL(`${window.location.origin}/api/ess/stats/avg-soh/operating-sites/1/banks/1/racks/1/`);
 
-fetch(requestUrl).then(response => {
-    return response.json();
-}).then(responseData => {
-    let chartData = responseData.map(element => {
-        return {
-            date: DateTime.fromISO(element['date']).toMillis(),
-            value: element['value']
-        }
-    });
-    
-    avgRackSoHChartSeries.data.setAll(chartData);
+loadData(requestUrl)
+    .then(responseData => {
+        let chartData = responseData.map(element => {
+            return {
+                date: DateTime.fromISO(element['date']).toMillis(),
+                value: element['value']
+            }
+        });
 
-    // Off loading UI
-    let avgRackSoHCardElement = document.getElementById('avgRackSoHCard');
-    avgRackSoHCardElement.querySelector('.spinner-border').classList.add('d-none');
+        avgRackSoHChartSeries.data.setAll(chartData);
 
-    let avgRackSoHChartElement = document.getElementById('avgRackSoHChart');
-    avgRackSoHChartElement.parentNode.classList.remove('d-none');
-}).catch(error => console.log(error));
+        // Off loading UI
+        let avgRackSoHCardElement = document.getElementById('avgRackSoHCard');
+        avgRackSoHCardElement.querySelector('.spinner-border').classList.add('d-none');
 
+        let avgRackSoHChartElement = document.getElementById('avgRackSoHChart');
+        avgRackSoHChartElement.parentNode.classList.remove('d-none');
+    })
+    .catch(error => console.log(error));
+
+// Create forecasting bank SoL chart
 createForecastingBankSoLChart();
 
-// Create forecasting max-min cell voltage chart
+// Create rack SoS chart
+let detailRackSoSChartOption = {
+    'seriesInfo': [
+        {
+            name: 'over_voltage',
+            value: 'value1'
+        },
+        {
+            name: 'under_voltage',
+            value: 'value2'
+        },
+        {
+            name: 'voltage_unbalance',
+            value: 'value3'
+        },
+        {
+            name: 'over_current',
+            value: 'value4'
+        },
+        {
+            name: 'over_temperature',
+            value: 'value5'
+        },
+        {
+            name: 'under_temperature',
+            value: 'value6'
+        },
+        {
+            name: 'temperature_unbalance',
+            value: 'value7'
+        },
+    ],
+};
+
+let mainRackSoSChartSeries = getMainRackSoSChartSeries('mainRackSoSChart');
+let detailRackSoSChartSeriesList = getDetailRackSoSChartSeriesList('detailRackSoSChart', detailRackSoSChartOption);
+
+endTime = DateTime.now().toFormat(customTimeDesignatorFullDateTimeFormat);
+startTime = DateTime.fromISO(endTime).minus({ hour: 1 }).toFormat(customTimeDesignatorFullDateTimeFormat);
+
+requestUrl = new URL(`${window.location.origin}/api/ess/stats/sos/operating-sites/1/banks/1/racks/1/`);
+requestUrl.searchParams.append('start-time', startTime);
+requestUrl.searchParams.append('end-time', endTime);
+
+loadData(requestUrl)
+    .then(responseData => {
+        const mainRackSoSChartElementId = 'mainRackSoSChart';
+        let rackSoSCardElement = document.getElementById('rackSoSCard');
+        let mainSoSChartData = [];
+        let detailSoSChartData = [];
+
+        // Add main & detail SoS data
+        responseData.forEach(element => {
+            let time = DateTime.fromISO(element['time']).toMillis();
+
+            mainSoSChartData.push({
+                time: time,
+                value: element['sos_score'],
+            });
+
+            let detailSoSChartDataItem = {
+                time: time,
+            };
+
+            detailRackSoSChartOption['seriesInfo'].forEach(seriesInfoItem => {
+                detailSoSChartDataItem[seriesInfoItem['value']] = element[seriesInfoItem['name']];
+            });
+
+            detailSoSChartData.push(detailSoSChartDataItem);
+        });
+
+        mainRackSoSChartSeries.data.setAll(mainSoSChartData);
+
+        detailRackSoSChartSeriesList.forEach(detailRackSoSChartSeries => {
+            detailRackSoSChartSeries.data.setAll(detailSoSChartData);
+        });
+
+        // Setup loading UI
+        let loadingElement = rackSoSCardElement.querySelector('.card-body .spinner-border');
+        loadingElement.classList.add('d-none');
+
+        let mainRackSoSChartElement = document.getElementById(mainRackSoSChartElementId);
+        mainRackSoSChartElement.parentNode.parentNode.classList.remove('d-none');
+    })
+    .catch(error => console.log(error));
+
+// Create forecasting max-min rack cell charts
 let forecastingMaxRackCellVoltageObject = {
     name: 'forecastingMaxRackCellVoltage',
     urlPath: 'forecasting-max-cell-voltage'
@@ -1507,64 +2358,212 @@ let forecastingObjects = [
     forecastingMinRackCellTemperatureObject,
 ];
 
-let option = {
+let forecastingMaxMinRackCellChartDefaultOption = {
     seriesInfo: [
         {
             name: "Observed",
             value: 'value1'
-        },{
+        }, {
             name: "CatBoost",
             value: 'value2'
-        },{
+        }, {
             name: "Linear",
             value: 'value3'
-        },{
+        }, {
             name: "LightGBM",
             value: 'value4'
-        },{
+        }, {
             name: "XGBoost",
             value: 'value5'
         },
     ]
 }
 
-forecastingObjects.forEach(element => {
-    let forecastingObjectName = element['name'];
+forecastingObjects.forEach(forecastingObject => {
+    let forecastingObjectName = forecastingObject['name'];
     let forecastingObjectCardElementId = `${forecastingObjectName}Card`;
     let forecastingObjectChartElementId = `${forecastingObjectName}Chart`;
 
     // Declare variable with dynamic name in 'window' object
-    window[`${forecastingObjectName}Object`] = element;
-    window[`${forecastingObjectName}ChartSeriesList`] = getSimpleLineSeriesList(forecastingObjectChartElementId, option);
+    window[`${forecastingObjectName}Object`] = forecastingObject;
 
-    requestUrl = new URL(`${window.location.origin}/api/ess/stats/${element['urlPath']}/operating-sites/1/banks/1/racks/1/`);
-    requestUrl.searchParams.append('start-time', currentDateTime.set({hour: 0, minute: 0, second: 0}).toFormat(customTimeDesignatorFullDateTimeFormat));
-    requestUrl.searchParams.append('end-time', currentDateTime.plus({day: 1}).toFormat(customTimeDesignatorFullDateTimeFormat));
+    requestUrl = new URL(`${window.location.origin}/api/ess/stats/${forecastingObject['urlPath']}/operating-sites/1/banks/1/racks/1/`);
+    requestUrl.searchParams.append('start-time', currentDateTime.minus({ hour: 1 }).toFormat(customTimeDesignatorFullDateTimeFormat));
+    requestUrl.searchParams.append('end-time', currentDateTime.toFormat(customTimeDesignatorFullDateTimeFormat));
 
-    fetch(requestUrl).then(response => {
-        return response.json();
-    }).then(responseData => {
-        // Set data
-        let chartData = responseData.map(element => {
-            return {
-                time: DateTime.fromISO(element['time']).toMillis(),
-                value1: element['values']['observed'],
-                value2: element['values']['catboost'],
-                value3: element['values']['linear'],
-                value4: element['values']['lightgbm'],
-                value5: element['values']['xgboost'],
+    loadData(requestUrl)
+        .then(async (responseData) => {
+            let chartData = getInitialForecastingMaxMinRackCellChartData(responseData);
+
+            // Set axis range info
+            let lastChartDataElementTime = chartData[chartData.length - 1]['time'];
+            let minusTenMinuteTime = DateTime.fromMillis(lastChartDataElementTime).minus({ minute: 10}).toMillis();
+
+            let forecastingMaxMinRackCellChartNewOption = JSON.parse(JSON.stringify(forecastingMaxMinRackCellChartDefaultOption));
+            forecastingMaxMinRackCellChartNewOption['axisRangeInfo'] = {
+                value: minusTenMinuteTime,
+                endValue: lastChartDataElementTime
             }
-        });
 
-        window[`${forecastingObjectName}ChartSeriesList`].forEach(element => {
-            element.data.setAll(chartData);
-        });
+            // Create chart
+            window[`${forecastingObjectName}ChartSeriesList`] = getForecastingMaxMinRackCellSeriesList(forecastingObjectChartElementId, forecastingMaxMinRackCellChartNewOption);
+            window[`${forecastingObjectName}ChartSeriesList`].forEach(chartSeries => {
+                chartSeries.data.setAll(chartData);
+            });
 
-        // Setup loading UI
-        let forecastingObjectCardElement = document.getElementById(forecastingObjectCardElementId);
-        forecastingObjectCardElement.querySelector('.spinner-border').classList.add('d-none');
+            // Setup loading UI
+            let forecastingObjectCardElement = document.getElementById(forecastingObjectCardElementId);
+            forecastingObjectCardElement.querySelector('.spinner-border').classList.add('d-none');
 
-        let forecastingObjectChartElement = document.getElementById(forecastingObjectChartElementId);
-        forecastingObjectChartElement.parentNode.classList.remove('d-none');
-}).catch(error => console.log(error));
+            let forecastingObjectChartElement = document.getElementById(forecastingObjectChartElementId);
+            forecastingObjectChartElement.parentNode.classList.remove('d-none');
+        })
+        .catch(error => console.log(error));
 });
+
+
+
+//GAP chart
+//차트 생성
+//마우스 커서일때 이벤트
+// 날짜AXIS 데이터받음
+//x축 varchart과 연결
+// y축 varchart과 연결
+// Create root element
+
+/**
+ * Get chart's root object
+ * @param {string} elementId 
+ * @returns {object}
+ */
+function getVoltageGapChartRoot(elementId) {
+    // https://www.amcharts.com/docs/v5/getting-started/#Root_element
+    let root = am5.Root.new(elementId);
+
+    // Set themes
+    // https://www.amcharts.com/docs/v5/concepts/themes/
+    root.setThemes([
+        am5themes_Animated.new(root)
+    ]);
+
+    return root;
+}
+
+/**
+ * Get chart object
+ * @param {object} chartRoot 
+ * @param {object} option 
+ * @returns {object}
+ */
+function getVoltageGapChart(chartRoot, option = {}) {
+    // Create chart
+    // https://www.amcharts.com/docs/v5/charts/xy-chart/
+    let chart = chartRoot.container.children.push(
+        am5xy.XYChart.new(chartRoot, {
+            panX: true,
+            panY: true,
+            wheelX: "panX",
+            wheelY: "zoomX",
+            pinchZoomX: true,
+        }));
+
+    // Add cursor
+    // https://www.amcharts.com/docs/v5/charts/xy-chart/cursor/
+    let cursor = chart.set("cursor", am5xy.XYCursor.new(chartRoot, {
+        behavior: "none"
+    }));
+    cursor.lineY.set("visible", false);
+
+    return chart
+}
+
+/**
+ * Get today's string
+ * @returns {string} Format: 'YYYY-MM-DD'
+ */
+function getTodayDateFormat() {
+    let today = new Date().toISOString().split('T')[0];
+
+    return today;
+}
+
+// Create voltageGap chart's series
+let voltageGapChartRoot = getVoltageGapChartRoot('differencePowerChart');
+let voltageGapChart = getVoltageGapChart(voltageGapChartRoot);
+
+// - Create axes
+// https://www.amcharts.com/docs/v5/charts/xy-chart/axes/
+let voltageGapChartXAxis = voltageGapChart.xAxes.push(
+    am5xy.DateAxis.new(voltageGapChartRoot, {
+        maxDeviation: 0.5,
+        baseInterval: { timeUnit: "second", count: 1 },
+        renderer: am5xy.AxisRendererX.new(voltageGapChartRoot, { pan: "zoom" }),
+        tooltip: am5.Tooltip.new(voltageGapChartRoot, {})
+    }));
+
+let voltageGapChartYAxis = voltageGapChart.yAxes.push(
+    am5xy.ValueAxis.new(voltageGapChartRoot, {
+        maxDeviation: 1,
+        renderer: am5xy.AxisRendererY.new(voltageGapChartRoot, { pan: "zoom" })
+    }));
+
+let minRackCellVoltageSeries = voltageGapChart.series.push(am5xy.LineSeries.new(voltageGapChartRoot, {
+    name: "minRackCellVoltageSeries",
+    xAxis: voltageGapChartXAxis,
+    yAxis: voltageGapChartYAxis,
+    valueYField: "minRackCellVoltage",
+    valueXField: "timestamp",
+    stroke: am5.color(0x00589b), // 'cobalt' color
+    fill: am5.color(0x00589b),
+    tooltip: am5.Tooltip.new(voltageGapChartRoot, {
+        labelText: "최소 전압 값 : {valueY} V",
+        pointerOrientation: "horizontal"
+    })
+}));
+
+let maxRackCellVoltageSeries = voltageGapChart.series.push(am5xy.LineSeries.new(voltageGapChartRoot, {
+    name: "maxRackCellVoltageSeries",
+    xAxis: voltageGapChartXAxis,
+    yAxis: voltageGapChartYAxis,
+    valueYField: "maxRackCellVoltage",
+    openValueYField: "minRackCellVoltage",
+    valueXField: "timestamp",
+    stroke: minRackCellVoltageSeries.get("stroke"),
+    stroke: am5.color("#0x00589b"),
+    fill: minRackCellVoltageSeries.get("stroke"),
+    fill: am5.color("#0x00589b"),
+    tooltip: am5.Tooltip.new(voltageGapChartRoot, {
+        labelText: "최대 전압 값 : {valueY} V",
+        pointerOrientation: "horizontal"
+    })
+}));
+
+// Create voltageGap chart
+requestUrl = new URL(`${window.location.origin}/api/ess/operating-sites/1/banks/1/racks/1/?fields=timestamp,rack_max_cell_voltage,rack_min_cell_voltage&date=${getTodayDateFormat()}&no_page`)
+
+fetch(requestUrl)
+    .then((response) => response.json())
+    .then((responseData) => {
+        let data = responseData.map(element => {
+            return { 
+                timestamp: new Date(element['timestamp']).getTime(),
+                minRackCellVoltage: element["rack_min_cell_voltage"],
+                maxRackCellVoltage: element["rack_max_cell_voltage"],
+            }
+        })
+
+        minRackCellVoltageSeries.data.setAll(data);
+        maxRackCellVoltageSeries.data.setAll(data);
+
+        maxRackCellVoltageSeries.fills.template.setAll({
+            fillOpacity: 0.3,
+            visible: true
+        });
+        
+        minRackCellVoltageSeries.strokes.template.set("strokeWidth", 2);
+        maxRackCellVoltageSeries.strokes.template.set("strokeWidth", 2);
+        
+        minRackCellVoltageSeries.appear(1000);
+        maxRackCellVoltageSeries.appear(1000);
+        voltageGapChart.appear(1000, 100);
+    })

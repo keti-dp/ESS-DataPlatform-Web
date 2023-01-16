@@ -389,27 +389,93 @@ function loadLatestMonitoringLog(elementId, url, getAlertElementFunc) {
     }).catch(error => console.log(error));
 }
 
-/* */
-
-function getLineChart(elementId, data, option = {}) {
+/**
+ * Get chart root object
+ * @param {string} elementId 
+ * @returns {object}
+ */
+function getChartRoot(elementId) {
     let root = am5.Root.new(elementId);
-
-    root.setThemes([
-        am5themes_Animated.new(root)
+    let customTheme = am5.Theme.new(root);
+    customTheme.rule('ColorSet').set('colors', [
+        // Color naming site: https://www.htmlcsscolor.com/
+        // Color palettes site: https://coolors.co/
+        am5.color(0x00589b), // cobalt
+        am5.color(0x00a0b0), // bondi blue
+        am5.color(0xcf5c78), // cabaret
+        // am5.color(0xf5df4d), // energy yellow
+        // am5.color(0xf0eee9), // romance
+        // am5.color(0x939597), // grey chateau
+        am5.color(0x887244), // shadow
+        am5.color(0xb9f18c), // sulu
+        // am5.color(0xffbd00), // amber
     ]);
 
+    root.setThemes([
+        am5themes_Animated.new(root),
+        customTheme,
+    ]);
+
+    return root;
+}
+
+/**
+ * Get initial line chart object
+ * @param {object} chartRoot 
+ * @returns {object}
+ */
+function getInitialLineChart(chartRoot) {
+    let root = chartRoot;
     let chart = root.container.children.push(
         am5xy.XYChart.new(root, {
-            panY: false,
+            panX: true,
+            panY: true,
+            wheelX: "panX",
             wheelY: "zoomX",
             layout: root.verticalLayout,
-            maxTooltipDistance: 0
         })
     );
 
-    let chartData = data;
+    chart.set("cursor", am5xy.XYCursor.new(root, {
+        behavior: "none",
+    }));
 
-    // Create Y-axis
+    return chart;
+}
+
+/**
+ * Get line chart series object
+ * @param {string} elementId 
+ * @param {object} option 
+ * @returns {object}
+ */
+function getLineChartSeries(elementId, option = {}) {
+    let root = getChartRoot(elementId);
+    let chart = getInitialLineChart(root);
+
+    // Create initail axes, series
+    let xAxis = chart.xAxes.push(
+        am5xy.DateAxis.new(root, Object.assign({
+            baseInterval: { timeUnit: "second", count: 1 },
+            renderer: am5xy.AxisRendererX.new(root, {}),
+            dateFormats: {
+                hour: 'HH:mm',
+                day: customFullDateFormat,
+                week: customFullDateFormat,
+                month: 'yyyy-MM',
+            },
+            periodChangeDateFormats: {
+                hour: 'yyyy-MM-dd HH:mm',
+                day: customFullDateFormat,
+                week: customFullDateFormat,
+            },
+            tooltip: am5.Tooltip.new(root, {
+                themeTags: ["axis"],
+            }),
+            tooltipDateFormat: customFullDateTimeFormat,
+        }, option['xAxis']))
+    );
+
     let yAxis = chart.yAxes.push(
         am5xy.ValueAxis.new(root, Object.assign({
             extraTooltipPrecision: 1,
@@ -417,46 +483,24 @@ function getLineChart(elementId, data, option = {}) {
         }, option['yAxis']))
     );
 
-    // Create X-Axis
-    let xAxis = chart.xAxes.push(
-        am5xy.DateAxis.new(root, Object.assign({
-            baseInterval: { timeUnit: "second", count: 1 },
-            renderer: am5xy.AxisRendererX.new(root, {})
-        }, option['xAxis']))
-    );
-
-    xAxis.get("dateFormats")["hour"] = "HH";
-    xAxis.get("periodChangeDateFormats")["hour"] = "yyyy-MM-dd HH";
-
     let series = chart.series.push(
-        am5xy.LineSeries.new(root, {
-            name: "Series",
+        am5xy.SmoothedXLineSeries.new(root, {
+            name: option['seriesName'].toUpperCase(),
             xAxis: xAxis,
             yAxis: yAxis,
-            valueYField: "value",
             valueXField: "time",
-            tooltip: am5.Tooltip.new(root, {})
+            valueYField: "value",
+            minDistance: 20,
+            tooltip: am5.Tooltip.new(root, {
+                labelText: "[bold]{name}[/]\n{valueY.formatNumber('#.000')}"
+            }),
         })
     );
 
-    series.strokes.template.set("strokeWidth", 3);
-
-    series.get("tooltip").label.set("text", "[bold]{name}[/]\n{valueX.formatDate('yyyy-MM-dd HH:mm:ss')}: {valueY.formatNumber('#.000')}")
-    series.data.setAll(chartData);
-
-    // Add cursor
-    chart.set("cursor", am5xy.XYCursor.new(root, {
-        behavior: "zoomXY",
-        xAxis: xAxis
-    }));
-
-    xAxis.set("tooltip", am5.Tooltip.new(root, {
-        themeTags: ["axis"]
-    }));
-
-    yAxis.set("tooltip", am5.Tooltip.new(root, {
-        themeTags: ["axis"]
-    }));
+    // Customize series
+    series.strokes.template.setAll({
+        strokeWidth: 3,
+    });
 
     return series;
 }
@@ -820,7 +864,7 @@ operatingSiteMonitoringListColumnIds.forEach((operatingSiteMonitoringListColumnI
 });
 
 // - Create monitoring list item chart
-let monitoringListItemChart;
+let monitoringListItemChartSeries;
 let monitoringListItemModalElement = document.getElementById('monitoringListItemModal');
 let monitoringListItemModalFormElement = document.getElementById('monitoringListItemModalForm');
 
@@ -854,37 +898,36 @@ monitoringListItemModalTriggerList.forEach(element => {
         let currentDate = DateTime.now().toISODate();
 
         let monitoringListItemModalTitleEl = document.getElementById('monitoringListItemModalLabel');
-        monitoringListItemModalTitleEl.innerHTML = `${operatingSiteInfoColumn} 시간별 모니터링 차트 <span class="material-icons-two-tone">watch_later</span> ${currentDate}`;
+        monitoringListItemModalTitleEl.innerHTML = `${operatingSiteInfoColumn.toUpperCase()} 시간별 모니터링 차트`;
 
         requestUrl.searchParams.append('date', currentDate);
         requestUrl.searchParams.append('fields', `timestamp,${operatingSiteInfoColumn}`);
         requestUrl.searchParams.append('no_page', '');
 
-        fetch(requestUrl).then(response => {
-            if (response.ok) {
-                return response.json();
-            }
-
-            throw new Error(response.statusText);
-        }).then(responseData => {
-            let data = responseData.map(element => {
+        loadData(requestUrl)
+        .then(responseData => {
+            let chartData = responseData.map(element => {
                 let time = new Date(element['timestamp']).getTime();
                 let value = element[operatingSiteInfoColumn];
 
                 return { time: time, value: value };
             });
 
-            if (monitoringListItemChart && 'data' in monitoringListItemChart) {
-                monitoringListItemChart.data.setAll(data);
+            if (monitoringListItemChartSeries && 'data' in monitoringListItemChartSeries) {
+                monitoringListItemChartSeries.data.setAll(chartData);
             } else {
-                monitoringListItemChart = getLineChart('monitoringListItemChart', data);
+                let chartOption = {
+                    seriesName: operatingSiteInfoColumn,
+                }
+
+                monitoringListItemChartSeries = getLineChartSeries('monitoringListItemChart', chartOption);
+                monitoringListItemChartSeries.data.setAll(chartData);
             }
 
             loadingElement.classList.add('d-none');
             monitoringListItemModalFormElement.classList.remove('d-none');
-        }).catch(error => {
-            console.log(error);
-        });
+        })
+        .catch(error => console.log(error));
     });
 });
 
@@ -1406,7 +1449,7 @@ monitoringListItemModalFormValidation.addField('#monitoringListItemModalStartDat
         return {time: time, value: value};
     });
 
-    monitoringListItemChart.data.setAll(data);
+    monitoringListItemChartSeries.data.setAll(data);
 
     loadingElement.classList.add('d-none');
     monitoringListItemModalFormElement.classList.remove('d-none');

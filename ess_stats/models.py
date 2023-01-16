@@ -111,3 +111,22 @@ class ForecastingMinRackCellTemperature(models.Model):
                 name="forecasting_min_rack_cell_temperature_unique",
             )
         ]
+
+
+class SoS(models.Model):
+    time = models.DateTimeField(db_column="TIMESTAMP", primary_key=True)
+    operating_site = models.IntegerField(db_column="OPERATING_SITE")
+    bank_id = models.IntegerField(db_column="BANK_ID")
+    rack_id = models.IntegerField(db_column="RACK_ID")
+    over_voltage = models.FloatField(db_column="OVER_VOLTAGE")
+    under_voltage = models.FloatField(db_column="UNDER_VOLTAGE")
+    voltage_unbalance = models.FloatField(db_column="VOLTAGE_UNBALANCE")
+    over_current = models.FloatField(db_column="OVER_CURRENT")
+    over_temperature = models.FloatField(db_column="OVER_TEMPERATURE")
+    under_temperature = models.FloatField(db_column="UNDER_TEMPERATURE")
+    temperature_unbalance = models.FloatField(db_column="TEMPERATURE_UNBALANCE")
+    sos_score = models.FloatField(db_column="SOS_SCORE")
+
+    class Meta:
+        managed = False
+        db_table = "ess_sos"

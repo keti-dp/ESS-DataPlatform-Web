@@ -6,8 +6,6 @@
 
 {% block html_head %}
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
-<script src="https://unpkg.com/filterizr@2.2.4/dist/vanilla.filterizr.min.js"></script>
-
 <style>
     .filter-container {
         --bs-gutter-x: 0;
@@ -15,6 +13,12 @@
 
     .card {
         margin: 5px;
+        height: 480px;
+    }
+
+    .visualization-chart {
+        width: 100%;
+        height: 300px;
     }
 </style>
 {% endblock %}
@@ -64,84 +68,153 @@
         </div>
 
         <div class="row filter-container">
-            <div class="col-12 col-sm-6 col-md-4 col-lg-3 filtr-item" data-category="1" data-sort="value">
-                <div class="card">
+            <div class="col-12 col-sm-6 col-md-4 col-lg-3 filtr-item" data-category="1, 3, 4" data-sort="value">
+                <div id="highSoCCard" class="card">
                     <div class="card-header">
-                        SoC
+                        High SoC
                     </div>
                     <div class="card-body">
-                        <h5 class="card-title">Special title treatment</h5>
-                        <p class="card-text">With supporting text below as a natural lead-in to additional content.
-                        </p>
-                        <a href="#" class="btn btn-primary">Go somewhere</a>
+                        <!-- Loading -->
+                        <div class="row">
+                            <div class="text-center">
+                                <div class="spinner-border" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <p class="d-none">판리 태양광 / Bank 1</p>
+                            <div id="highSoCChart" class="visualization-chart"></div>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <div class="col-12 col-sm-6 col-md-4 col-lg-3 filtr-item" data-category="2" data-sort="value">
-                <div class="card">
+                <div id="lowTemperatureChargeCard" class="card">
                     <div class="card-header">
-                        SoH
+                        저온 충전
                     </div>
                     <div class="card-body">
-                        <h5 class="card-title">Special title treatment</h5>
-                        <p class="card-text">With supporting text below as a natural lead-in to additional content.
-                        </p>
-                        <a href="#" class="btn btn-primary">Go somewhere</a>
+                        <!-- Loading -->
+                        <div class="row">
+                            <div class="text-center">
+                                <div class="spinner-border" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <p class="d-none">시온유 태양광 / Bank 1</p>
+                            <div id="lowTemperatureChargeChart" class="visualization-chart"></div>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <div class="col-12 col-sm-6 col-md-4 col-lg-3 filtr-item" data-category="3" data-sort="value">
-                <div class="card">
+                <div id="overDischargeCard" class="card">
                     <div class="card-header">
-                        SoS
+                        과방전
                     </div>
                     <div class="card-body">
-                        <h5 class="card-title">Special title treatment</h5>
-                        <p class="card-text">With supporting text below as a natural lead-in to additional content.
-                        </p>
-                        <a href="#" class="btn btn-primary">Go somewhere</a>
+                        <!-- Loading -->
+                        <div class="row">
+                            <div class="text-center">
+                                <div class="spinner-border" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <p class="d-none">판리 태양광 / Bank 2</p>
+                            <div id="overDischargeChart" class="visualization-chart"></div>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="col-12 col-sm-6 col-md-4 col-lg-3 filtr-item" data-category="3, 4" data-sort="value">
-                <div class="card">
+            <div class="col-12 col-sm-6 col-md-4 col-lg-3 filtr-item" data-category="3" data-sort="value">
+                <div id="overVoltageCard" class="card">
                     <div class="card-header">
-                        전압
+                        과전압
                     </div>
                     <div class="card-body">
-                        <h5 class="card-title">Special title treatment</h5>
-                        <p class="card-text">With supporting text below as a natural lead-in to additional content.
-                        </p>
-                        <a href="#" class="btn btn-primary">Go somewhere</a>
+                        <!-- Loading -->
+                        <div class="row">
+                            <div class="text-center">
+                                <div class="spinner-border" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <p class="d-none">판리 태양광 / Bank 1</p>
+                            <div id="overVoltageChart" class="visualization-chart"></div>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div class="col-12 col-sm-6 col-md-4 col-lg-3 filtr-item" data-category="3" data-sort="value">
-                <div class="card">
+            <div class="col-12 col-sm-6 col-md-4 col-lg-3 filtr-item" data-category="4" data-sort="value">
+                <div id="voltageUnbalancingCard" class="card">
                     <div class="card-header">
-                        전류
+                        전압 불평형
                     </div>
                     <div class="card-body">
-                        <h5 class="card-title">Special title treatment</h5>
-                        <p class="card-text">With supporting text below as a natural lead-in to additional content.
-                        </p>
-                        <a href="#" class="btn btn-primary">Go somewhere</a>
+                        <!-- Loading -->
+                        <div class="row">
+                            <div class="text-center">
+                                <div class="spinner-border" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <p class="d-none">시온유 태양광 / Bank 1 / Rack 2</p>
+                            <div id="voltageUnbalancingChart" class="visualization-chart"></div>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="col-12 col-sm-6 col-md-4 col-lg-3 filtr-item" data-category="2, 4, 5" data-sort="value">
-                <div class="card">
+            <div class="col-12 col-sm-6 col-md-4 col-lg-3 filtr-item" data-category="4" data-sort="value">
+                <div id="temperatureUnbalancingCard" class="card">
                     <div class="card-header">
-                        온도
+                        온도 불평형
                     </div>
                     <div class="card-body">
-                        <h5 class="card-title">Special title treatment</h5>
-                        <p class="card-text">With supporting text below as a natural lead-in to additional content.
-                        </p>
-                        <a href="#" class="btn btn-primary">Go somewhere</a>
+                        <!-- Loading -->
+                        <div class="row">
+                            <div class="text-center">
+                                <div class="spinner-border" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <p class="d-none">시온유 태양광 / Bank 1 / Rack 2</p>
+                            <div id="temperatureUnbalancingChart" class="visualization-chart"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-sm-6 col-md-4 col-lg-3 filtr-item" data-category="5" data-sort="value">
+                <div id="highTemperatureCard" class="card">
+                    <div class="card-header">
+                        고온 상황
+                    </div>
+                    <div class="card-body">
+                        <!-- Loading -->
+                        <div class="row">
+                            <div class="text-center">
+                                <div class="spinner-border" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <p class="d-none">시온유 태양광 / Bank 1 / Rack 2</p>
+                            <div id="highTemperatureChart" class="visualization-chart"></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -152,6 +225,18 @@
 {% endblock %}
 
 {% block js %}
+<!-- Luxon Javascript -->
+<script src="https://cdn.jsdelivr.net/npm/luxon@2.1.1/build/global/luxon.min.js"></script>
+<!-- Filterizr Javascript -->
+<script src="https://unpkg.com/filterizr@2.2.4/dist/vanilla.filterizr.min.js"></script>
+<!-- AmChart Javascript -->
+<script src="https://cdn.amcharts.com/lib/5/index.js"></script>
+<script src="https://cdn.amcharts.com/lib/5/xy.js"></script>
+<script src="https://cdn.amcharts.com/lib/5/themes/Animated.js"></script>
+<script src="https://cdn.amcharts.com/lib/5/themes/Responsive.js"></script>
+
+<script type="module" src="{% static 'js/custom/demo.js' %}"></script>
+
 <script>
     const options = {};
     const filterizr = new Filterizr('.filter-container', options);

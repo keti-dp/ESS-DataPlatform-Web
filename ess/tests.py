@@ -15,6 +15,15 @@ from .ess_collections import (
     ESS_DATA_DATE,
 )
 
+from .views import (
+    AVG_ESS_BANK_SOC_LIST_VIEW_QUERY,
+    AVG_ESS_RACK_SOC_LIST_VIEW_QUERY,
+    AVG_ESS_BANK_SOH_LIST_VIEW_QUERY,
+    AVG_ESS_RACK_SOH_LIST_VIEW_QUERY,
+    AVG_ESS_BANK_POWER_LIST_VIEW_QUERY,
+    TIME_BUCKET_TIMEZONE,
+)
+
 DATABASES = {"ess1", "ess2"}
 TEST_DATABASE = "ess1"
 
@@ -75,6 +84,66 @@ class BankTestCase(TestCase):
 
             self.assertGreaterEqual(len(row), 100)
 
+    def test_avg_ess_bank_soc_list_view_query(self):
+        with connections[TEST_DATABASE].cursor() as cursor:
+            start_time = ESS_DATA_DATE[TEST_DATABASE]
+            end_time = datetime.strptime(start_time, "%Y-%m-%d") + timedelta(days=1)
+
+            query = AVG_ESS_BANK_SOC_LIST_VIEW_QUERY
+            params = {
+                "time_bucket_timezone": TIME_BUCKET_TIMEZONE,
+                "time_bucket_width": "1hour",
+                "bank_id": 1,
+                "start_time": start_time,
+                "end_time": end_time,
+            }
+
+            cursor.execute(query, params)
+
+            row = cursor.fetchall()
+
+            self.assertEqual(len(row), 24)
+
+    def test_avg_ess_bank_soh_list_view_query(self):
+        with connections[TEST_DATABASE].cursor() as cursor:
+            start_time = ESS_DATA_DATE[TEST_DATABASE]
+            end_time = datetime.strptime(start_time, "%Y-%m-%d") + timedelta(days=1)
+
+            query = AVG_ESS_BANK_SOH_LIST_VIEW_QUERY
+            params = {
+                "time_bucket_timezone": TIME_BUCKET_TIMEZONE,
+                "time_bucket_width": "1hour",
+                "bank_id": 1,
+                "start_time": start_time,
+                "end_time": end_time,
+            }
+
+            cursor.execute(query, params)
+
+            row = cursor.fetchall()
+
+            self.assertEqual(len(row), 24)
+
+    def test_avg_ess_bank_power_list_view_query(self):
+        with connections[TEST_DATABASE].cursor() as cursor:
+            start_time = ESS_DATA_DATE[TEST_DATABASE]
+            end_time = datetime.strptime(start_time, "%Y-%m-%d") + timedelta(days=1)
+
+            query = AVG_ESS_BANK_POWER_LIST_VIEW_QUERY
+            params = {
+                "time_bucket_timezone": TIME_BUCKET_TIMEZONE,
+                "time_bucket_width": "1hour",
+                "bank_id": 1,
+                "start_time": start_time,
+                "end_time": end_time,
+            }
+
+            cursor.execute(query, params)
+
+            row = cursor.fetchall()
+
+            self.assertEqual(len(row), 24)
+
 
 class RackTestCase(TestCase):
     databases = DATABASES
@@ -109,6 +178,48 @@ class RackTestCase(TestCase):
             row = cursor.fetchall()
 
         self.assertGreaterEqual(len(row), 10)
+
+    def test_avg_ess_rack_soc_list_view_query(self):
+        with connections[TEST_DATABASE].cursor() as cursor:
+            start_time = ESS_DATA_DATE[TEST_DATABASE]
+            end_time = datetime.strptime(start_time, "%Y-%m-%d") + timedelta(days=1)
+
+            query = AVG_ESS_RACK_SOC_LIST_VIEW_QUERY
+            params = {
+                "time_bucket_timezone": TIME_BUCKET_TIMEZONE,
+                "time_bucket_width": "1hour",
+                "bank_id": 1,
+                "rack_id": 1,
+                "start_time": start_time,
+                "end_time": end_time,
+            }
+
+            cursor.execute(query, params)
+
+            row = cursor.fetchall()
+
+            self.assertEqual(len(row), 24)
+
+    def test_avg_ess_rack_soh_list_view_query(self):
+        with connections[TEST_DATABASE].cursor() as cursor:
+            start_time = ESS_DATA_DATE[TEST_DATABASE]
+            end_time = datetime.strptime(start_time, "%Y-%m-%d") + timedelta(days=1)
+
+            query = AVG_ESS_RACK_SOH_LIST_VIEW_QUERY
+            params = {
+                "time_bucket_timezone": TIME_BUCKET_TIMEZONE,
+                "time_bucket_width": "1hour",
+                "bank_id": 1,
+                "rack_id": 1,
+                "start_time": start_time,
+                "end_time": end_time,
+            }
+
+            cursor.execute(query, params)
+
+            row = cursor.fetchall()
+
+            self.assertEqual(len(row), 24)
 
 
 class PcsTestCase(TestCase):
