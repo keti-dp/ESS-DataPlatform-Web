@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 from django.db import connections
 from django.test import TestCase
 
-# This custom module have dynamic ess models, serializers, data_dates
+# This custom module have dynamic ess models, serializers and data_dates
 from .ess_collections import (
     ESS_BANK,
     ESS_RACK,
@@ -24,7 +24,12 @@ from .views import (
     TIME_BUCKET_TIMEZONE,
 )
 
-DATABASES = {"ess1", "ess2"}
+DATABASES = {
+    "ess1",
+    "ess2",
+    "ess3",
+}
+
 TEST_DATABASE = "ess1"
 
 

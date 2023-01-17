@@ -1,6 +1,6 @@
 from rest_flex_fields import FlexFieldsModelSerializer
 from rest_framework import serializers
-from .models import Bank, Rack, Pcs, Etc, ESS2Bank, ESS2Rack, ESS2Pcs, ESS2Etc
+from .models import Bank, Rack, Pcs, Etc, ESS2Bank, ESS2Rack, ESS2Pcs, ESS2Etc, ESS3Bank, ESS3Rack, ESS3Pcs, ESS3Etc
 
 
 class BankSerializer(FlexFieldsModelSerializer):
@@ -54,6 +54,34 @@ class ESS2PcsSerializer(FlexFieldsModelSerializer):
 class ESS2EtcSerializer(FlexFieldsModelSerializer):
     class Meta:
         model = ESS2Etc
+        fields = "__all__"
+
+
+class ESS3BankSerializer(FlexFieldsModelSerializer):
+    master_rack_communication_fault = serializers.JSONField()
+
+    class Meta:
+        model = ESS3Bank
+        fields = "__all__"
+
+
+class ESS3RackSerializer(FlexFieldsModelSerializer):
+    rack_module_fault = serializers.JSONField()
+
+    class Meta:
+        model = ESS3Rack
+        fields = "__all__"
+
+
+class ESS3PcsSerializer(FlexFieldsModelSerializer):
+    class Meta:
+        model = ESS3Pcs
+        fields = "__all__"
+
+
+class ESS3EtcSerializer(FlexFieldsModelSerializer):
+    class Meta:
+        model = ESS3Etc
         fields = "__all__"
 
 
