@@ -120,6 +120,18 @@ DATABASES = {
             "NAME": os.getenv("ESS2_TEST_DB_NAME"),
         },
     },
+    "ess3": {
+        "ENGINE": os.getenv("ESS3_DB_ENGINE"),
+        "HOST": os.getenv("ESS3_DB_HOST"),
+        "PORT": os.getenv("ESS3_DB_PORT"),
+        "NAME": os.getenv("ESS3_DB_NAME"),
+        "USER": os.getenv("ESS3_DB_USER"),
+        "PASSWORD": os.getenv("ESS3_DB_PASSWORD"),
+        "TEST": {
+            "DEPENDENCIES": [],
+            "NAME": os.getenv("ESS3_TEST_DB_NAME"),
+        },
+    },
     "ess_feature": {
         "ENGINE": os.getenv("ESS_FEATURE_DB_ENGINE"),
         "HOST": os.getenv("ESS_FEATURE_DB_HOST"),
