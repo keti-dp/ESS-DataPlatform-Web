@@ -1,4 +1,5 @@
 import csv
+import hashlib
 from datetime import datetime
 from datetime import timedelta
 from django.db import connections, DataError
@@ -21,7 +22,7 @@ from django_elasticsearch_dsl_drf.viewsets import BaseDocumentViewSet
 from django_elasticsearch_dsl_drf.pagination import PageNumberPagination
 from django.http import StreamingHttpResponse
 from rest_framework import status
-from rest_framework.views import Response
+from rest_framework.views import APIView, Response
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from .documents import EssMonitoringLogDocument
 from .paginations import LargeResultsSetPagination
@@ -99,6 +100,10 @@ def get_csv_items(rows, pseudo_buffer, fieldnames):
 
     for row in rows:
         yield writer.writerow(row)
+
+
+def get_hash_key(prefix, key):
+    return f'{prefix}{hashlib.sha256(bytes(key, "utf-8")).hexdigest()[:8]}'
 
 
 # General ESS model list view
@@ -945,3 +950,231 @@ class ESSOperatingDataDownloadView(RetrieveAPIView):
                 {"code": "404", "exception type": "Index Error", "message": "해당 데이터를 찾을 수 없습니다."},
                 status=status.HTTP_404_NOT_FOUND,
             )
+
+
+class DeIdentificationESSBankListView(APIView):
+    def get(self, request, *args, **kwargs):
+        operating_site_id = kwargs["operating_site_id"]
+        database = f"ess{operating_site_id}"
+        bank_id = kwargs["bank_id"]
+        start_time_query_param = request.query_params.get("start-time")
+        start_time = datetime.strptime(start_time_query_param, "%Y-%m-%dT%H:%M:%S")
+        end_time_query_param = request.query_params.get("end-time")
+        end_time = datetime.strptime(end_time_query_param, "%Y-%m-%dT%H:%M:%S")
+
+        with connections[database].cursor() as cursor:
+            query = """
+                SELECT * 
+                FROM bank 
+                WHERE "BANK_ID" = %(bank_id)s AND "TIMESTAMP" BETWEEN %(start_time)s AND %(end_time)s 
+                ORDER BY "TIMESTAMP"
+            """
+
+            params = {
+                "bank_id": bank_id,
+                "start_time": start_time,
+                "end_time": end_time,
+            }
+
+            cursor.execute(query, params=params)
+
+            data = dictfetchall(cursor)
+
+        new_data = []
+
+        for data_item in data:
+            new_item = {}
+
+            for key, value in data_item.items():
+                new_key = key.lower()
+
+                if "fault" in new_key or "warning" in new_key or "protection" in new_key:
+                    new_key = get_hash_key("bk_", key)
+
+                new_item[new_key] = value
+
+            new_data.append(new_item)
+
+        return Response(new_data)
+
+
+class DeIdentificationESSRackListView(APIView):
+    def get(self, request, *args, **kwargs):
+        operating_site_id = kwargs["operating_site_id"]
+        database = f"ess{operating_site_id}"
+        bank_id = kwargs["bank_id"]
+        start_time_query_param = request.query_params.get("start-time")
+        start_time = datetime.strptime(start_time_query_param, "%Y-%m-%dT%H:%M:%S")
+        end_time_query_param = request.query_params.get("end-time")
+        end_time = datetime.strptime(end_time_query_param, "%Y-%m-%dT%H:%M:%S")
+
+        with connections[database].cursor() as cursor:
+            query = """
+                SELECT * 
+                FROM rack 
+                WHERE "BANK_ID" = %(bank_id)s AND "TIMESTAMP" BETWEEN %(start_time)s AND %(end_time)s 
+                ORDER BY "TIMESTAMP", "RACK_ID"
+            """
+
+            params = {
+                "bank_id": bank_id,
+                "start_time": start_time,
+                "end_time": end_time,
+            }
+
+            cursor.execute(query, params=params)
+
+            data = dictfetchall(cursor)
+
+        new_data = []
+
+        for data_item in data:
+            new_item = {}
+
+            for key, value in data_item.items():
+                new_key = key.lower()
+
+                if "fault" in new_key or "warning" in new_key or "protection" in new_key:
+                    new_key = get_hash_key("rk_", key)
+
+                new_item[new_key] = value
+
+            new_data.append(new_item)
+
+        return Response(new_data)
+
+
+class DeIdentificationESSPcsListView(APIView):
+    def get(self, request, *args, **kwargs):
+        operating_site_id = kwargs["operating_site_id"]
+        database = f"ess{operating_site_id}"
+        start_time_query_param = request.query_params.get("start-time")
+        start_time = datetime.strptime(start_time_query_param, "%Y-%m-%dT%H:%M:%S")
+        end_time_query_param = request.query_params.get("end-time")
+        end_time = datetime.strptime(end_time_query_param, "%Y-%m-%dT%H:%M:%S")
+
+        with connections[database].cursor() as cursor:
+            query = """
+                SELECT * 
+                FROM pcs 
+                WHERE "TIMESTAMP" BETWEEN %(start_time)s AND %(end_time)s 
+                ORDER BY "TIMESTAMP"
+            """
+
+            params = {
+                "start_time": start_time,
+                "end_time": end_time,
+            }
+
+            cursor.execute(query, params=params)
+
+            data = dictfetchall(cursor)
+
+        new_data = []
+
+        for data_item in data:
+            new_item = {}
+
+            for key, value in data_item.items():
+                new_key = key.lower()
+
+                if "fault" in new_key or "warning" in new_key or "protection" in new_key:
+                    new_key = get_hash_key("ps_", key)
+
+                new_item[new_key] = value
+
+            new_data.append(new_item)
+
+        return Response(new_data)
+
+
+class DeIdentificationESSEtcListView(APIView):
+    def get(self, request, *args, **kwargs):
+        operating_site_id = kwargs["operating_site_id"]
+        database = f"ess{operating_site_id}"
+        start_time_query_param = request.query_params.get("start-time")
+        start_time = datetime.strptime(start_time_query_param, "%Y-%m-%dT%H:%M:%S")
+        end_time_query_param = request.query_params.get("end-time")
+        end_time = datetime.strptime(end_time_query_param, "%Y-%m-%dT%H:%M:%S")
+
+        with connections[database].cursor() as cursor:
+            query = """
+                SELECT * 
+                FROM etc 
+                WHERE "TIMESTAMP" BETWEEN %(start_time)s AND %(end_time)s 
+                ORDER BY "TIMESTAMP"
+            """
+
+            params = {
+                "start_time": start_time,
+                "end_time": end_time,
+            }
+
+            cursor.execute(query, params=params)
+
+            data = dictfetchall(cursor)
+
+        new_data = []
+
+        for data_item in data:
+            new_item = {}
+
+            for key, value in data_item.items():
+                new_key = key.lower()
+
+                if "fault" in new_key or "warning" in new_key or "protection" in new_key:
+                    new_key = get_hash_key("ec_", key)
+
+                new_item[new_key] = value
+
+            new_data.append(new_item)
+
+        return Response(new_data)
+
+
+class DeIdentificationESSRackDetailListView(APIView):
+    def get(self, request, *args, **kwargs):
+        operating_site_id = kwargs["operating_site_id"]
+        database = f"ess{operating_site_id}"
+        bank_id = kwargs["bank_id"]
+        rack_id = kwargs["rack_id"]
+        start_time_query_param = request.query_params.get("start-time")
+        start_time = datetime.strptime(start_time_query_param, "%Y-%m-%dT%H:%M:%S")
+        end_time_query_param = request.query_params.get("end-time")
+        end_time = datetime.strptime(end_time_query_param, "%Y-%m-%dT%H:%M:%S")
+
+        with connections[database].cursor() as cursor:
+            query = """
+                SELECT * 
+                FROM rack 
+                WHERE "BANK_ID" = %(bank_id)s AND "RACK_ID" = %(rack_id)s AND "TIMESTAMP" BETWEEN %(start_time)s AND %(end_time)s 
+                ORDER BY "TIMESTAMP", "RACK_ID"
+            """
+
+            params = {
+                "bank_id": bank_id,
+                "rack_id": rack_id,
+                "start_time": start_time,
+                "end_time": end_time,
+            }
+
+            cursor.execute(query, params=params)
+
+            data = dictfetchall(cursor)
+
+        new_data = []
+
+        for data_item in data:
+            new_item = {}
+
+            for key, value in data_item.items():
+                new_key = key.lower()
+
+                if "fault" in new_key or "warning" in new_key or "protection" in new_key:
+                    new_key = get_hash_key("rk_", key)
+
+                new_item[new_key] = value
+
+            new_data.append(new_item)
+
+        return Response(new_data)
