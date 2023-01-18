@@ -17,6 +17,11 @@ from .views import (
     LatestESSPcsView,
     LatestESSEtcView,
     ESSOperatingDataDownloadView,
+    DeIdentificationESSBankListView,
+    DeIdentificationESSRackListView,
+    DeIdentificationESSPcsListView,
+    DeIdentificationESSEtcListView,
+    DeIdentificationESSRackDetailListView,
 )
 
 router = DefaultRouter()
@@ -75,4 +80,21 @@ urlpatterns = [
     path("operating-sites/<int:operating_site_id>/pcs/latest/", LatestESSPcsView.as_view()),
     path("operating-sites/<int:operating_site_id>/etc/latest/", LatestESSEtcView.as_view()),
     path("download/operating-sites/<int:operating_site_id>/<data_type>/", ESSOperatingDataDownloadView.as_view()),
+    path("di/operating-sites/<int:operating_site_id>/banks/<int:bank_id>/", DeIdentificationESSBankListView.as_view()),
+    path(
+        "di/operating-sites/<int:operating_site_id>/banks/<int:bank_id>/racks/",
+        DeIdentificationESSRackListView.as_view(),
+    ),
+    path(
+        "di/operating-sites/<int:operating_site_id>/pcs/",
+        DeIdentificationESSPcsListView.as_view(),
+    ),
+    path(
+        "di/operating-sites/<int:operating_site_id>/etc/",
+        DeIdentificationESSEtcListView.as_view(),
+    ),
+    path(
+        "di/operating-sites/<int:operating_site_id>/banks/<int:bank_id>/racks/<int:rack_id>",
+        DeIdentificationESSRackDetailListView.as_view(),
+    ),
 ]
