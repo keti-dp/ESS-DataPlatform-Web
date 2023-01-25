@@ -930,8 +930,6 @@ class ESSOperatingDataDownloadView(RetrieveAPIView):
                 .order_by("timestamp")
             )
             fieldnames = list(queryset.values()[0].keys())
-            print(fieldnames)
-            print(queryset.values())
 
             return StreamingHttpResponse(
                 (get_csv_items(queryset.values(), Echo(), fieldnames)),
