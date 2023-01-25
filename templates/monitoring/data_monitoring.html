@@ -155,7 +155,7 @@
                                 <select class="form-select form-select-sm mb-1">
                                     <option value="1">시온유 태양광</option>
                                     <option value="2">판리 태양광</option>
-                                    <option value="3">3</option>
+                                    <option value="3">황금6호 태양광</option>
                                     <option value="4">4</option>
                                     <option value="5">5</option>
                                 </select>
@@ -349,8 +349,24 @@
                     </div>
                     <div class="card-body">
                         <div class="row">
-                            <div class="col">
-                                <p>서비스를 준비중입니다.</p>
+                            <!-- Monitoring list area -->
+                            <div id="operatingSite3MonitoringListColumn" class="col-xl-8 col-md-12 overflow-auto"></div>
+
+                            <!-- Monitoring log area  -->
+                            <div id="operatingSite3MonitoringLogColumn" class="col-xl-4 col-md-12 overflow-auto">
+                                <select class="form-select form-select-sm mb-1">
+                                    <option value="0">전체</option>
+                                    <option value="1">경고</option>
+                                    <option value="2">보호</option>
+                                </select>
+                                <input class="form-control form-control-sm mb-1" type="text" placeholder="검색어를 입력하세요.">
+                                <!-- Loading -->
+                                <div class="text-center">
+                                    <div class="spinner-border" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                </div>
+                                <div id="operatingSite3MonitoringLogColumnLogContainer"></div>
                             </div>
                         </div>
                     </div>
