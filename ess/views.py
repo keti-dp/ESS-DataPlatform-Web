@@ -21,6 +21,7 @@ from django_elasticsearch_dsl_drf.filter_backends import (
 from django_elasticsearch_dsl_drf.viewsets import BaseDocumentViewSet
 from django_elasticsearch_dsl_drf.pagination import PageNumberPagination
 from django.http import StreamingHttpResponse
+from psycopg2 import sql
 from rest_framework import status
 from rest_framework.views import APIView, Response
 from rest_framework.generics import ListAPIView, RetrieveAPIView
@@ -104,6 +105,15 @@ def get_csv_items(rows, pseudo_buffer, fieldnames):
 
 def get_hash_key(prefix, key):
     return f'{prefix}{hashlib.sha256(bytes(key, "utf-8")).hexdigest()[:8]}'
+
+
+def get_de_identification_key(prefix, key):
+    lower_key = key.lower()
+
+    if "fault" in lower_key or "warning" in lower_key or "protection" in lower_key:
+        return get_hash_key(prefix, key)
+
+    return lower_key
 
 
 # General ESS model list view
@@ -920,6 +930,8 @@ class ESSOperatingDataDownloadView(RetrieveAPIView):
                 .order_by("timestamp")
             )
             fieldnames = list(queryset.values()[0].keys())
+            print(fieldnames)
+            print(queryset.values())
 
             return StreamingHttpResponse(
                 (get_csv_items(queryset.values(), Echo(), fieldnames)),
@@ -950,6 +962,9 @@ class ESSOperatingDataDownloadView(RetrieveAPIView):
                 {"code": "404", "exception type": "Index Error", "message": "해당 데이터를 찾을 수 없습니다."},
                 status=status.HTTP_404_NOT_FOUND,
             )
+
+
+# De-Identification API & Download view
 
 
 class DeIdentificationESSBankListView(APIView):
@@ -1178,3 +1193,48 @@ class DeIdentificationESSRackDetailListView(APIView):
             new_data.append(new_item)
 
         return Response(new_data)
+
+
+class DeIndentificationESSOperatingDataDownloadView(APIView):
+    def get(self, request, *args, **kwargs):
+        operating_site_id = kwargs["operating_site_id"]
+        database = f"ess{str(operating_site_id)}"
+        start_time_query_param = request.query_params.get("start-time")
+        start_time = datetime.strptime(start_time_query_param, "%Y-%m-%dT%H:%M:%S")
+        end_time_query_param = request.query_params.get("end-time")
+        end_time = datetime.strptime(end_time_query_param, "%Y-%m-%dT%H:%M:%S")
+
+        data_type = kwargs["data_type"]
+        abbreviated_data_types = {
+            "bank": "bk",
+            "rack": "rk",
+            "pcs": "ps",
+            "etc": "ec",
+        }
+
+        with connections[database].cursor() as cursor:
+            query = sql.SQL(
+                """
+                    SELECT * 
+                    FROM {data_type} 
+                    WHERE "TIMESTAMP" BETWEEN %s AND %s 
+                    ORDER BY "TIMESTAMP"
+                """
+            ).format(
+                data_type=sql.Identifier(data_type),
+            )
+
+            cursor.execute(query, (start_time, end_time))
+
+            fieldnames = [
+                get_de_identification_key(f"{abbreviated_data_types[data_type]}_", col[0])
+                for col in cursor.description
+            ]
+
+            data = [dict(zip(fieldnames, row)) for row in cursor.fetchall()]
+
+            return StreamingHttpResponse(
+                (get_csv_items(data, Echo(), fieldnames)),
+                content_type="text/csv",
+                headers={"Content-Disposition": f"attachment; filename={data_type}.csv"},
+            )
