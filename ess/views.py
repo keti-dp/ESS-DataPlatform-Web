@@ -21,6 +21,7 @@ from django_elasticsearch_dsl_drf.filter_backends import (
 from django_elasticsearch_dsl_drf.viewsets import BaseDocumentViewSet
 from django_elasticsearch_dsl_drf.pagination import PageNumberPagination
 from django.http import StreamingHttpResponse
+from django.utils.connection import ConnectionDoesNotExist
 from psycopg2 import sql
 from rest_framework import status
 from rest_framework.views import APIView, Response
@@ -1195,44 +1196,72 @@ class DeIdentificationESSRackDetailListView(APIView):
 
 class DeIndentificationESSOperatingDataDownloadView(APIView):
     def get(self, request, *args, **kwargs):
-        operating_site_id = kwargs["operating_site_id"]
-        database = f"ess{str(operating_site_id)}"
-        start_time_query_param = request.query_params.get("start-time")
-        start_time = datetime.strptime(start_time_query_param, "%Y-%m-%dT%H:%M:%S")
-        end_time_query_param = request.query_params.get("end-time")
-        end_time = datetime.strptime(end_time_query_param, "%Y-%m-%dT%H:%M:%S")
+        try:
+            operating_site_id = kwargs["operating_site_id"]
+            database = f"ess{str(operating_site_id)}"
+            start_time_query_param = request.query_params.get("start-time")
+            start_time = datetime.strptime(start_time_query_param, "%Y-%m-%dT%H:%M:%S")
+            end_time_query_param = request.query_params.get("end-time")
+            end_time = datetime.strptime(end_time_query_param, "%Y-%m-%dT%H:%M:%S")
 
-        data_type = kwargs["data_type"]
-        abbreviated_data_types = {
-            "bank": "bk",
-            "rack": "rk",
-            "pcs": "ps",
-            "etc": "ec",
-        }
+            data_type = kwargs["data_type"]
 
-        with connections[database].cursor() as cursor:
-            query = sql.SQL(
-                """
-                    SELECT * 
-                    FROM {data_type} 
-                    WHERE "TIMESTAMP" BETWEEN %s AND %s 
-                    ORDER BY "TIMESTAMP"
-                """
-            ).format(
-                data_type=sql.Identifier(data_type),
-            )
+            abbreviated_data_types = {
+                "bank": "bk",
+                "rack": "rk",
+                "pcs": "ps",
+                "etc": "ec",
+            }
 
-            cursor.execute(query, (start_time, end_time))
+            if data_type not in abbreviated_data_types:
+                raise KeyError
 
-            fieldnames = [
-                get_de_identification_key(f"{abbreviated_data_types[data_type]}_", col[0])
-                for col in cursor.description
-            ]
+            with connections[database].cursor() as cursor:
+                query = sql.SQL(
+                    """
+                        SELECT * 
+                        FROM {data_type} 
+                        WHERE "TIMESTAMP" BETWEEN %s AND %s 
+                        ORDER BY "TIMESTAMP"
+                    """
+                ).format(
+                    data_type=sql.Identifier(data_type),
+                )
 
-            data = [dict(zip(fieldnames, row)) for row in cursor.fetchall()]
+                cursor.execute(query, (start_time, end_time))
+
+                fieldnames = [
+                    get_de_identification_key(f"{abbreviated_data_types[data_type]}_", col[0])
+                    for col in cursor.description
+                ]
+
+                data = [dict(zip(fieldnames, row)) for row in cursor.fetchall()]
 
             return StreamingHttpResponse(
                 (get_csv_items(data, Echo(), fieldnames)),
                 content_type="text/csv",
                 headers={"Content-Disposition": f"attachment; filename={data_type}.csv"},
+            )
+        except KeyError:
+            return Response(
+                {"code": "400", "message": "올바른 요청 URL을 입력하세요.(data_type)"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except ValueError:
+            return Response(
+                {
+                    "code": "400",
+                    "message": "올바른 요청 파라미터를 입력하세요.(time 형식은 'YYYY-MM-DDThh:mm:ss' 입니다.)",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except TypeError:
+            return Response(
+                {"code": "400", "message": "필수 요청 파라미터를 입력하세요.(start-time, end-time)"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except ConnectionDoesNotExist:
+            return Response(
+                {"code": "404", "message": "해당 데이터를 찾을 수 없습니다."},
+                status=status.HTTP_404_NOT_FOUND,
             )
