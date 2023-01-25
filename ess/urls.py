@@ -22,6 +22,7 @@ from .views import (
     DeIdentificationESSPcsListView,
     DeIdentificationESSEtcListView,
     DeIdentificationESSRackDetailListView,
+    DeIndentificationESSOperatingDataDownloadView,
 )
 
 router = DefaultRouter()
@@ -96,5 +97,9 @@ urlpatterns = [
     path(
         "di/operating-sites/<int:operating_site_id>/banks/<int:bank_id>/racks/<int:rack_id>",
         DeIdentificationESSRackDetailListView.as_view(),
+    ),
+    path(
+        "download/di/operating-sites/<int:operating_site_id>/<data_type>/",
+        DeIndentificationESSOperatingDataDownloadView.as_view(),
     ),
 ]
