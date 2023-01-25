@@ -777,7 +777,7 @@ async function monitoringLogColumnInputHandler(event, url) {
 
 /* Initial task */
 // - Create monitoring list
-var operatingSiteMonitoringListColumnIds = ['operatingSite1MonitoringListColumn', 'operatingSite2MonitoringListColumn'];
+var operatingSiteMonitoringListColumnIds = ['operatingSite1MonitoringListColumn', 'operatingSite2MonitoringListColumn', 'operatingSite3MonitoringListColumn'];
 operatingSiteMonitoringListColumnIds.forEach((operatingSiteMonitoringListColumnId, operatingSiteMonitoringListColumnIdIndex) => {
     let operatingSite = operatingSiteMonitoringListColumnId.replace('MonitoringListColumn', '');
     let operatingSiteId = operatingSiteMonitoringListColumnIdIndex + 1;
@@ -934,7 +934,7 @@ monitoringListItemModalTriggerList.forEach(element => {
 // - Create monitoring log
 let initialMonitoringLogLoadInterval = {};
 
-var monitoringLogColumnIds = ['operatingSite1MonitoringLogColumn', 'operatingSite2MonitoringLogColumn'];
+var monitoringLogColumnIds = ['operatingSite1MonitoringLogColumn', 'operatingSite2MonitoringLogColumn', 'operatingSite3MonitoringLogColumn'];
 monitoringLogColumnIds.forEach(async (monitoringLogColumnId, index) => {
     let operatingSiteId = index + 1;
     let monitoringLogColumnElement = document.getElementById(monitoringLogColumnId);
