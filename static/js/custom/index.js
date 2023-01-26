@@ -2451,8 +2451,18 @@ loadData(requestUrl)
             }
         });
 
-        let series = getEXSoSSeries('mainBankEXSoSChart');
+        let chartElementId = 'mainEXSoSChart';
+
+        let series = getMainEXSoSSeries(chartElementId);
         series.data.setAll(chartData);
+
+
+        // Setup loading UI
+        let cardElement = document.getElementById('exSoSCard');
+        cardElement.querySelector('.spinner-border').classList.add('d-none');
+
+        let chartElement = document.getElementById(chartElementId);
+        chartElement.parentNode.classList.remove('d-none');
     })
     .catch(error => console.log(error));
 
