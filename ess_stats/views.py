@@ -1,3 +1,4 @@
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.viewsets import ReadOnlyModelViewSet
 from rest_framework.response import Response
 from .models import (
@@ -9,6 +10,7 @@ from .models import (
     ForecastingMaxRackCellTemperature,
     ForecastingMinRackCellTemperature,
     SoS,
+    EXSoS,
 )
 from .filters import CustomDateFilterBackend, CustomDateTimeFilterBackend
 from .serializer import (
@@ -20,6 +22,7 @@ from .serializer import (
     ForecastingMaxRackCellTemperatureSerializer,
     ForecastingMinRackCellTemperatureSerializer,
     SoSSerializer,
+    EXSoSSerializer,
 )
 
 
@@ -203,5 +206,54 @@ class SoSViewSet(ReadOnlyModelViewSet):
         queryset = self.get_queryset().filter(rack_id=rack_id)
         filter_queryset = self.filter_queryset(queryset)
         serializer = SoSSerializer(filter_queryset, many=True)
+
+        return Response(serializer.data)
+
+
+class EXSoSBankViewSet(ReadOnlyModelViewSet):
+    serializer_class = EXSoSSerializer
+    filter_backends = [DjangoFilterBackend, CustomDateTimeFilterBackend]
+    filterset_fields = ["mode"]
+
+    def get_queryset(self):
+        operating_site_id = self.kwargs["operating_site_id"]
+        queryset = EXSoS.objects.filter(operating_site=operating_site_id).order_by("time", "bank_id")
+
+        return queryset
+
+    def paginate_queryset(self, queryset):
+        return None
+
+    def retrieve(self, request, *args, **kwargs) -> list:
+        bank_id = kwargs["pk"]
+        queryset = self.get_queryset().filter(bank_id=bank_id)
+        filter_queryset = self.filter_queryset(queryset)
+        serializer = EXSoSSerializer(filter_queryset, many=True)
+
+        return Response(serializer.data)
+
+
+class EXSoSRackViewSet(ReadOnlyModelViewSet):
+    serializer_class = EXSoSSerializer
+    filter_backends = [DjangoFilterBackend, CustomDateTimeFilterBackend]
+    filterset_fields = ["mode"]
+
+    def get_queryset(self):
+        operating_site_id = self.kwargs["operating_site_id"]
+        bank_id = self.kwargs["bank_pk"]
+        queryset = EXSoS.objects.filter(operating_site=operating_site_id, bank_id=bank_id).order_by(
+            "time", "bank_id", "rack_id"
+        )
+
+        return queryset
+
+    def paginate_queryset(self, queryset):
+        return None
+
+    def retrieve(self, request, *args, **kwargs) -> list:
+        rack_id = kwargs["pk"]
+        queryset = self.get_queryset().filter(rack_id=rack_id)
+        filter_queryset = self.filter_queryset(queryset)
+        serializer = EXSoSSerializer(filter_queryset, many=True)
 
         return Response(serializer.data)
