@@ -644,6 +644,109 @@ function getDetailRackSoSChartSeriesList(elementId, option) {
 }
 
 /**
+ * Get main EXSoS chart series
+ * @param {string} elementId 
+ * @returns {object}
+ */
+function getMainEXSoSSeries(elementId) {
+    let root = getChartRoot(elementId)
+    let chart = getInitialLineChart(root);
+
+    // Create axes
+    let xAxis = chart.xAxes.push(am5xy.DateAxis.new(root, {
+        baseInterval: {
+            timeUnit: "minute",
+            count: 10
+        },
+        dateFormats: {
+            hour: 'HH:mm',
+            day: customFullDateFormat,
+            week: customFullDateFormat,
+            month: 'yyyy-MM',
+        },
+        renderer: am5xy.AxisRendererX.new(root, {}),
+        periodChangeDateFormats: {
+            hour: 'yyyy-MM-dd HH:mm',
+            day: customFullDateFormat,
+            week: customFullDateFormat,
+        },
+        tooltip: am5.Tooltip.new(root, {}),
+        tooltipDateFormat: customFullDateTimeFormat,
+    }));
+
+    let yAxis = chart.yAxes.push(am5xy.ValueAxis.new(root, {
+        renderer: am5xy.AxisRendererY.new(root, {}),
+    }));
+
+    // Add series
+    let series = chart.series.push(am5xy.LineSeries.new(root, {
+        name: 'EXSoS',
+        xAxis: xAxis,
+        yAxis: yAxis,
+        valueXField: 'time',
+        valueYField: 'value',
+        tooltip: am5.Tooltip.new(root, {
+            labelText: `통합 안전도: {valueY}`
+        })
+    }));
+
+    // Customize series
+    series.strokes.template.setAll({
+        strokeWidth: 3,
+    });
+
+    series.bullets.push(function() {
+        let circle = am5.Circle.new(root, {
+            radius: 7,
+            fill: series.get('fill'),
+            opacity: 0,
+            interactive: true, // required to trigger the state on hover
+        });
+
+        circle.states.create('default', {
+            opacity: 0
+        });
+
+        circle.states.create('hover', {
+            opacity: 1
+        });
+
+        return am5.Bullet.new(root, {
+            sprite: circle
+        });
+    });
+
+    let cursor = chart.get("cursor");
+    cursor.setAll({
+        xAxis: xAxis,
+        yAxis: yAxis
+    });
+    cursor.events.on("cursormoved", cursorMoved);
+
+    let previousBulletSprites = [];
+
+    function cursorMoved() {
+        previousBulletSprites.forEach(element => {
+            element.unhover();
+        });
+
+        previousBulletSprites = [];
+
+        chart.series.each(function(series) {
+            let dataItem = series.get("tooltip").dataItem;
+
+            if (dataItem) {
+                let bulletSprite = dataItem.bullets[0].get("sprite");
+                bulletSprite.hover();
+                previousBulletSprites.push(bulletSprite);
+            }
+        });
+    }
+
+    return series
+}
+
+/**
  * Create avg chart line
  * @param {object} chartSeries 
  */
@@ -2327,6 +2430,39 @@ loadData(requestUrl)
 
         let mainRackSoSChartElement = document.getElementById(mainRackSoSChartElementId);
         mainRackSoSChartElement.parentNode.parentNode.classList.remove('d-none');
+    })
+    .catch(error => console.log(error));
+
+// Create bank EXSoS chart
+startDate = currentDateTime.toFormat(customFullDateFormat);
+endDate = DateTime.fromFormat(startDate, customFullDateFormat).plus({day: 1}).toFormat(customFullDateFormat);
+
+requestUrl = new URL(`${window.location.origin}/api/ess/stats/ex-sos/operating-sites/1/banks/1/`);
+requestUrl.searchParams.append('start-time', startDate);
+requestUrl.searchParams.append('end-time', endDate);
+requestUrl.searchParams.append('mode', 1);
+
+loadData(requestUrl)
+    .then(responseData => {
+        let chartData = responseData.map(element => {
+            return {
+                time: DateTime.fromISO(element['time']).toMillis(),
+                value: element['integrated_safety']
+            }
+        });
+
+        let chartElementId = 'mainEXSoSChart';
+
+        let series = getMainEXSoSSeries(chartElementId);
+        series.data.setAll(chartData);
+
+
+        // Setup loading UI
+        let cardElement = document.getElementById('exSoSCard');
+        cardElement.querySelector('.spinner-border').classList.add('d-none');
+
+        let chartElement = document.getElementById(chartElementId);
+        chartElement.parentNode.classList.remove('d-none');
     })
     .catch(error => console.log(error));
 
