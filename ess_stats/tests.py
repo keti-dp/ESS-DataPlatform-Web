@@ -8,6 +8,7 @@ from .models import (
     ForecastingMaxRackCellTemperature,
     ForecastingMinRackCellTemperature,
     SoS,
+    EXSoS,
 )
 
 
@@ -87,5 +88,15 @@ class SoSTestCase(TestCase):
     def test_limit_count(self):
         count = 10
         queryset = SoS.objects.all()[:count]
+
+        self.assertGreaterEqual(len(queryset), 0)
+
+
+class EXSoSTestCase(TestCase):
+    databases = {"ess_stats"}
+
+    def test_limit_count(self):
+        count = 10
+        queryset = EXSoS.objects.all()[:count]
 
         self.assertGreaterEqual(len(queryset), 0)
