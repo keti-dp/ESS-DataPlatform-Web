@@ -646,9 +646,10 @@ function getDetailRackSoSChartSeriesList(elementId, option) {
 /**
  * Get main EXSoS chart series
  * @param {string} elementId 
+ * @param {object} option 
  * @returns {object}
  */
-function getMainEXSoSSeries(elementId) {
+function getMainEXSoSChartSeries(elementId, option) {
     let root = getChartRoot(elementId)
     let chart = getInitialLineChart(root);
 
@@ -695,13 +696,24 @@ function getMainEXSoSSeries(elementId) {
         strokeWidth: 3,
     });
 
+    // Set data click event
+    let bulletTemplate = am5.Template.new(root, {});
+    bulletTemplate.events.on('click', event => {
+        let dataItem = event.target.dataItem;
+        let dataObject = dataItem.dataContext;
+
+        option['dataObject'] = dataObject;
+
+        changeDetailEXSoSChart(option);
+    });
+
     series.bullets.push(function() {
         let circle = am5.Circle.new(root, {
             radius: 7,
             fill: series.get('fill'),
             opacity: 0,
             interactive: true, // required to trigger the state on hover
-        });
+        }, bulletTemplate);
 
         circle.states.create('default', {
             opacity: 0
@@ -716,6 +728,7 @@ function getMainEXSoSSeries(elementId) {
         });
     });
 
+    // Set cursor event
     let cursor = chart.get("cursor");
     cursor.setAll({
         xAxis: xAxis,
@@ -726,8 +739,8 @@ function getMainEXSoSSeries(elementId) {
     let previousBulletSprites = [];
 
     function cursorMoved() {
-        previousBulletSprites.forEach(element => {
-            element.unhover();
+        previousBulletSprites.forEach(previousBulletSprite => {
+            previousBulletSprite.unhover();
         });
 
         previousBulletSprites = [];
@@ -744,6 +757,159 @@ function getMainEXSoSSeries(elementId) {
     }
 
     return series
+}
+
+/**
+ * Get detail EXSoS chart series list
+ * @param {string} elementId 
+ * @returns {Array}
+ */
+function getDetailEXSoSChartSeriesList(elementId) {
+    let root = getChartRoot(elementId);
+    let chart = getInitialLineChart(root);
+
+    let xAxis = chart.xAxes.push(am5xy.ValueAxis.new(root, {
+        max: 1,
+        renderer: am5xy.AxisRendererX.new(root, {}),
+        tooltip: am5.Tooltip.new(root, {}),
+        extraTooltipPrecision: 1
+    }));
+    xAxis.children.push(am5.Label.new(root, {
+        text: '[bold]통합 안전도',
+        x: am5.p50,
+        centerX: am5.p50
+    }));
+
+    let yAxis = chart.yAxes.push(am5xy.ValueAxis.new(root, {
+        max: 1,
+        renderer: am5xy.AxisRendererY.new(root, {}),
+        tooltip: am5.Tooltip.new(root, {}),
+        extraTooltipPrecision: 1
+    }));
+    yAxis.children.unshift(am5.Label.new(root, {
+        rotation: -90,
+        text: '[bold]소속도',
+        y: am5.p50,
+        centerX: am5.p50
+    })); // for the left axis, we need it to be the first child, so it's left-most of the other elements (hence unshift()).
+
+    let negligibleSeries = chart.series.push(am5xy.LineSeries.new(root, {
+        name: 'Negligible',
+        xAxis: xAxis,
+        yAxis: yAxis,
+        valueXField: 'valueX',
+        valueYField: 'valueY',
+    }));
+
+    let marginalSeries = chart.series.push(am5xy.LineSeries.new(root, {
+        name: 'Marginal',
+        xAxis: xAxis,
+        yAxis: yAxis,
+        valueXField: 'valueX',
+        valueYField: 'valueY',
+    }));
+
+    let neutralSeries = chart.series.push(am5xy.LineSeries.new(root, {
+        name: 'Neutral',
+        xAxis: xAxis,
+        yAxis: yAxis,
+        valueXField: 'valueX',
+        valueYField: 'valueY',
+    }));
+
+    let criticalSeries = chart.series.push(am5xy.LineSeries.new(root, {
+        name: 'Critical',
+        xAxis: xAxis,
+        yAxis: yAxis,
+        valueXField: 'valueX',
+        valueYField: 'valueY',
+    }));
+
+    let catastrophicSeries = chart.series.push(am5xy.LineSeries.new(root, {
+        name: 'Catastrophic',
+        xAxis: xAxis,
+        yAxis: yAxis,
+        valueXField: 'valueX',
+        valueYField: 'valueY',
+    }));
+
+    let seriesList = [negligibleSeries, marginalSeries, neutralSeries, criticalSeries, catastrophicSeries];
+
+    seriesList.forEach(series => {
+        series.strokes.template.setAll({
+            strokeWidth: 3,
+        });
+    });
+
+    // Set legend
+    let legend = chart.children.push(am5.Legend.new(root, {
+        centerX: am5.percent(50),
+        x: am5.percent(50),
+        layout: am5.GridLayout.new(root, {
+            fixedWidthGrid: true
+        })
+    }));
+    legend.data.setAll(chart.series.values);
+
+    return seriesList
+}
+
+/**
+ * Change detail EXSoS chart
+ * @param {object} option 
+ */
+function changeDetailEXSoSChart(option) {
+    let dataObject = option['dataObject'];
+    let detailEXSoSChartInfoElement = document.getElementById('detailEXSoSChartInfo');
+    detailEXSoSChartInfoElement.innerHTML = `<h3>${DateTime.fromMillis(dataObject['time']).toFormat(customFullDateTimeFormat)} [통합 안전도]: ${dataObject['value']}</h3>`;
+
+    // Set integrated safety line in detail chart
+    let detailEXSoSChartSeriesList = option['detailEXSoSChartSeriesList'];
+
+    let detailEXSoSChartXAxis = detailEXSoSChartSeriesList[0].get('xAxis');
+    detailEXSoSChartXAxis.axisRanges.clear();
+
+    let rangeDataItem = detailEXSoSChartXAxis.makeDataItem({
+        value: dataObject['value']
+    });
+
+    let detailEXSoSChartXAxisRange = detailEXSoSChartXAxis.createAxisRange(rangeDataItem);
+
+    rangeDataItem.get('grid').setAll({
+        strokeWidth: 3,
+        strokeOpacity: 0.5,
+        strokeDasharray: [3]
+    });
+
+    let axisLabel = detailEXSoSChartXAxisRange.get('label');
+    axisLabel.setAll({
+        text: `통합 안전도`,
+        background: am5.RoundedRectangle.new(detailEXSoSChartSeriesList[0].root, {
+            fill: am5.color(0xf5df4d),
+        }),
+    });
+
+    axisLabel.toFront();
+
+    // Draw membership degree in detail chart
+    let membershipDegree = dataObject['value1'];
+
+    detailEXSoSChartSeriesList.forEach((detailEXSoSChartSeries, index) => {
+        detailEXSoSChartSeries.axisRanges.clear();
+
+        let detailEXSoSChartYAxis = detailEXSoSChartSeriesList[index].get('yAxis');
+        let seriesRangeDataItem = detailEXSoSChartYAxis.makeDataItem({
+            value: membershipDegree[detailEXSoSChartSeries.get('name')],
+            endValue: 0
+        });
+
+        let seriesRange = detailEXSoSChartSeries.createAxisRange(seriesRangeDataItem);
+        seriesRange.fills.template.setAll({
+            fill: am5.color(0xff8c00), // dark orange color
+            fillOpacity: 0.5,
+            visible: true
+        });
+    });
 }
 
 /**
@@ -2447,15 +2613,89 @@ loadData(requestUrl)
         let chartData = responseData.map(element => {
             return {
                 time: DateTime.fromISO(element['time']).toMillis(),
-                value: element['integrated_safety']
+                value: element['integrated_safety'],
+                value1: element['membership_degree']
             }
         });
 
         let chartElementId = 'mainEXSoSChart';
 
-        let series = getMainEXSoSSeries(chartElementId);
-        series.data.setAll(chartData);
+        let detailEXSoSChartSeriesList = getDetailEXSoSChartSeriesList('detailEXSoSChart');
+        let detailEXSoSChartData = [
+            [
+                {
+                    valueX: 0,
+                    valueY: 1
+                },
+                {
+                    valueX: 0.25,
+                    valueY: 0
+                }
+            ],
+            [
+                {
+                    valueX: 0,
+                    valueY: 0,
+                },
+                {
+                    valueX: 0.25,
+                    valueY: 1
+                },
+                {
+                    valueX: 0.5,
+                    valueY: 0
+                }
+            ],
+            [
+                {
+                    valueX: 0.25,
+                    valueY: 0,
+                },
+                {
+                    valueX: 0.5,
+                    valueY: 1
+                },
+                {
+                    valueX: 0.75,
+                    valueY: 0
+                }
+            ],
+            [
+                {
+                    valueX: 0.5,
+                    valueY: 0,
+                },
+                {
+                    valueX: 0.75,
+                    valueY: 1
+                },
+                {
+                    valueX: 1,
+                    valueY: 0
+                }
+            ],
+            [
+                {
+                    valueX: 0.75,
+                    valueY: 0
+                },
+                {
+                    valueX: 1,
+                    valueY: 1
+                }
+            ],
+        ]
 
+        detailEXSoSChartSeriesList.forEach((element, index) => {
+            element.data.setAll(detailEXSoSChartData[index])
+        });
+
+        let option = {
+            detailEXSoSChartSeriesList: detailEXSoSChartSeriesList,
+        }
+
+        let series = getMainEXSoSChartSeries(chartElementId, option);
+        series.data.setAll(chartData);
 
         // Setup loading UI
         let cardElement = document.getElementById('exSoSCard');
@@ -2465,6 +2705,7 @@ loadData(requestUrl)
         chartElement.parentNode.classList.remove('d-none');
     })
     .catch(error => console.log(error));
+
 
 // Create forecasting max-min rack cell charts
 let forecastingMaxRackCellVoltageObject = {
