@@ -16,9 +16,14 @@
         min-height: 360px;
     }
 
-    .detail-visualization-chart {
+    .detail-sos-chart {
         width: 100%;
         min-height: 800px;
+    }
+
+    .detail-exsos-chart {
+        width: 100%;
+        min-height: 500px;
     }
 </style>
 {% endblock %}
@@ -298,17 +303,18 @@
                                                 <div class="accordion-item">
                                                     <h2 class="accordion-header">
                                                         <button class="accordion-button collapsed" type="button"
-                                                            data-bs-toggle="collapse" data-bs-target="#collapseOne"
-                                                            aria-expanded="true" aria-controls="collapseOne">
+                                                            data-bs-toggle="collapse"
+                                                            data-bs-target="#detailRackSoSAccordionCollapseOne"
+                                                            aria-expanded="true"
+                                                            aria-controls="detailRackSoSAccordionCollapseOne">
                                                             상세 보기
                                                         </button>
                                                     </h2>
-                                                    <div id="collapseOne" class="accordion-collapse collapse"
-                                                        aria-labelledby="headingOne"
+                                                    <div id="detailRackSoSAccordionCollapseOne"
+                                                        class="accordion-collapse collapse" aria-labelledby="headingOne"
                                                         data-bs-parent="#detailRackSoSAccordion">
                                                         <div class="accordion-body">
-                                                            <div id="detailRackSoSChart"
-                                                                class="detail-visualization-chart">
+                                                            <div id="detailRackSoSChart" class="detail-sos-chart">
                                                             </div>
                                                         </div>
                                                     </div>
@@ -357,6 +363,29 @@
                                     <div class="row d-none">
                                         <p>시온유 태양광 / Bank 1</p>
                                         <div id="mainEXSoSChart" class="visualization-chart"></div>
+                                    </div>
+                                    <div class="row m-t-20">
+                                        <div class="accordion" id="detailEXSoSAccordion">
+                                            <div class="accordion-item">
+                                                <h2 class="accordion-header">
+                                                    <button class="accordion-button collapsed" type="button"
+                                                        data-bs-toggle="collapse"
+                                                        data-bs-target="#detailEXSoSAccordionCollapseOne"
+                                                        aria-expanded="true"
+                                                        aria-controls="detailEXSoSAccordionCollapseOne">
+                                                        상세 보기
+                                                    </button>
+                                                </h2>
+                                                <div id="detailEXSoSAccordionCollapseOne"
+                                                    class="accordion-collapse collapse" aria-labelledby="headingOne"
+                                                    data-bs-parent="#detailEXSoSAccordion">
+                                                    <div class="accordion-body">
+                                                        <div id="detailEXSoSChartInfo" class="text-center"></div>
+                                                        <div id="detailEXSoSChart" class="detail-exsos-chart"></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
