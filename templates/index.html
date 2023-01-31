@@ -56,6 +56,7 @@
                             <a class="nav-link ml-3 my-1" href="#itemSoh">SoH</a>
                             <a class="nav-link ml-3 my-1" href="#itemSoL">SoL</a>
                             <a class="nav-link ml-3 my-1" href="#itemSoS">SoS</a>
+                            <a class="nav-link ml-3 my-1" href="#itemEXSoS">EXSoS</a>
                         </nav>
                         <a class="nav-link" href="#itemEtc">기타</a>
                         <nav class="nav nav-pills flex-column">
@@ -70,7 +71,7 @@
                 <div data-bs-spy="scroll" data-bs-target="#mainContentNavbar" data-bs-offset="0" tabindex="0"
                     style="height: 100%; overflow-x: hidden; overflow-y: scroll;">
                     <h4 id="itemSafetyDiagnosticIndicator"><u>안전 진단 지표</u></h4>
-                    <p>배터리의 다양한 안전 상태 지표를 나타냅니다.</p>
+                    <p>ESS의 다양한 안전 상태 지표를 나타냅니다.</p>
 
                     <!-- [SoC] start -->
                     <h5 id="itemSoc">SoC <i class="bi bi-info-circle" data-bs-toggle="tooltip" data-bs-placement="top"
@@ -331,7 +332,9 @@
                     <!-- [EXSoS] start -->
                     <div class="row">
                         <h5 id="itemEXSoS">EXSoS <i class="bi bi-info-circle" data-bs-toggle="tooltip"
-                                data-bs-placement="top" title="" data-bs-original-title=""></i>
+                                data-bs-placement="top" title="" data-bs-original-title="SoS를 다른 지표를 통해 계산한 확장된 SoS. 
+                                통합 안전도 : 퍼지논리를 기반하여 전압 안전도와 온도 안전도를 하나의 안전도로 표현한 수치. 
+                                소속도 : 해당 수치가 각 퍼지집합(함수)에 속하는 정도를 0 ~ 1 사이 값으로 표시한 값."></i>
                         </h5>
                         <div class="col-xl-6 col-md-12">
                             <div id="exSoSCard" class="card mx-2">
@@ -986,6 +989,88 @@
                                         placeholder="마지막 시간을 선택해주세요" />
                                     <span class='input-group-text'
                                         data-td-target='#essRackSoSVisualizationSearchModalFormEndDateTimePicker'
+                                        data-td-toggle='datetimepicker'>
+                                        <span class='fas fa-calendar'></span>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <button type="submit" class="btn btn-primary">검색</button>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- EXSoS visualization search modal -->
+        <div class="modal fade" id="essEXSoSVisualizationSearchModal" tabindex="-1"
+            aria-labelledby="essEXSoSVisualizationSearchModalFormLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="essEXSoSVisualizationSearchModalFormLabel">EXSoS 차트 검색</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form action="#" id="essEXSoSVisualizationSearchModalForm" autocomplete="off">
+                            <div class="form-group">
+                                <label class='form-label'>Mode:</label>
+                                <div class="input-group m-b-10">
+                                    <select id="essEXSoSVisualizationSearchModalFormModeSelect" class="form-select">
+                                        <option value="" selected disabled>Mode를 선택해주세요.</option>
+                                        <option value="1">Bank</option>
+                                        <option value="2">Rack</option>
+                                    </select>
+                                </div>
+                                <label class='form-label'>구성:</label>
+                                <div class="input-group m-b-10">
+                                    <select id="essEXSoSVisualizationSearchModalFormOperatingSiteSelect"
+                                        class="form-select">
+                                        <option value="" selected disabled>운영 사이트를 선택해주세요.</option>
+                                        <option value="1">시온유 태양광</option>
+                                        <option value="2">판리 태양광</option>
+                                        <option value="3">황금6호 태양광</option>
+                                    </select>
+                                </div>
+                                <div class="input-group m-b-10">
+                                    <select name="" id="essEXSoSVisualizationSearchModalFormBankSelect"
+                                        class="form-select" disabled>
+                                        <option value="" selected disabled>Bank를 선택해주세요.</option>
+                                    </select>
+                                </div>
+                                <div class="input-group m-b-10 d-none">
+                                    <select id="essEXSoSVisualizationSearchModalFormRackSelect" class="form-select"
+                                        disabled>
+                                        <option value="" selected disabled>Rack을 선택해주세요.</option>
+                                    </select>
+                                </div>
+                                <label class='form-label'>시간:</label>
+                                <div class='input-group log-event m-b-10'
+                                    id='essEXSoSVisualizationSearchModalFormStartDateTimePicker'
+                                    data-td-target-input='nearest' data-td-target-toggle='nearest'>
+                                    <input id='essEXSoSVisualizationSearchModalFormStartDateTimeInput' type='text'
+                                        class='form-control'
+                                        data-td-target='#essEXSoSVisualizationSearchModalFormStartDateTimePicker'
+                                        placeholder="시작 시간을 선택해주세요" />
+                                    <span class='input-group-text'
+                                        data-td-target='#essEXSoSVisualizationSearchModalFormStartDateTimePicker'
+                                        data-td-toggle='datetimepicker'>
+                                        <span class='fas fa-calendar'></span>
+                                    </span>
+                                </div>
+                                <div class='input-group log-event'
+                                    id='essEXSoSVisualizationSearchModalFormEndDateTimePicker'
+                                    data-td-target-input='nearest' data-td-target-toggle='nearest'>
+                                    <input id='essEXSoSVisualizationSearchModalFormEndDateTimeInput' type='text'
+                                        class='form-control'
+                                        data-td-target='#essEXSoSVisualizationSearchModalFormEndDateTimePicker'
+                                        placeholder="마지막 시간을 선택해주세요" />
+                                    <span class='input-group-text'
+                                        data-td-target='#essEXSoSVisualizationSearchModalFormEndDateTimePicker'
                                         data-td-toggle='datetimepicker'>
                                         <span class='fas fa-calendar'></span>
                                     </span>

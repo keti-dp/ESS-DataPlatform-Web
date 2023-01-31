@@ -861,7 +861,7 @@ function getDetailEXSoSChartSeriesList(elementId) {
 function changeDetailEXSoSChart(option) {
     let dataObject = option['dataObject'];
     let detailEXSoSChartInfoElement = document.getElementById('detailEXSoSChartInfo');
-    detailEXSoSChartInfoElement.innerHTML = `<h3>${DateTime.fromMillis(dataObject['time']).toFormat(customFullDateTimeFormat)} [통합 안전도]: ${dataObject['value']}</h3>`;
+    detailEXSoSChartInfoElement.innerHTML = `<p>${DateTime.fromMillis(dataObject['time']).toFormat(customFullDateTimeFormat)} [통합 안전도]: ${dataObject['value']}</p>`;
 
     // Set integrated safety line in detail chart
     let detailEXSoSChartSeriesList = option['detailEXSoSChartSeriesList'];
@@ -2142,6 +2142,247 @@ essRackSoSVisualizationSearchModalFormValidation
         mainRackSoSChartElement.parentNode.parentNode.classList.remove('d-none');
     });
 
+// Search EXSoS card
+let essEXSoSVisualizationSearchModalFormModeSelectElement = document.getElementById('essEXSoSVisualizationSearchModalFormModeSelect');
+let essEXSoSVisualizationSearchModalFormOperatingSiteSelectElement = document.getElementById('essEXSoSVisualizationSearchModalFormOperatingSiteSelect');
+let essEXSoSVisualizationSearchModalFormBankSelectElement = document.getElementById('essEXSoSVisualizationSearchModalFormBankSelect');
+let essEXSoSVisualizationSearchModalFormRackSelectElement = document.getElementById('essEXSoSVisualizationSearchModalFormRackSelect');
+let essEXSoSVisualizationSearchModalFormStartDateTimePickerElement = document.getElementById('essEXSoSVisualizationSearchModalFormStartDateTimePicker');
+let essEXSoSVisualizationSearchModalFormEndDateTimePickerElement = document.getElementById('essEXSoSVisualizationSearchModalFormEndDateTimePicker');
+
+essEXSoSVisualizationSearchModalFormModeSelectElement.addEventListener('change', event => {
+    let mode = event.target.value;
+    let essEXSoSVisualizationSearchModalFormRackSelectParentElement = essEXSoSVisualizationSearchModalFormRackSelectElement.parentNode;
+
+    switch (mode) {
+        case '1':
+            essEXSoSVisualizationSearchModalFormRackSelectParentElement.classList.add('d-none');
+
+            essEXSoSVisualizationSearchModalFormValidation
+                .removeField('#essEXSoSVisualizationSearchModalFormRackSelect')
+            break;
+        case '2':
+            essEXSoSVisualizationSearchModalFormRackSelectParentElement.classList.remove('d-none');
+
+            essEXSoSVisualizationSearchModalFormValidation
+                .addField('#essEXSoSVisualizationSearchModalFormRackSelect', [
+                    {
+                        rule: 'required',
+                        errorMessage: 'Rack을 선택하세요.'
+                    }
+                ])
+            break;
+        default: 
+            console.log(`mode: ${mode}`);
+    }
+});
+
+essEXSoSVisualizationSearchModalFormOperatingSiteSelectElement.addEventListener('change', event => {
+    essEXSoSVisualizationSearchModalFormBankSelectElement.innerHTML = '';
+    essEXSoSVisualizationSearchModalFormBankSelectElement.insertAdjacentHTML('afterbegin', '<option value="" selected disabled>Bank를 선택해주세요.</option>');
+    essEXSoSVisualizationSearchModalFormBankSelectElement.setAttribute('disabled', '');
+
+    essEXSoSVisualizationSearchModalFormRackSelectElement.innerHTML = '';
+    essEXSoSVisualizationSearchModalFormRackSelectElement.insertAdjacentHTML('afterbegin', '<option value="" selected disabled>Rack을 선택해주세요.</option>');
+    essEXSoSVisualizationSearchModalFormRackSelectElement.setAttribute('disabled', '');
+
+    let operatingSiteId = event.target.value;
+    let essProtectionMapInfoRackCountObject = essProtectionMap['info']['rackCount'];
+
+    if (essProtectionMapInfoRackCountObject[`operatingSite${operatingSiteId}`]) {
+        let bankCount = Object.keys(essProtectionMapInfoRackCountObject[`operatingSite${operatingSiteId}`]).length;
+
+        for (i = 0; i < bankCount; i++) {
+            essEXSoSVisualizationSearchModalFormBankSelectElement.insertAdjacentHTML('beforeend', `<option value="${i + 1}">${i + 1}</option>`)
+        }
+
+        essEXSoSVisualizationSearchModalFormBankSelectElement.removeAttribute('disabled');
+    }
+});
+
+essEXSoSVisualizationSearchModalFormBankSelectElement.addEventListener('change', event => {
+    essEXSoSVisualizationSearchModalFormRackSelectElement.innerHTML = '';
+    essEXSoSVisualizationSearchModalFormRackSelectElement.insertAdjacentHTML('afterbegin', '<option value="" selected disabled>Rack을 선택해주세요.</option>')
+
+    let operatingSiteId = essEXSoSVisualizationSearchModalFormOperatingSiteSelectElement.value;
+    let bankId = event.target.value;
+    let essProtectionMapInfoRackCountObject = essProtectionMap['info']['rackCount'];
+
+    if (essProtectionMapInfoRackCountObject[`operatingSite${operatingSiteId}`]) {
+        let rackCount = essProtectionMapInfoRackCountObject[`operatingSite${operatingSiteId}`][`bank${bankId}`];
+
+        for (i = 0; i < rackCount; i++) {
+            essEXSoSVisualizationSearchModalFormRackSelectElement.insertAdjacentHTML('beforeend', `<option value="${i + 1}">${i + 1}</option>`)
+        }
+        essEXSoSVisualizationSearchModalFormRackSelectElement.removeAttribute('disabled');
+    } else {
+        essEXSoSVisualizationSearchModalFormRackSelectElement.setAttribute('disabled', '');
+    }
+});
+
+const essEXSoSVisualizationSearchModalFormStartDateTimeTempusDominus = new tempusDominus.TempusDominus(essEXSoSVisualizationSearchModalFormStartDateTimePickerElement, {
+    display: {
+        components: {
+            seconds: true
+        },
+        sideBySide: true
+    },
+    hooks: {
+        inputFormat: (context, date) => { return DateTime.fromISO(date.toISOString()).toFormat(customFullDateTimeFormat) }
+    }
+});
+
+const essEXSoSVisualizationSearchModalFormEndDateTimeTempusDominus = new tempusDominus.TempusDominus(essEXSoSVisualizationSearchModalFormEndDateTimePickerElement, {
+    display: {
+        components: {
+            seconds: true
+        },
+        sideBySide: true
+    },
+    hooks: {
+        inputFormat: (context, date) => { return DateTime.fromISO(date.toISOString()).toFormat(customFullDateTimeFormat) }
+    },
+    useCurrent: false
+});
+
+essEXSoSVisualizationSearchModalFormStartDateTimePickerElement.addEventListener(tempusDominus.Namespace.events.change, (e) => {
+    essEXSoSVisualizationSearchModalFormEndDateTimeTempusDominus.updateOptions({
+        restrictions: {
+            minDate: e.detail.date
+        },
+    });
+});
+
+const essEXSoSVisualizationSearchModalFormEndDateTimeTempusDominusSubscription = essEXSoSVisualizationSearchModalFormEndDateTimeTempusDominus.subscribe(tempusDominus.Namespace.events.change, (e) => {
+    essEXSoSVisualizationSearchModalFormStartDateTimeTempusDominus.updateOptions({
+        restrictions: {
+            maxDate: e.date
+        }
+    });
+});
+
+const essEXSoSVisualizationSearchModalFormValidation = new JustValidate('#essEXSoSVisualizationSearchModalForm', {
+    errorFieldCssClass: 'is-invalid',
+    focusInvalidField: true,
+    lockForm: true,
+    tooltip: {
+        position: 'right',
+    }
+});
+essEXSoSVisualizationSearchModalFormValidation
+    .addField('#essEXSoSVisualizationSearchModalFormModeSelect', [
+        {
+            rule: 'required',
+            errorMessage: 'Mode를 선택하세요.'
+        }
+    ])
+    .addField('#essEXSoSVisualizationSearchModalFormOperatingSiteSelect', [
+        {
+            rule: 'required',
+            errorMessage: '운영 사이트를 선택하세요.'
+        }
+    ])
+    .addField('#essEXSoSVisualizationSearchModalFormBankSelect', [
+        {
+            rule: 'required',
+            errorMessage: 'Bank를 선택하세요.'
+        }
+    ])
+    .addField('#essEXSoSVisualizationSearchModalFormRackSelect', [
+        {
+            rule: 'required',
+            errorMessage: 'Rack을 선택하세요.'
+        }
+    ])
+    .addField('#essEXSoSVisualizationSearchModalFormStartDateTimeInput', [
+        {
+            plugin: JustValidatePluginDate(fields => ({
+                required: true,
+                format: customFullDateTimeFormat
+            })),
+            errorMessage: '시작 시간을 선택하세요.'
+        },
+    ])
+    .addField('#essEXSoSVisualizationSearchModalFormEndDateTimeInput', [
+        {
+            plugin: JustValidatePluginDate(fields => ({
+                required: true,
+                format: customFullDateTimeFormat
+            })),
+            errorMessage: '마지막 시간을 선택하세요.'
+        },
+    ])
+    .onSuccess(async (event) => {
+        let cardElement = document.getElementById('exSoSCard');
+        let chartElement = document.getElementById('mainEXSoSChart');
+        let chartPreviousElementSibling = chartElement.previousElementSibling;
+        let loadingElement = cardElement.querySelector('.spinner-border');
+        let modalElement = document.getElementById('essEXSoSVisualizationSearchModal');
+
+        // Off modal
+        bootstrap.Modal.getInstance(modalElement).hide();
+
+        // On loading UI
+        chartElement.parentNode.classList.add('d-none');
+        loadingElement.classList.remove('d-none');
+
+        let operatingSiteId = essEXSoSVisualizationSearchModalFormOperatingSiteSelectElement.value;
+        let bankId = essEXSoSVisualizationSearchModalFormBankSelectElement.value;
+        let rackId = essEXSoSVisualizationSearchModalFormRackSelectElement.value;
+        let mode = essEXSoSVisualizationSearchModalFormModeSelectElement.value;
+        let startTime = DateTime.fromFormat(essEXSoSVisualizationSearchModalFormStartDateTimeInput.value, customFullDateTimeFormat).toFormat(customTimeDesignatorFullDateTimeFormat);
+        let endTime = DateTime.fromFormat(essEXSoSVisualizationSearchModalFormEndDateTimeInput.value, customFullDateTimeFormat).toFormat(customTimeDesignatorFullDateTimeFormat);
+
+        let urlString;
+        let chartPreviousElementSiblingString;
+
+        switch (mode) {
+            case '1':
+                urlString = `${window.location.origin}/api/ess/stats/ex-sos/operating-sites/${operatingSiteId}/banks/${bankId}/`;
+                chartPreviousElementSiblingString = `${essEXSoSVisualizationSearchModalFormOperatingSiteSelectElement.options[essEXSoSVisualizationSearchModalFormOperatingSiteSelectElement.selectedIndex].text} / Bank ${bankId}`;
+                break;
+            case '2':
+                urlString = `${window.location.origin}/api/ess/stats/ex-sos/operating-sites/${operatingSiteId}/banks/${bankId}/racks/${rackId}`;
+                chartPreviousElementSiblingString = `${essEXSoSVisualizationSearchModalFormOperatingSiteSelectElement.options[essEXSoSVisualizationSearchModalFormOperatingSiteSelectElement.selectedIndex].text} / Bank ${bankId} / Rack ${rackId}`;
+                break;
+            default:
+                console.log(`mode: ${mode}`);
+        }
+
+        let requestUrl = new URL(urlString);
+        requestUrl.searchParams.append('mode', mode);
+        requestUrl.searchParams.append('start-time', startTime);
+        requestUrl.searchParams.append('end-time', endTime);
+
+        let responseData = await loadData(requestUrl);
+        let chartData = responseData.map(element => {
+            return {
+                time: DateTime.fromISO(element['time']).toMillis(),
+                value: element['integrated_safety'],
+                value1: element['membership_degree']
+            }
+        });
+
+        mainEXSoSChartSeries.data.setAll(chartData);
+
+        chartPreviousElementSibling.innerHTML = chartPreviousElementSiblingString;
+
+        // Clear info & data of detail EXSoS chart
+        let detailEXSoSChartXAxis = detailEXSoSChartSeriesList[0].get('xAxis');
+        detailEXSoSChartXAxis.axisRanges.clear();
+
+        detailEXSoSChartSeriesList.forEach(detailEXSoSChartSeries => {
+            detailEXSoSChartSeries.axisRanges.clear();
+        });
+
+        let detailEXSoSChartInfoElement = document.getElementById('detailEXSoSChartInfo');
+        detailEXSoSChartInfoElement.innerHTML = '';
+
+        // Off loading UI
+        chartElement.parentNode.classList.remove('d-none');
+        loadingElement.classList.add('d-none');
+    });
+
 // Search forecasting max-min rack cell modal
 let forecastingObjectVisualizationSearchModalElement = document.getElementById('forecastingObjectVisualizationSearchModal');
 forecastingObjectVisualizationSearchModalElement.addEventListener('show.bs.modal', event => {
@@ -2600,6 +2841,8 @@ loadData(requestUrl)
     .catch(error => console.log(error));
 
 // Create bank EXSoS chart
+let mainEXSoSChartSeries;
+let detailEXSoSChartSeriesList;
 startDate = currentDateTime.toFormat(customFullDateFormat);
 endDate = DateTime.fromFormat(startDate, customFullDateFormat).plus({day: 1}).toFormat(customFullDateFormat);
 
@@ -2619,8 +2862,6 @@ loadData(requestUrl)
         });
 
         let chartElementId = 'mainEXSoSChart';
-
-        let detailEXSoSChartSeriesList = getDetailEXSoSChartSeriesList('detailEXSoSChart');
         let detailEXSoSChartData = [
             [
                 {
@@ -2686,16 +2927,17 @@ loadData(requestUrl)
             ],
         ]
 
-        detailEXSoSChartSeriesList.forEach((element, index) => {
-            element.data.setAll(detailEXSoSChartData[index])
+        detailEXSoSChartSeriesList = getDetailEXSoSChartSeriesList('detailEXSoSChart');
+        detailEXSoSChartSeriesList.forEach((detailEXSoSChartSeries, index) => {
+            detailEXSoSChartSeries.data.setAll(detailEXSoSChartData[index])
         });
 
         let option = {
             detailEXSoSChartSeriesList: detailEXSoSChartSeriesList,
         }
 
-        let series = getMainEXSoSChartSeries(chartElementId, option);
-        series.data.setAll(chartData);
+        mainEXSoSChartSeries = getMainEXSoSChartSeries(chartElementId, option);
+        mainEXSoSChartSeries.data.setAll(chartData);
 
         // Setup loading UI
         let cardElement = document.getElementById('exSoSCard');
