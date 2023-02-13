@@ -9,6 +9,7 @@ from .models import (
     ForecastingMinRackCellTemperature,
     SoS,
     EXSoS,
+    MultiStepForecastingMaxCellVoltage,
 )
 
 
@@ -98,5 +99,15 @@ class EXSoSTestCase(TestCase):
     def test_limit_count(self):
         count = 10
         queryset = EXSoS.objects.all()[:count]
+
+        self.assertGreaterEqual(len(queryset), 0)
+
+
+class MultiStepForecastingMaxCellVoltageTestCase(TestCase):
+    databases = {"ess_stats"}
+
+    def test_limit_count(self):
+        count = 10
+        queryset = MultiStepForecastingMaxCellVoltage.objects.all()[:count]
 
         self.assertGreaterEqual(len(queryset), 0)

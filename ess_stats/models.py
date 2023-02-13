@@ -144,3 +144,15 @@ class EXSoS(models.Model):
     class Meta:
         managed = False
         db_table = "ess_exsos"
+
+
+class MultiStepForecastingMaxCellVoltage(models.Model):
+    time = models.DateTimeField(primary_key=True)
+    operating_site = models.IntegerField(db_column="operating_site_id", blank=True, null=True)
+    bank_id = models.IntegerField(blank=True, null=True)
+    rack_id = models.IntegerField(blank=True, null=True)
+    values = models.TextField(blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = "multi_step_forecasting_maxvol"
