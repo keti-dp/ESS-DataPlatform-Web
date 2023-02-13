@@ -707,7 +707,7 @@ function getMainEXSoSChartSeries(elementId, option) {
         changeDetailEXSoSChart(option);
     });
 
-    series.bullets.push(function() {
+    series.bullets.push(function () {
         let circle = am5.Circle.new(root, {
             radius: 7,
             fill: series.get('fill'),
@@ -745,7 +745,7 @@ function getMainEXSoSChartSeries(elementId, option) {
 
         previousBulletSprites = [];
 
-        chart.series.each(function(series) {
+        chart.series.each(function (series) {
             let dataItem = series.get("tooltip").dataItem;
 
             if (dataItem) {
@@ -1036,11 +1036,11 @@ function getForecastingMaxMinRackCellSeriesList(elementId, option) {
         strokeOpacity: 0.5,
         strokeDasharray: [3]
     });
-      
-      rangeDataItem.get("axisFill").setAll({
+
+    rangeDataItem.get("axisFill").setAll({
         fill: am5.color(0x999999),
         fillOpacity: 0.2,
-        visible:true
+        visible: true
     });
 
     // Set legend
@@ -1124,7 +1124,7 @@ function getInitialForecastingMaxMinRackCellChartData(data) {
     });
 
     // Starting points of forecasting series list are ending point of observing series
-    for(valueNumber = 2; valueNumber <= 5; valueNumber++) {
+    for (valueNumber = 2; valueNumber <= 5; valueNumber++) {
         dataObject[lastElementTimeObjectOfData.toMillis()][`value${valueNumber}`] = dataObject[lastElementTimeObjectOfData.toMillis()]['value1'];
     }
 
@@ -1217,6 +1217,123 @@ async function getForecastingMaxMinRackCellChartOption(chartData, defaultOption,
     });
 
     return forecastingMaxMinRackCellChartOption;
+}
+
+function getMultiStepForecastingMaxCellVoltageSeriesList(elementId, option) {
+    let root = getChartRoot(elementId);
+    let chart = getInitialLineChart(root, option);
+
+    let xAxis = chart.xAxes.push(am5xy.DateAxis.new(root, {
+        baseInterval: {
+            timeUnit: 'minute',
+            count: 5
+        },
+        dateFormats: {
+            hour: 'HH:mm',
+            day: customFullDateFormat,
+            week: customFullDateFormat,
+            month: 'yyyy-MM',
+        },
+        renderer: am5xy.AxisRendererX.new(root, {}),
+        periodChangeDateFormats: {
+            hour: 'yyyy-MM-dd HH:mm',
+            day: customFullDateFormat,
+            week: customFullDateFormat,
+        },
+        tooltip: am5.Tooltip.new(root, {})
+    }));
+
+    let yAxis = chart.yAxes.push(am5xy.ValueAxis.new(root, {
+        renderer: am5xy.AxisRendererY.new(root, {}),
+    }));
+
+    let seriesInfo = option['seriesInfo'];
+
+    let seriesList = seriesInfo.map(element => {
+        return chart.series.push(am5xy.LineSeries.new(root, {
+            name: element['name'],
+            xAxis: xAxis,
+            yAxis: yAxis,
+            valueXField: 'time',
+            valueYField: element['value'],
+            tooltip: am5.Tooltip.new(root, {
+                labelText: `값: {valueY}`,
+                pointerOrientation: "horizontal"
+            })
+        }));
+    });
+
+    let firstForecastingModelName = seriesList[1].get('name');
+
+    seriesList.forEach(element => {
+        let strokesTemplateOption = {
+            strokeWidth: 3
+        };
+
+        // 'Observed' series is in front of everything
+        if (element.get('name') == 'Observed') {
+            element.toFront();
+        } else {
+            if (element.get('name') != firstForecastingModelName) {
+                element.hide();
+            }
+        }
+
+        element.strokes.template.setAll(strokesTemplateOption);
+    });
+
+    // Set date fields
+    root.dateFormatter.setAll({
+        dateFormat: 'HH:mm',
+        dateFields: ["valueX"]
+    });
+
+    // Set legend
+    let legend = chart.children.push(am5.Legend.new(root, {
+        centerX: am5.percent(50),
+        x: am5.percent(50),
+        layout: am5.GridLayout.new(root, {
+            maxColumns: 2,
+            fixedWidthGrid: true
+        })
+    }));
+
+    // Event legend
+    // When legend item container is hovered, dim all the series except the hovered one
+    legend.itemContainers.template.events.on("pointerover", function (e) {
+        let itemContainer = e.target;
+
+        // As series list is data of a legend, dataContext is series
+        let series = itemContainer.dataItem.dataContext;
+
+        chart.series.each(function (chartSeries) {
+            if (chartSeries != series) {
+                chartSeries.strokes.template.setAll({
+                    strokeOpacity: 0.15,
+                    stroke: am5.color(0x000000)
+                });
+            } else {
+                chartSeries.strokes.template.setAll({
+                    strokeWidth: 3
+                });
+            }
+        });
+    });
+
+    // When legend item container is unhovered, make all series as they are
+    legend.itemContainers.template.events.on("pointerout", function (e) {
+        chart.series.each(function (chartSeries) {
+            chartSeries.strokes.template.setAll({
+                strokeOpacity: 1,
+                strokeWidth: 3,
+                stroke: chartSeries.get("fill")
+            });
+        });
+    })
+
+    legend.data.setAll(chart.series.values);
+
+    return seriesList;
 }
 
 /**
@@ -2172,7 +2289,7 @@ essEXSoSVisualizationSearchModalFormModeSelectElement.addEventListener('change',
                     }
                 ])
             break;
-        default: 
+        default:
             console.log(`mode: ${mode}`);
     }
 });
@@ -2844,7 +2961,7 @@ loadData(requestUrl)
 let mainEXSoSChartSeries;
 let detailEXSoSChartSeriesList;
 startDate = currentDateTime.toFormat(customFullDateFormat);
-endDate = DateTime.fromFormat(startDate, customFullDateFormat).plus({day: 1}).toFormat(customFullDateFormat);
+endDate = DateTime.fromFormat(startDate, customFullDateFormat).plus({ day: 1 }).toFormat(customFullDateFormat);
 
 requestUrl = new URL(`${window.location.origin}/api/ess/stats/ex-sos/operating-sites/1/banks/1/`);
 requestUrl.searchParams.append('start-time', startDate);
@@ -3016,7 +3133,7 @@ forecastingObjects.forEach(forecastingObject => {
 
             // Set axis range info
             let lastChartDataElementTime = chartData[chartData.length - 1]['time'];
-            let minusTenMinuteTime = DateTime.fromMillis(lastChartDataElementTime).minus({ minute: 10}).toMillis();
+            let minusTenMinuteTime = DateTime.fromMillis(lastChartDataElementTime).minus({ minute: 10 }).toMillis();
 
             let forecastingMaxMinRackCellChartNewOption = JSON.parse(JSON.stringify(forecastingMaxMinRackCellChartDefaultOption));
             forecastingMaxMinRackCellChartNewOption['axisRangeInfo'] = {
@@ -3040,6 +3157,65 @@ forecastingObjects.forEach(forecastingObject => {
         .catch(error => console.log(error));
 });
 
+// Create multi step forecasting max cell voltage chart
+startTime = '2023-02-07T00:00:00';
+endTime = '2023-02-08T00:00:00';
+requestUrl = new URL(`${window.location.origin}/api/ess/stats/multi-step-forecasting-max-cell-voltage/operating-sites/1/banks/1/racks/2/`);
+requestUrl.searchParams.append('start-time', startTime);
+requestUrl.searchParams.append('end-time', endTime);
+
+loadData(requestUrl)
+    .then(async (responseData) => {
+        let observedData = await loadData(`${window.location.origin}/api/ess/operating-sites/1/banks/1/racks/2/?fields=timestamp,rack_max_cell_voltage&start-time=${startTime}&end-time=${endTime}&no_page`);
+
+        let multiStepforecastingMaxCellChartDefaultOption = {
+            seriesInfo: [
+                {
+                    name: "Observed",
+                    value: 'value1'
+                }, {
+                    name: "LSTM",
+                    value: 'value2'
+                }, {
+                    name: "LSTM_Attention",
+                    value: 'value3'
+                },
+            ]
+        };
+
+        let valueDataObject = {};
+
+        observedData.forEach(element => {
+            valueDataObject[DateTime.fromISO(element['timestamp']).toMillis()] = {
+                value1: element['rack_max_cell_voltage']
+            };
+        });
+
+        responseDataValues = responseData[0]['values'];
+        responseDataValues['time'].forEach((element, index) => {
+            if (valueDataObject[DateTime.fromFormat(element, customFullDateTimeFormat).toMillis()]) {
+                valueDataObject[DateTime.fromFormat(element, customFullDateTimeFormat).toMillis()]['value2'] = responseDataValues['lstm'][index];
+                valueDataObject[DateTime.fromFormat(element, customFullDateTimeFormat).toMillis()]['value3'] = responseDataValues['lstm_attention'][index];
+            }
+        });
+
+        let chartData = [];
+
+        Object.keys(valueDataObject).forEach(element => {
+            if (Object.keys(valueDataObject[element]).length >= 2) {
+                chartData.push({
+                    time: Number.parseInt(element),
+                    ...valueDataObject[element]
+                });
+            }
+        });
+
+        window['multiStepForecastingMaxCellVoltageSeriesList'] = getMultiStepForecastingMaxCellVoltageSeriesList('multiStepForecastingMaxCellVoltageChart', multiStepforecastingMaxCellChartDefaultOption);
+        window['multiStepForecastingMaxCellVoltageSeriesList'].forEach(chartSeries => {
+            chartSeries.data.setAll(chartData);
+        });
+    })
+    .catch(error => console.log(error));
 
 
 //GAP chart
@@ -3164,7 +3340,7 @@ fetch(requestUrl)
     .then((response) => response.json())
     .then((responseData) => {
         let data = responseData.map(element => {
-            return { 
+            return {
                 timestamp: new Date(element['timestamp']).getTime(),
                 minRackCellVoltage: element["rack_min_cell_voltage"],
                 maxRackCellVoltage: element["rack_max_cell_voltage"],
@@ -3178,10 +3354,10 @@ fetch(requestUrl)
             fillOpacity: 0.3,
             visible: true
         });
-        
+
         minRackCellVoltageSeries.strokes.template.set("strokeWidth", 2);
         maxRackCellVoltageSeries.strokes.template.set("strokeWidth", 2);
-        
+
         minRackCellVoltageSeries.appear(1000);
         maxRackCellVoltageSeries.appear(1000);
         voltageGapChart.appear(1000, 100);
