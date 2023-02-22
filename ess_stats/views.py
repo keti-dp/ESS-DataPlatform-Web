@@ -1,4 +1,5 @@
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.generics import ListAPIView
 from rest_framework.viewsets import ReadOnlyModelViewSet
 from rest_framework.response import Response
 from .models import (
@@ -12,6 +13,7 @@ from .models import (
     SoS,
     EXSoS,
     MultiStepForecastingMaxCellVoltage,
+    StaticChartData,
 )
 from .filters import CustomDateFilterBackend, CustomDateTimeFilterBackend
 from .serializer import (
@@ -25,6 +27,7 @@ from .serializer import (
     SoSSerializer,
     EXSoSSerializer,
     MultiStepForecastingMaxCellVoltageSerializer,
+    StaticChartDataSerializer,
 )
 
 
@@ -284,3 +287,10 @@ class MultiStepForecastingMaxCellVoltageViewSet(ReadOnlyModelViewSet):
         serializer = MultiStepForecastingMaxCellVoltageSerializer(filter_queryset, many=True)
 
         return Response(serializer.data)
+
+
+class StaticChartDataView(ListAPIView):
+    serializer_class = StaticChartDataSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ["name", "chart_type"]
+    queryset = StaticChartData.objects.all()

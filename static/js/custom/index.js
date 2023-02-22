@@ -705,6 +705,7 @@ function getMainEXSoSChartSeries(elementId, option) {
         option['dataObject'] = dataObject;
 
         changeDetailEXSoSChart(option);
+        changeDetailEXSoSSafetyChart(option);
     });
 
     series.bullets.push(function () {
@@ -910,6 +911,43 @@ function changeDetailEXSoSChart(option) {
             visible: true
         });
     });
+}
+
+/**
+ * Change detail EXSoS chart
+ * @param {object} option 
+ */
+function changeDetailEXSoSSafetyChart(option) {
+    let dataObject = option['dataObject'];
+    let chargeStatus = dataObject['membership_degree_detail']['status'];
+
+    console.log(chargeStatus);
+
+    if (chargeStatus == 0) {
+        detailExSoSVoltageSafetySeriesList.forEach(series => {
+            series.data.setAll(JSON.parse(staticExSoSChartData)['over_voltage_safety']);
+        });
+
+        detailExSoSTemperatureSafetySeriesList.forEach(series => {
+            series.data.setAll(JSON.parse(staticExSoSChartData)['over_temperature_safety']);
+        });
+    } else if (chargeStatus == 1) {
+        detailExSoSVoltageSafetySeriesList.forEach(series => {
+            series.data.setAll(JSON.parse(staticExSoSChartData)['under_voltage_safety']);
+        });
+
+        detailExSoSTemperatureSafetySeriesList.forEach(series => {
+            series.data.setAll(JSON.parse(staticExSoSChartData)['under_temperature_safety']);
+        });
+    } else {
+        detailExSoSVoltageSafetySeriesList.forEach(series => {
+            series.data.setAll(JSON.parse(staticExSoSChartData)['voltage_imbalance_safety']);
+        });
+
+        detailExSoSTemperatureSafetySeriesList.forEach(series => {
+            series.data.setAll(JSON.parse(staticExSoSChartData)['temperature_imbalance_safety']);
+        });
+    }
 }
 
 /**
@@ -2974,7 +3012,8 @@ loadData(requestUrl)
             return {
                 time: DateTime.fromISO(element['time']).toMillis(),
                 value: element['integrated_safety'],
-                value1: element['membership_degree']
+                value1: element['membership_degree'],
+                membership_degree_detail: element['membership_degree_detail'],
             }
         });
 
@@ -3061,7 +3100,7 @@ loadData(requestUrl)
         cardElement.querySelector('.spinner-border').classList.add('d-none');
 
         let chartElement = document.getElementById(chartElementId);
-        chartElement.parentNode.classList.remove('d-none');
+        chartElement.parentNode.parentNode.classList.remove('d-none');
     })
     .catch(error => console.log(error));
 
@@ -3362,3 +3401,168 @@ fetch(requestUrl)
         maxRackCellVoltageSeries.appear(1000);
         voltageGapChart.appear(1000, 100);
     })
+
+
+
+
+
+
+let staticExSoSChartData = sessionStorage.getItem('staticExSoSChartData');
+
+if (!staticExSoSChartData) {
+    requestUrl = new URL(`${window.location.origin}/api/ess/stats/static-chart-data/`)
+    requestUrl.searchParams.append('chart_type', 'ExSoS');
+
+    loadData(requestUrl)
+    .then(data => {
+        console.log('wow');
+        let staticExSoSChartDataValue = {};
+
+        data['results'].forEach(element => {
+            staticExSoSChartDataValue[element['name']] = element['values'];
+        });
+
+        sessionStorage.setItem(`staticExSoSChartData`, JSON.stringify(staticExSoSChartDataValue));
+    }).catch(error => console.log(error));
+}
+
+function getDetailExSoSSafetySeriesList(elementId, option) {
+    let root = getChartRoot(elementId);
+    let chart = getInitialLineChart(root);
+
+    let xAxis = chart.xAxes.push(
+        am5xy.ValueAxis.new(root, {
+        strictMinMax: true,
+        maxDeviation: 0,
+        renderer: am5xy.AxisRendererX.new(root, { minGridDistance: 50 }),
+        tooltip: am5.Tooltip.new(root, {
+            themeTags: ["axis"],
+            animationDuration: 300
+        })
+        })
+    );
+    xAxis.children.push(am5.Label.new(root, {
+        text: '[bold]안전도',
+        x: am5.p50,
+        centerX: am5.p50
+    }));
+    
+    let yAxis = chart.yAxes.push(
+        am5xy.ValueAxis.new(root, {
+        strictMinMax: true,
+        maxDeviation: 0,
+        renderer: am5xy.AxisRendererY.new(root, {}),
+        tooltip: am5.Tooltip.new(root, {
+            themeTags: ["axis"],
+            animationDuration: 300
+        })
+        })
+    );
+    yAxis.children.unshift(am5.Label.new(root, {
+        rotation: -90,
+        text: '[bold]소속도',
+        y: am5.p50,
+        centerX: am5.p50
+    }));
+    
+    let series1 = chart.series.push(
+        am5xy.LineSeries.new(root, {
+        xAxis: xAxis,
+        yAxis: yAxis,
+        valueYField: "negligible_y",
+        valueXField: "negligible_x",
+        baseAxis: xAxis,
+        tooltip: am5.Tooltip.new(root, {
+            labelText: "x:{valueX}, y:{valueY}"
+        })
+        })
+    );
+    
+    let series2 = chart.series.push(
+        am5xy.LineSeries.new(root, {
+        xAxis: xAxis,
+        yAxis: yAxis,
+        valueYField: "marginal_y",
+        valueXField: "marginal_x",
+        baseAxis: xAxis,
+        tooltip: am5.Tooltip.new(root, {
+            labelText: "x:{valueX}, y:{valueY}"
+        })
+        })
+    );
+    
+    // Create series
+    // https://www.amcharts.com/docs/v5/charts/xy-chart/series/
+    let series3 = chart.series.push(
+        am5xy.LineSeries.new(root, {
+        xAxis: xAxis,
+        yAxis: yAxis,
+        valueYField: "neutral_y",
+        valueXField: "neutral_x",
+        baseAxis: yAxis,
+        tooltip: am5.Tooltip.new(root, {
+            labelText: "x:{valueX}, y:{valueY}"
+        })
+        })
+    );
+    
+    let series4 = chart.series.push(
+        am5xy.LineSeries.new(root, {
+        xAxis: xAxis,
+        yAxis: yAxis,
+        valueYField: "critical_y",
+        valueXField: "critical_x",
+        baseAxis: yAxis,
+        tooltip: am5.Tooltip.new(root, {
+            labelText: "x:{valueX}, y:{valueY}"
+        })
+        })
+    );
+    
+    let series5 = chart.series.push(
+        am5xy.LineSeries.new(root, {
+        xAxis: xAxis,
+        yAxis: yAxis,
+        valueYField: "catastrophic_y",
+        valueXField: "catastrophic_x",
+        baseAxis: yAxis,
+        tooltip: am5.Tooltip.new(root, {
+            labelText: "x:{valueX}, y:{valueY}"
+        })
+        })
+    );
+    
+    series1.strokes.template.setAll({
+        strokeWidth: 3,
+    });
+    
+    series2.strokes.template.setAll({
+        strokeWidth: 3,
+    });
+    
+    series3.strokes.template.setAll({
+        strokeWidth: 3,
+    });
+    
+    series4.strokes.template.setAll({
+        strokeWidth: 3,
+    });
+    
+    series5.strokes.template.setAll({
+        strokeWidth: 3,
+    });
+
+    let seriesList = [series1, series2, series3, series4, series5];
+    
+    return seriesList
+}
+
+let detailExSoSVoltageSafetySeriesList = getDetailExSoSSafetySeriesList('detailEXSoSVoltageSafetyChart');
+detailExSoSVoltageSafetySeriesList.forEach(series => {
+    series.data.setAll(JSON.parse(staticExSoSChartData)['over_voltage_safety']);
+})
+
+let detailExSoSTemperatureSafetySeriesList = getDetailExSoSSafetySeriesList('detailEXSoSTemperatureSafetyChart');
+detailExSoSTemperatureSafetySeriesList.forEach(series => {
+    series.data.setAll(JSON.parse(staticExSoSChartData)['over_temperature_safety']);
+})

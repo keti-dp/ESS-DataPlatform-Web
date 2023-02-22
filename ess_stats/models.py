@@ -140,6 +140,7 @@ class EXSoS(models.Model):
     rack_id = models.IntegerField(db_column="RACK_ID", blank=True, null=True)
     integrated_safety = models.FloatField(db_column="INTEGRATED_SAFETY", blank=True, null=True)
     membership_degree = models.TextField(db_column="MEMBERSHIP_DEGREE", blank=True, null=True)
+    membership_degree_detail = models.TextField(db_column="MEMBERSHIP_DEGREE_DETAIL", blank=True, null=True)
 
     class Meta:
         managed = False
@@ -156,3 +157,12 @@ class MultiStepForecastingMaxCellVoltage(models.Model):
     class Meta:
         managed = False
         db_table = "multi_step_forecasting_maxvol"
+
+
+class StaticChartData(models.Model):
+    name = models.CharField(max_length=150)
+    chart_type = models.CharField(max_length=150)
+    values = models.JSONField()
+
+    class Meta:
+        db_table = "static_chart_data"
