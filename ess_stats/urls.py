@@ -13,6 +13,7 @@ from .views import (
     EXSoSBankViewSet,
     EXSoSRackViewSet,
     MultiStepForecastingMaxCellVoltageViewSet,
+    StaticChartDataView,
 )
 
 router = SimpleRouter()
@@ -85,4 +86,5 @@ urlpatterns = [
         "multi-step-forecasting-max-cell-voltage/operating-sites/<int:operating_site_id>/banks/<int:bank_id>/",
         include(multi_step_forecasting_max_cell_voltage_router.urls),
     ),
+    path("static-chart-data/", StaticChartDataView.as_view()),
 ]

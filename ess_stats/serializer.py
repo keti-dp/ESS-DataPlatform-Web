@@ -10,6 +10,7 @@ from .models import (
     SoS,
     EXSoS,
     MultiStepForecastingMaxCellVoltage,
+    StaticChartData,
 )
 
 
@@ -63,6 +64,7 @@ class SoSSerializer(serializers.ModelSerializer):
 
 class EXSoSSerializer(serializers.ModelSerializer):
     membership_degree = serializers.JSONField()
+    membership_degree_detail = serializers.JSONField()
 
     class Meta:
         model = EXSoS
@@ -74,4 +76,10 @@ class MultiStepForecastingMaxCellVoltageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = MultiStepForecastingMaxCellVoltage
+        fields = "__all__"
+
+
+class StaticChartDataSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StaticChartData
         fields = "__all__"

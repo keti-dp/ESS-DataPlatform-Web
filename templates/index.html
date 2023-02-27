@@ -336,7 +336,7 @@
                                 통합 안전도 : 퍼지논리를 기반하여 전압 안전도와 온도 안전도를 하나의 안전도로 표현한 수치. 
                                 소속도 : 해당 수치가 각 퍼지집합(함수)에 속하는 정도를 0 ~ 1 사이 값으로 표시한 값."></i>
                         </h5>
-                        <div class="col-xl-6 col-md-12">
+                        <div class="col-xl-12 col-md-12">
                             <div id="exSoSCard" class="card mx-2">
                                 <div class="card-header">
                                     <div class="row">
@@ -364,8 +364,14 @@
                                         </div>
                                     </div>
                                     <div class="row d-none">
-                                        <p>시온유 태양광 / Bank 1</p>
-                                        <div id="mainEXSoSChart" class="visualization-chart"></div>
+                                        <div class="col-lg-6 col-12">
+                                            <p>시온유 태양광 / Bank 1</p>
+                                            <div id="mainEXSoSChart" class="visualization-chart"></div>
+                                        </div>
+                                        <div class="col-lg-6 col-12">
+                                            <div id="detailEXSoSChartInfo" class="text-center"></div>
+                                            <div id="detailEXSoSChart" class="detail-exsos-chart"></div>
+                                        </div>
                                     </div>
                                     <div class="row m-t-20">
                                         <div class="accordion" id="detailEXSoSAccordion">
@@ -383,8 +389,25 @@
                                                     class="accordion-collapse collapse" aria-labelledby="headingOne"
                                                     data-bs-parent="#detailEXSoSAccordion">
                                                     <div class="accordion-body">
-                                                        <div id="detailEXSoSChartInfo" class="text-center"></div>
-                                                        <div id="detailEXSoSChart" class="detail-exsos-chart"></div>
+                                                        <div class="row">
+                                                            <div class="col">
+                                                                <div id="detailEXSoSSafetyStatusInfo"
+                                                                    class="text-center"></div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="row">
+                                                            <div class="col-lg-6 col-12">
+                                                                <div id="detailEXSoSVoltageSafetyChart"
+                                                                    class="detail-exsos-chart">
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-lg-6 col-12">
+                                                                <div id="detailEXSoSTemperatureSafetyChart"
+                                                                    class="detail-exsos-chart">
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
                                                     </div>
                                                 </div>
                                             </div>

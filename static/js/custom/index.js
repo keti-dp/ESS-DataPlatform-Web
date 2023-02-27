@@ -705,6 +705,7 @@ function getMainEXSoSChartSeries(elementId, option) {
         option['dataObject'] = dataObject;
 
         changeDetailEXSoSChart(option);
+        changeDetailEXSoSSafetyChart(option);
     });
 
     series.bullets.push(function () {
@@ -855,6 +856,80 @@ function getDetailEXSoSChartSeriesList(elementId) {
 }
 
 /**
+ * Get detail EXSoS safety series list
+ * @param {string} elementId 
+ * @param {object} option 
+ * @returns {Array}
+ */
+function getDetailExSoSSafetySeriesList(elementId, option) {
+    let root = getChartRoot(elementId);
+    let chart = getInitialLineChart(root);
+
+    let xAxis = chart.xAxes.push(
+        am5xy.ValueAxis.new(root, {
+        strictMinMax: true,
+        maxDeviation: 0,
+        renderer: am5xy.AxisRendererX.new(root, { minGridDistance: 50 }),
+        tooltip: am5.Tooltip.new(root, {}),
+        extraTooltipPrecision: 1
+        })
+    );
+    xAxis.children.push(am5.Label.new(root, {
+        html: `<strong>${option['xAxisText']}</strong>`,
+        x: am5.p50,
+        centerX: am5.p50
+    }));
+    
+    let yAxis = chart.yAxes.push(
+        am5xy.ValueAxis.new(root, {
+        strictMinMax: true,
+        maxDeviation: 0,
+        renderer: am5xy.AxisRendererY.new(root, {}),
+        tooltip: am5.Tooltip.new(root, {}),
+        extraTooltipPrecision: 1
+        })
+    );
+    yAxis.children.unshift(am5.Label.new(root, {
+        rotation: -90,
+        text: '[bold]소속도',
+        y: am5.p50,
+        centerX: am5.p50
+    }));
+
+    let seriesList = option['safetyDegrees'].map(safetyDegree => {
+        let name = safetyDegree['name'];
+        let valueXField = safetyDegree['valueXY'][0];
+        let valueYField = safetyDegree['valueXY'][1];
+
+        return chart.series.push(am5xy.LineSeries.new(root, {
+            name: name,
+            xAxis: xAxis,
+            yAxis: yAxis,
+            valueYField: valueYField,
+            valueXField: valueXField,
+        }))
+    });
+
+    seriesList.forEach(series => {
+        series.strokes.template.setAll({
+            strokeWidth: 3,
+        });
+    });
+
+    // Set legend
+    let legend = chart.children.push(am5.Legend.new(root, {
+        centerX: am5.percent(50),
+        x: am5.percent(50),
+        layout: am5.GridLayout.new(root, {
+            fixedWidthGrid: true
+        })
+    }));
+    legend.data.setAll(chart.series.values);
+
+    return seriesList
+}
+
+/**
  * Change detail EXSoS chart
  * @param {object} option 
  */
@@ -909,6 +984,100 @@ function changeDetailEXSoSChart(option) {
             fillOpacity: 0.5,
             visible: true
         });
+    });
+}
+
+/**
+ * Change detail EXSoS chart
+ * @param {object} option 
+ */
+function changeDetailEXSoSSafetyChart(option) {
+    let dataObject = option['dataObject'];
+    let time = DateTime.fromMillis(dataObject['time']).toFormat(customFullDateTimeFormat);
+    let membership_degree_detail = dataObject['membership_degree_detail'];
+    let chargeStatus = membership_degree_detail['status'];
+    let voltage = membership_degree_detail['voltage'];
+    let temperature = membership_degree_detail['temperature'];
+
+    let detailEXSoSSafetyStatusInfoElement = document.getElementById('detailEXSoSSafetyStatusInfo');
+
+    switch (chargeStatus) {
+        case 0: 
+            detailEXSoSSafetyStatusInfoElement.innerHTML = `<p>${time} [충전 상태]: ${voltage}V, ${temperature}&#8451</p>`
+            detailExSoSVoltageSafetySeriesList.forEach(series => {
+                series.data.setAll(JSON.parse(staticExSoSChartData)['over_voltage_safety']);
+            });
+
+            detailExSoSTemperatureSafetySeriesList.forEach(series => {
+                series.data.setAll(JSON.parse(staticExSoSChartData)['over_temperature_safety']);
+            });
+
+            break;
+        case 1:
+            detailEXSoSSafetyStatusInfoElement.innerHTML = `<p>${time} [방전 상태]: ${voltage}V, ${temperature}&#8451</p>`
+
+            detailExSoSVoltageSafetySeriesList.forEach(series => {
+                series.data.setAll(JSON.parse(staticExSoSChartData)['under_voltage_safety']);
+            });
+
+            detailExSoSTemperatureSafetySeriesList.forEach(series => {
+                series.data.setAll(JSON.parse(staticExSoSChartData)['under_temperature_safety']);
+            });
+
+            break;
+        case 2:
+            detailEXSoSSafetyStatusInfoElement.innerHTML = `<p>${time} [휴지기]: ${voltage}V, ${temperature}&#8451</p>`
+
+            detailExSoSVoltageSafetySeriesList.forEach(series => {
+                series.data.setAll(JSON.parse(staticExSoSChartData)['voltage_imbalance_safety']);
+            });
+
+            detailExSoSTemperatureSafetySeriesList.forEach(series => {
+                series.data.setAll(JSON.parse(staticExSoSChartData)['temperature_imbalance_safety']);
+            });
+
+            break;
+        default:
+            break;
+    }
+
+    // Set xAxis range
+    let rangeDataOption = [
+        {
+            rangeDataItemValue: voltage,
+            axisLabelText: '현재 전압'
+        },
+        {
+            rangeDataItemValue: temperature,
+            axisLabelText: '현재 온도'
+        },
+    ];
+
+    [detailExSoSVoltageSafetySeriesList, detailExSoSTemperatureSafetySeriesList].forEach((detailExSoSSafetySeriesList, index) => {
+        let detailExSoSSafetyChartXAxis = detailExSoSSafetySeriesList[0].get('xAxis');
+        detailExSoSSafetyChartXAxis.axisRanges.clear();
+
+        let rangeDataItem = detailExSoSSafetyChartXAxis.makeDataItem({
+            value: rangeDataOption[index]['rangeDataItemValue']
+        })
+
+        let detailExSoSSafetyChartXAxisRange = detailExSoSSafetyChartXAxis.createAxisRange(rangeDataItem);
+
+        rangeDataItem.get('grid').setAll({
+            strokeWidth: 3,
+            strokeOpacity: 0.5,
+            strokeDasharray: [3]
+        });
+
+        let axisLabel = detailExSoSSafetyChartXAxisRange.get('label');
+        axisLabel.setAll({
+            text: rangeDataOption[index]['axisLabelText'],
+            background: am5.RoundedRectangle.new(detailExSoSSafetySeriesList[0].root, {
+                fill: am5.color(0xf5df4d),
+            }),
+        });
+
+        axisLabel.toFront();
     });
 }
 
@@ -2476,7 +2645,8 @@ essEXSoSVisualizationSearchModalFormValidation
             return {
                 time: DateTime.fromISO(element['time']).toMillis(),
                 value: element['integrated_safety'],
-                value1: element['membership_degree']
+                value1: element['membership_degree'],
+                membership_degree_detail: element['membership_degree_detail'],
             }
         });
 
@@ -2494,6 +2664,11 @@ essEXSoSVisualizationSearchModalFormValidation
 
         let detailEXSoSChartInfoElement = document.getElementById('detailEXSoSChartInfo');
         detailEXSoSChartInfoElement.innerHTML = '';
+
+        [detailExSoSVoltageSafetySeriesList, detailExSoSTemperatureSafetySeriesList].forEach(detailExSoSSafetySeriesList => {
+            let detailExSoSSafetyChartXAxis = detailExSoSSafetySeriesList[0].get('xAxis');
+            detailExSoSSafetyChartXAxis.axisRanges.clear();
+        });
 
         // Off loading UI
         chartElement.parentNode.classList.remove('d-none');
@@ -2974,7 +3149,8 @@ loadData(requestUrl)
             return {
                 time: DateTime.fromISO(element['time']).toMillis(),
                 value: element['integrated_safety'],
-                value1: element['membership_degree']
+                value1: element['membership_degree'],
+                membership_degree_detail: element['membership_degree_detail'],
             }
         });
 
@@ -3061,10 +3237,76 @@ loadData(requestUrl)
         cardElement.querySelector('.spinner-border').classList.add('d-none');
 
         let chartElement = document.getElementById(chartElementId);
-        chartElement.parentNode.classList.remove('d-none');
+        chartElement.parentNode.parentNode.classList.remove('d-none');
     })
     .catch(error => console.log(error));
 
+let detailExSoSSafetyOption = {
+    safetyDegrees: [
+        {
+            name: 'Negligible',
+            valueXY: ['negligible_x', 'negligible_y'],
+        },
+        {
+            name: 'Marginal',
+            valueXY: ['marginal_x', 'marginal_y'],
+        },
+        {
+            name: 'Neutral',
+            valueXY: ['neutral_x', 'neutral_y'],
+        },
+        {
+            name: 'Critical',
+            valueXY: ['critical_x', 'critical_y'],
+        },
+        {
+            name: 'Catastrophic',
+            valueXY: ['catastrophic_x', 'catastrophic_y'],
+        },
+    ]
+};
+detailExSoSSafetyOption['xAxisText'] = '전압(V)';
+
+let detailExSoSVoltageSafetySeriesList = getDetailExSoSSafetySeriesList('detailEXSoSVoltageSafetyChart', detailExSoSSafetyOption);
+
+// HTML Code 'Degree Celsius': &#8451;
+detailExSoSSafetyOption['xAxisText'] = '온도(&#8451;)';
+
+let detailExSoSTemperatureSafetySeriesList = getDetailExSoSSafetySeriesList('detailEXSoSTemperatureSafetyChart', detailExSoSSafetyOption);
+let staticExSoSChartData = sessionStorage.getItem('staticExSoSChartData');
+
+if (!staticExSoSChartData) {
+    requestUrl = new URL(`${window.location.origin}/api/ess/stats/static-chart-data/`)
+    requestUrl.searchParams.append('chart_type', 'ExSoS');
+
+    loadData(requestUrl)
+    .then(data => {
+        let staticExSoSChartDataValue = {};
+
+        data['results'].forEach(element => {
+            staticExSoSChartDataValue[element['name']] = element['values'];
+        });
+
+        sessionStorage.setItem(`staticExSoSChartData`, JSON.stringify(staticExSoSChartDataValue));
+        staticExSoSChartData = sessionStorage.getItem('staticExSoSChartData');
+
+        detailExSoSVoltageSafetySeriesList.forEach(series => {
+            series.data.setAll(JSON.parse(staticExSoSChartData)['over_voltage_safety']);
+        });
+    
+        detailExSoSTemperatureSafetySeriesList.forEach(series => {
+            series.data.setAll(JSON.parse(staticExSoSChartData)['over_temperature_safety']);
+        });
+    }).catch(error => console.log(error));
+} else {
+    detailExSoSVoltageSafetySeriesList.forEach(series => {
+        series.data.setAll(JSON.parse(staticExSoSChartData)['over_voltage_safety']);
+    });
+
+    detailExSoSTemperatureSafetySeriesList.forEach(series => {
+        series.data.setAll(JSON.parse(staticExSoSChartData)['over_temperature_safety']);
+    });
+}
 
 // Create forecasting max-min rack cell charts
 let forecastingMaxRackCellVoltageObject = {
