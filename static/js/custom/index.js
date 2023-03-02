@@ -1045,11 +1045,11 @@ function changeDetailEXSoSSafetyChart(option) {
     let rangeDataOption = [
         {
             rangeDataItemValue: voltage,
-            axisLabelText: '현재 전압'
+            axisLabelText: '평균 전압'
         },
         {
             rangeDataItemValue: temperature,
-            axisLabelText: '현재 온도'
+            axisLabelText: '평균 온도'
         },
     ];
 
