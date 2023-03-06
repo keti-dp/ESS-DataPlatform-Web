@@ -867,11 +867,11 @@ function getDetailExSoSSafetySeriesList(elementId, option) {
 
     let xAxis = chart.xAxes.push(
         am5xy.ValueAxis.new(root, {
-        strictMinMax: true,
-        maxDeviation: 0,
-        renderer: am5xy.AxisRendererX.new(root, { minGridDistance: 50 }),
-        tooltip: am5.Tooltip.new(root, {}),
-        extraTooltipPrecision: 1
+            strictMinMax: true,
+            maxDeviation: 0,
+            renderer: am5xy.AxisRendererX.new(root, { minGridDistance: 50 }),
+            tooltip: am5.Tooltip.new(root, {}),
+            extraTooltipPrecision: 1
         })
     );
     xAxis.children.push(am5.Label.new(root, {
@@ -879,14 +879,14 @@ function getDetailExSoSSafetySeriesList(elementId, option) {
         x: am5.p50,
         centerX: am5.p50
     }));
-    
+
     let yAxis = chart.yAxes.push(
         am5xy.ValueAxis.new(root, {
-        strictMinMax: true,
-        maxDeviation: 0,
-        renderer: am5xy.AxisRendererY.new(root, {}),
-        tooltip: am5.Tooltip.new(root, {}),
-        extraTooltipPrecision: 1
+            strictMinMax: true,
+            maxDeviation: 0,
+            renderer: am5xy.AxisRendererY.new(root, {}),
+            tooltip: am5.Tooltip.new(root, {}),
+            extraTooltipPrecision: 1
         })
     );
     yAxis.children.unshift(am5.Label.new(root, {
@@ -1002,7 +1002,7 @@ function changeDetailEXSoSSafetyChart(option) {
     let detailEXSoSSafetyStatusInfoElement = document.getElementById('detailEXSoSSafetyStatusInfo');
 
     switch (chargeStatus) {
-        case 0: 
+        case 0:
             detailEXSoSSafetyStatusInfoElement.innerHTML = `<p>${time} [충전 상태]: ${voltage}V, ${temperature}&#8451</p>`
             detailExSoSVoltageSafetySeriesList.forEach(series => {
                 series.data.setAll(JSON.parse(staticExSoSChartData)['over_voltage_safety']);
@@ -1157,6 +1157,20 @@ function getForecastingMaxMinRackCellSeriesList(elementId, option) {
 
     // Add series
     let seriesList = seriesInfo.map(element => {
+        let tooltip;
+
+        if (element['name'] == 'Observed') {
+            tooltip = am5.Tooltip.new(root, {
+                labelText: `값: {valueY}, 셀 번호: {observedPosition}`,
+                pointerOrientation: "horizontal"
+            });
+        } else {
+            tooltip = am5.Tooltip.new(root, {
+                labelText: `값: {valueY}`,
+                pointerOrientation: "horizontal"
+            });
+        }
+
         return chart.series.push(am5xy.SmoothedXLineSeries.new(root, {
             name: element['name'],
             xAxis: xAxis,
@@ -1164,10 +1178,7 @@ function getForecastingMaxMinRackCellSeriesList(elementId, option) {
             valueXField: 'time',
             valueYField: element['value'],
             minDistance: 3,
-            tooltip: am5.Tooltip.new(root, {
-                labelText: `값: {valueY}`,
-                pointerOrientation: "horizontal"
-            })
+            tooltip: tooltip
         }));
     });
 
@@ -1261,56 +1272,6 @@ function getForecastingMaxMinRackCellSeriesList(elementId, option) {
 }
 
 /**
- * Get initial forecasting max-min rack cell chart data
- * @param {Array} data 
- * @returns {Array}
- */
-function getInitialForecastingMaxMinRackCellChartData(data) {
-    // Set observed and forecasting data objects
-    let dataObject = {};
-    let lastElementTimeObjectOfData = DateTime.fromISO(data[data.length - 1]['time']);
-
-    data.forEach(element => {
-        let timeObject = DateTime.fromISO(element['time']);
-
-        if (dataObject[`${timeObject.toMillis()}`]) {
-            dataObject[`${timeObject.toMillis()}`]['value1'] = element['values']['observed'];
-        } else {
-            dataObject[`${timeObject.toMillis()}`] = {
-                value1: element['values']['observed'],
-            }
-        }
-
-        let plusTenMinuteTimeObject = timeObject.plus({ minute: 10 });
-        if (plusTenMinuteTimeObject.toMillis() >= lastElementTimeObjectOfData.toMillis()) {
-            dataObject[`${plusTenMinuteTimeObject.toMillis()}`] = {
-                value2: element['values']['catboost'],
-                value3: element['values']['linear'],
-                value4: element['values']['lightgbm'],
-                value5: element['values']['xgboost'],
-            }
-        }
-    });
-
-    // Starting points of forecasting series list are ending point of observing series
-    for (valueNumber = 2; valueNumber <= 5; valueNumber++) {
-        dataObject[lastElementTimeObjectOfData.toMillis()][`value${valueNumber}`] = dataObject[lastElementTimeObjectOfData.toMillis()]['value1'];
-    }
-
-    // Set chart data
-    let chartData = Object.keys(dataObject).map(element => {
-        return {
-            time: Number(element),
-            ...dataObject[element],
-        }
-    });
-
-    chartData.sort((a, b) => a['time'] - b['time']);
-
-    return chartData;
-}
-
-/**
  * Get forecasting max-min rack cell chart data
  * @param {Array} data 
  * @returns {Array}
@@ -1323,18 +1284,18 @@ function getForecastingMaxMinRackCellChartData(data) {
         let timeObject = DateTime.fromISO(element['time']);
 
         if (dataObject[`${timeObject.toMillis()}`]) {
-            dataObject[`${timeObject.toMillis()}`]['value1'] = element['values']['observed'];
+            dataObject[`${timeObject.toMillis()}`]['observed'] = element['values']['observed'];
         } else {
             dataObject[`${timeObject.toMillis()}`] = {
-                value1: element['values']['observed'],
+                observed: element['values']['observed'],
             }
         }
 
         dataObject[`${timeObject.plus({ minute: 10 }).toMillis()}`] = {
-            value2: element['values']['catboost'],
-            value3: element['values']['linear'],
-            value4: element['values']['lightgbm'],
-            value5: element['values']['xgboost'],
+            catboost: element['values']['catboost'],
+            linear: element['values']['linear'],
+            lightgbm: element['values']['lightgbm'],
+            xgboost: element['values']['xgboost'],
         }
     });
 
@@ -1364,7 +1325,7 @@ async function getForecastingMaxMinRackCellChartOption(chartData, defaultOption,
 
     chartData.forEach(element => {
         // Check all values exist
-        if (element['value1'] && Object.keys(element).length > 2) {
+        if (element['observed'] && Object.keys(element).length > 3) {
             Object.keys(forecastingDiffObject).forEach(forecastingDiffObjectKey => {
                 forecastingDiffObject[forecastingDiffObjectKey].push(element[forecastingDiffObjectKey]);
             });
@@ -1372,8 +1333,8 @@ async function getForecastingMaxMinRackCellChartOption(chartData, defaultOption,
     });
 
     Object.keys(forecastingDiffObject).forEach((forecastingDiffObjectKey) => {
-        if (forecastingDiffObjectKey !== 'value1') {
-            const observedValues = tf.tensor(forecastingDiffObject['value1']);
+        if (forecastingDiffObjectKey !== 'observed') {
+            const observedValues = tf.tensor(forecastingDiffObject['observed']);
             const predictionValues = tf.tensor(forecastingDiffObject[forecastingDiffObjectKey]);
             const meanAbsoluteError = tf.metrics.meanAbsoluteError(observedValues, predictionValues).dataSync()[0];
             const meanSquaredError = tf.metrics.meanSquaredError(observedValues, predictionValues).dataSync()[0];
@@ -2837,16 +2798,34 @@ forecastingObjectVisualizationSearchModalFormValidation
         let operatingSiteId = forecastingObjectVisualizationSearchModalFormOperatingSiteSelectElement.value;
         let bankId = forecastingObjectVisualizationSearchModalFormBankSelectElement.value;
         let rackId = forecastingObjectVisualizationSearchModalFormRackSelectElement.value;
+        let fields = `timestamp,${forecastingObject['observedValue']},${forecastingObject['observedPosition']}`
         let startTime = DateTime.fromFormat(window['forecastingObjectVisualizationSearchModalFormStartDateTimeInput'].value, customFullDateTimeFormat).toFormat(customTimeDesignatorFullDateTimeFormat);
         let endTime = DateTime.fromFormat(window['forecastingObjectVisualizationSearchModalFormEndDateTimeInput'].value, customFullDateTimeFormat).toFormat(customTimeDesignatorFullDateTimeFormat);
 
-        let requestUrl = new URL(`${window.location.origin}/api/ess/stats/${forecastingObject['urlPath']}/operating-sites/${operatingSiteId}/banks/${bankId}/racks/${rackId}/`);
+        let requestUrl = new URL(`${window.location.origin}/api/ess/operating-sites/${operatingSiteId}/banks/${bankId}/racks/${rackId}/`);
+        requestUrl.searchParams.append('fields', fields);
+        requestUrl.searchParams.append('start-time', startTime);
+        requestUrl.searchParams.append('end-time', endTime);
+        requestUrl.searchParams.append('no_page', '');
+
+        let observedResponseData = await loadData(requestUrl);
+        let observedResponseDataObject = {};
+
+        observedResponseData.forEach(element => {
+            let time = DateTime.fromISO(element['timestamp']).toMillis();
+
+            observedResponseDataObject[`${time}`] = {};
+            observedResponseDataObject[`${time}`]['observed'] = element[`${forecastingObject['observedValue']}`];
+            observedResponseDataObject[`${time}`]['observedPosition'] = element[`${forecastingObject['observedPosition']}`];
+        });
+
+        requestUrl = new URL(`${window.location.origin}/api/ess/stats/${forecastingObject['urlPath']}/operating-sites/${operatingSiteId}/banks/${bankId}/racks/${rackId}/`);
         requestUrl.searchParams.append('start-time', startTime);
         requestUrl.searchParams.append('end-time', endTime);
 
-        let responseData = await loadData(requestUrl);
+        let forecastingObjectResponseData = await loadData(requestUrl);
 
-        let chartData = getForecastingMaxMinRackCellChartData(responseData);
+        let chartData = getForecastingMaxMinRackCellChartData(forecastingObjectResponseData);
 
         forecastingObjectCardElement.querySelector('.card-body p').textContent = `
             ${forecastingObjectVisualizationSearchModalFormOperatingSiteSelectElement.options[forecastingObjectVisualizationSearchModalFormOperatingSiteSelectElement.selectedIndex].text} / Bank ${bankId} / Rack ${rackId}
@@ -2859,15 +2838,23 @@ forecastingObjectVisualizationSearchModalFormValidation
         });
 
         chartData.forEach(element => {
-            // Check object with all models
-            if (element['value1'] && Object.keys(element).length > 2) {
+            let time = element['time'];
+
+            if (observedResponseDataObject[`${time}`]) {
+                element['observedPosition'] = observedResponseDataObject[`${time}`]['observedPosition'];
+            }
+
+            // Check object with all models (Default key: time, observed, observedPosition)
+            if (element['observed'] && Object.keys(element).length > 3) {
                 Object.keys(forecastingDiffObject).forEach(forecastingDiffObjectKey => {
-                    let forecastingDiff = Math.abs(element['value1'] - element[forecastingDiffObjectKey]);
+                    let forecastingDiff = Math.abs(element['observed'] - element[forecastingDiffObjectKey]);
 
                     element[`${forecastingDiffObjectKey}Diff`] = forecastingDiff;
                 });
             }
         });
+
+        console.log(chartData);
 
         let forecastingMaxMinRackCellChartOption = await getForecastingMaxMinRackCellChartOption(chartData, forecastingMaxMinRackCellChartDefaultOption, forecastingDiffObject);
 
@@ -3280,24 +3267,24 @@ if (!staticExSoSChartData) {
     requestUrl.searchParams.append('chart_type', 'ExSoS');
 
     loadData(requestUrl)
-    .then(data => {
-        let staticExSoSChartDataValue = {};
+        .then(data => {
+            let staticExSoSChartDataValue = {};
 
-        data['results'].forEach(element => {
-            staticExSoSChartDataValue[element['name']] = element['values'];
-        });
+            data['results'].forEach(element => {
+                staticExSoSChartDataValue[element['name']] = element['values'];
+            });
 
-        sessionStorage.setItem(`staticExSoSChartData`, JSON.stringify(staticExSoSChartDataValue));
-        staticExSoSChartData = sessionStorage.getItem('staticExSoSChartData');
+            sessionStorage.setItem(`staticExSoSChartData`, JSON.stringify(staticExSoSChartDataValue));
+            staticExSoSChartData = sessionStorage.getItem('staticExSoSChartData');
 
-        detailExSoSVoltageSafetySeriesList.forEach(series => {
-            series.data.setAll(JSON.parse(staticExSoSChartData)['over_voltage_safety']);
-        });
-    
-        detailExSoSTemperatureSafetySeriesList.forEach(series => {
-            series.data.setAll(JSON.parse(staticExSoSChartData)['over_temperature_safety']);
-        });
-    }).catch(error => console.log(error));
+            detailExSoSVoltageSafetySeriesList.forEach(series => {
+                series.data.setAll(JSON.parse(staticExSoSChartData)['over_voltage_safety']);
+            });
+
+            detailExSoSTemperatureSafetySeriesList.forEach(series => {
+                series.data.setAll(JSON.parse(staticExSoSChartData)['over_temperature_safety']);
+            });
+        }).catch(error => console.log(error));
 } else {
     detailExSoSVoltageSafetySeriesList.forEach(series => {
         series.data.setAll(JSON.parse(staticExSoSChartData)['over_voltage_safety']);
@@ -3311,21 +3298,29 @@ if (!staticExSoSChartData) {
 // Create forecasting max-min rack cell charts
 let forecastingMaxRackCellVoltageObject = {
     name: 'forecastingMaxRackCellVoltage',
+    observedValue: 'rack_max_cell_voltage',
+    observedPosition: 'rack_max_cell_voltage_position',
     urlPath: 'forecasting-max-cell-voltage'
 };
 
 let forecastingMinRackCellVoltageObject = {
     name: 'forecastingMinRackCellVoltage',
+    observedValue: 'rack_min_cell_voltage',
+    observedPosition: 'rack_min_cell_voltage_position',
     urlPath: 'forecasting-min-cell-voltage'
 };
 
 let forecastingMaxRackCellTemperatureObject = {
     name: 'forecastingMaxRackCellTemperature',
+    observedValue: 'rack_max_cell_temperature',
+    observedPosition: 'rack_max_cell_temperature_position',
     urlPath: 'forecasting-max-cell-temperature'
 }
 
 let forecastingMinRackCellTemperatureObject = {
     name: 'forecastingMinRackCellTemperature',
+    observedValue: 'rack_min_cell_temperature',
+    observedPosition: 'rack_min_cell_temperature_position',
     urlPath: 'forecasting-min-cell-temperature'
 }
 
@@ -3340,64 +3335,128 @@ let forecastingMaxMinRackCellChartDefaultOption = {
     seriesInfo: [
         {
             name: "Observed",
-            value: 'value1'
+            value: 'observed'
         }, {
             name: "CatBoost",
-            value: 'value2'
+            value: 'catboost'
         }, {
             name: "Linear",
-            value: 'value3'
+            value: 'linear'
         }, {
             name: "LightGBM",
-            value: 'value4'
+            value: 'lightgbm'
         }, {
             name: "XGBoost",
-            value: 'value5'
+            value: 'xgboost'
         },
     ]
-}
+};
+
+let fields = 'timestamp';
 
 forecastingObjects.forEach(forecastingObject => {
-    let forecastingObjectName = forecastingObject['name'];
-    let forecastingObjectCardElementId = `${forecastingObjectName}Card`;
-    let forecastingObjectChartElementId = `${forecastingObjectName}Chart`;
-
-    // Declare variable with dynamic name in 'window' object
-    window[`${forecastingObjectName}Object`] = forecastingObject;
-
-    requestUrl = new URL(`${window.location.origin}/api/ess/stats/${forecastingObject['urlPath']}/operating-sites/1/banks/1/racks/1/`);
-    requestUrl.searchParams.append('start-time', currentDateTime.minus({ hour: 1 }).toFormat(customTimeDesignatorFullDateTimeFormat));
-    requestUrl.searchParams.append('end-time', currentDateTime.toFormat(customTimeDesignatorFullDateTimeFormat));
-
-    loadData(requestUrl)
-        .then(async (responseData) => {
-            let chartData = getInitialForecastingMaxMinRackCellChartData(responseData);
-
-            // Set axis range info
-            let lastChartDataElementTime = chartData[chartData.length - 1]['time'];
-            let minusTenMinuteTime = DateTime.fromMillis(lastChartDataElementTime).minus({ minute: 10 }).toMillis();
-
-            let forecastingMaxMinRackCellChartNewOption = JSON.parse(JSON.stringify(forecastingMaxMinRackCellChartDefaultOption));
-            forecastingMaxMinRackCellChartNewOption['axisRangeInfo'] = {
-                value: minusTenMinuteTime,
-                endValue: lastChartDataElementTime
-            }
-
-            // Create chart
-            window[`${forecastingObjectName}ChartSeriesList`] = getForecastingMaxMinRackCellSeriesList(forecastingObjectChartElementId, forecastingMaxMinRackCellChartNewOption);
-            window[`${forecastingObjectName}ChartSeriesList`].forEach(chartSeries => {
-                chartSeries.data.setAll(chartData);
-            });
-
-            // Setup loading UI
-            let forecastingObjectCardElement = document.getElementById(forecastingObjectCardElementId);
-            forecastingObjectCardElement.querySelector('.spinner-border').classList.add('d-none');
-
-            let forecastingObjectChartElement = document.getElementById(forecastingObjectChartElementId);
-            forecastingObjectChartElement.parentNode.classList.remove('d-none');
-        })
-        .catch(error => console.log(error));
+    fields += `,${forecastingObject['observedValue']},${forecastingObject['observedPosition']}`;
 });
+
+startTime = currentDateTime.minus({ hour: 1 }).toFormat(customTimeDesignatorFullDateTimeFormat);
+endTime = currentDateTime.toFormat(customTimeDesignatorFullDateTimeFormat);
+
+requestUrl = new URL(`${window.location.origin}/api/ess/operating-sites/1/banks/1/racks/1/`);
+requestUrl.searchParams.append('fields', fields);
+requestUrl.searchParams.append('start-time', startTime);
+requestUrl.searchParams.append('end-time', endTime);
+requestUrl.searchParams.append('no_page', '');
+
+loadData(requestUrl)
+    .then(observedResponseData => {
+        forecastingObjects.forEach(forecastingObject => {
+            let forecastingObjectName = forecastingObject['name'];
+            let forecastingObjectCardElementId = `${forecastingObjectName}Card`;
+            let forecastingObjectChartElementId = `${forecastingObjectName}Chart`;
+
+            // Declare variable with dynamic name in 'window' object
+            window[`${forecastingObjectName}Object`] = forecastingObject;
+
+            let startTime = currentDateTime.minus({ minute: 10 }).toFormat(customTimeDesignatorFullDateTimeFormat);
+            let endTime = currentDateTime.toFormat(customTimeDesignatorFullDateTimeFormat);
+
+            let requestUrl = new URL(`${window.location.origin}/api/ess/stats/${forecastingObject['urlPath']}/operating-sites/1/banks/1/racks/1/`);
+            requestUrl.searchParams.append('start-time', startTime);
+            requestUrl.searchParams.append('end-time', endTime);
+
+            loadData(requestUrl)
+                .then(forecastingObjectResponseData => {
+                    let chartDataObjects = {};
+
+                    // Add observed response data in chart data object
+                    observedResponseData.forEach((element, index) => {
+                        let time = DateTime.fromISO(element['timestamp']).toMillis();
+
+                        chartDataObjects[`${time}`] = {};
+                        chartDataObjects[`${time}`]['observed'] = element[forecastingObject['observedValue']];
+                        chartDataObjects[`${time}`]['observedPosition'] = element[forecastingObject['observedPosition']];
+
+                        // Attach values of forecasting max-min response data in last observed data
+                        if (index == observedResponseData.length - 1) {
+                            forecastingMaxMinRackCellChartDefaultOption['seriesInfo'].forEach(info => {
+                                if (info['value'] !== 'observed') {
+                                    chartDataObjects[`${time}`][info['value']] = element[forecastingObject['observedValue']];
+                                }
+                            });
+                        }
+                    });
+
+                    // Add forecasting max-min response data in chart data object
+                    forecastingObjectResponseData.forEach(element => {
+                        let time = DateTime.fromISO(element['time']).plus({ minute: 10 }).toMillis();
+                        let values = element['values'];
+
+                        delete values['observed'];
+
+                        if (!chartDataObjects[`${time}`]) {
+                            chartDataObjects[`${time}`] = {};
+
+                            Object.keys(values).forEach(value => {
+                                chartDataObjects[`${time}`][value] = values[value];
+                            });
+                        }
+                    });
+
+                    let chartData = Object.keys(chartDataObjects).map(timeString => {
+                        return {
+                            time: Number(timeString),
+                            ...chartDataObjects[timeString]
+                        }
+                    });
+
+                    // Set axis range info
+                    let lastObservedChartDataTime = DateTime.fromISO(observedResponseData[observedResponseData.length - 1]['timestamp']).toMillis();
+                    let lastForecastingObjectResponseDataTime = chartData[chartData.length - 1]['time'];
+
+                    let forecastingMaxMinRackCellChartNewOption = JSON.parse(JSON.stringify(forecastingMaxMinRackCellChartDefaultOption));
+                    forecastingMaxMinRackCellChartNewOption['axisRangeInfo'] = {
+                        value: lastObservedChartDataTime,
+                        endValue: lastForecastingObjectResponseDataTime
+                    }
+
+                    // Create chart
+                    window[`${forecastingObjectName}ChartSeriesList`] = getForecastingMaxMinRackCellSeriesList(forecastingObjectChartElementId, forecastingMaxMinRackCellChartNewOption);
+                    window[`${forecastingObjectName}ChartSeriesList`].forEach(chartSeries => {
+                        chartSeries.data.setAll(chartData);
+                    });
+
+                    // Setup loading UI
+                    let forecastingObjectCardElement = document.getElementById(forecastingObjectCardElementId);
+                    forecastingObjectCardElement.querySelector('.spinner-border').classList.add('d-none');
+
+                    let forecastingObjectChartElement = document.getElementById(forecastingObjectChartElementId);
+                    forecastingObjectChartElement.parentNode.classList.remove('d-none');
+                })
+                .catch(error => console.log(error));
+        })
+    })
+    .catch(error => console.log(error));
+
 
 // Create multi step forecasting max cell voltage chart
 startTime = '2023-02-07T00:00:00';
