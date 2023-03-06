@@ -320,6 +320,33 @@ class ESS2Bank(CommonBankInfo):
         db_table = "bank"
 
 
+class ESS3Bank(CommonBankInfo):
+    max_module_temperature = models.FloatField(db_column="MAX_MODULE_TEMPERATURE", blank=True, null=True)
+    min_module_temperature = models.FloatField(db_column="MIN_MODULE_TEMPERATURE", blank=True, null=True)
+    max_module_humidity = models.FloatField(db_column="MAX_MODULE_HUMIDITY", blank=True, null=True)
+    min_module_humidity = models.FloatField(db_column="MIN_MODULE_HUMIDITY", blank=True, null=True)
+    rack_tray_voltage_imbalance_warning = models.IntegerField(
+        db_column="RACK_TRAY_VOLTAGE_IMBALANCE_WARNING", blank=True, null=True
+    )
+    master_rack_communication_fault = models.TextField(
+        db_column="MASTER_RACK_COMMUNICATION_FAULT", blank=True, default=""
+    )
+    battery_status_for_standby = models.IntegerField(db_column="BATTERY_STATUS_FOR_STANDBY", blank=True, null=True)
+    battery_status_for_discharge = models.IntegerField(db_column="BATTERY_STATUS_FOR_DISCHARGE", blank=True, null=True)
+    rack_to_master_bms_communication_status = models.IntegerField(
+        db_column="RACK_TO_MASTER_BMS_COMMUNICATION_STATUS", blank=True, null=True
+    )
+    charging_stop_of_status = models.IntegerField(db_column="CHARGING_STOP_OF_STATUS", blank=True, null=True)
+    discharging_stop_of_status = models.IntegerField(db_column="DISCHARGING_STOP_OF_STATUS", blank=True, null=True)
+    emergency_status = models.IntegerField(db_column="EMERGENCY_STATUS", blank=True, null=True)
+    tvoc_status = models.IntegerField(db_column="TVOC_STATUS", blank=True, null=True)
+    order_source = models.IntegerField(db_column="ORDER_SOURCE", blank=True, null=True)
+    emergency_source = models.IntegerField(db_column="EMERGENCY_SOURCE", blank=True, null=True)
+
+    class Meta(CommonBankInfo.Meta):
+        db_table = "bank"
+
+
 class Rack(models.Model):
     timestamp = models.DateTimeField(db_column="TIMESTAMP", primary_key=True)
     bank_id = models.IntegerField(db_column="BANK_ID")
@@ -422,6 +449,33 @@ class Rack(models.Model):
 
 
 class ESS2Rack(CommonRackInfo):
+    rack_max_module_temperature = models.FloatField(db_column="RACK_MAX_MODULE_TEMPERATURE", blank=True, null=True)
+    rack_max_module_temperature_position = models.FloatField(
+        db_column="RACK_MAX_MODULE_TEMPERATURE_POSITION", blank=True, null=True
+    )
+    rack_min_module_temperature = models.FloatField(db_column="RACK_MIN_MODULE_TEMPERATURE", blank=True, null=True)
+    rack_min_module_temperature_position = models.FloatField(
+        db_column="RACK_MIN_MODULE_TEMPERATURE_POSITION", blank=True, null=True
+    )
+    rack_max_module_humidity = models.FloatField(db_column="RACK_MAX_MODULE_HUMIDITY", blank=True, null=True)
+    rack_max_module_humidity_position = models.FloatField(
+        db_column="RACK_MAX_MODULE_HUMIDITY_POSITION", blank=True, null=True
+    )
+    rack_min_module_humidity = models.FloatField(db_column="RACK_MIN_MODULE_HUMIDITY", blank=True, null=True)
+    rack_min_module_humidity_position = models.FloatField(
+        db_column="RACK_MIN_MODULE_HUMIDITY_POSITION", blank=True, null=True
+    )
+    rack_status_for_online = models.IntegerField(db_column="RACK_STATUS_FOR_Online", blank=True, null=True)
+    rack_tray_volatge_imbalance_warning = models.IntegerField(
+        db_column="RACK_TRAY_VOLATGE_IMBALANCE_WARNING", blank=True, null=True
+    )
+    rack_module_fault = models.TextField(db_column="RACK_MODULE_FAULT", blank=True, null=True)
+
+    class Meta(CommonRackInfo.Meta):
+        db_table = "rack"
+
+
+class ESS3Rack(CommonRackInfo):
     rack_max_module_temperature = models.FloatField(db_column="RACK_MAX_MODULE_TEMPERATURE", blank=True, null=True)
     rack_max_module_temperature_position = models.FloatField(
         db_column="RACK_MAX_MODULE_TEMPERATURE_POSITION", blank=True, null=True
@@ -615,6 +669,68 @@ class ESS2Pcs(models.Model):
         db_table = "pcs"
 
 
+class ESS3Pcs(models.Model):
+    timestamp = models.DateTimeField(db_column="TIMESTAMP", primary_key=True)
+    voltage = models.FloatField(db_column="VOLTAGE", blank=True, null=True)
+    current = models.FloatField(db_column="CURRENT", blank=True, null=True)
+    power = models.FloatField(db_column="POWER", blank=True, null=True)
+    ac_vu = models.FloatField(db_column="AC_VU", blank=True, null=True)
+    ac_vv = models.FloatField(db_column="AC_VV", blank=True, null=True)
+    ac_vw = models.FloatField(db_column="AC_VW", blank=True, null=True)
+    ac_iu = models.FloatField(db_column="AC_IU", blank=True, null=True)
+    ac_iv = models.FloatField(db_column="AC_IV", blank=True, null=True)
+    ac_iw = models.FloatField(db_column="AC_IW", blank=True, null=True)
+    ac_power = models.FloatField(db_column="AC_POWER", blank=True, null=True)
+    ac_freq = models.FloatField(db_column="AC_FREQ", blank=True, null=True)
+    dc_v = models.FloatField(db_column="DC_V", blank=True, null=True)
+    c_kwh = models.FloatField(db_column="C_KWH", blank=True, null=True)
+    power_setting = models.FloatField(db_column="POWER_SETTING", blank=True, null=True)
+    max_voltage = models.FloatField(db_column="MAX_VOLTAGE", blank=True, null=True)
+    min_voltage = models.FloatField(db_column="MIN_VOLTAGE", blank=True, null=True)
+    ci_setting = models.FloatField(db_column="CI_SETTING", blank=True, null=True)
+    di_setting = models.FloatField(db_column="DI_SETTING", blank=True, null=True)
+    lqe_ref = models.FloatField(db_column="LQE_REF", blank=True, null=True)
+    vdc_ref = models.FloatField(db_column="VDC_REF", blank=True, null=True)
+    d_kwh = models.FloatField(db_column="D_KWH", blank=True, null=True)
+    pf = models.FloatField(db_column="PF", blank=True, null=True)
+    state_of_pcs = models.IntegerField(db_column="STATE_OF_PCS", blank=True, null=True)
+    gate_err_a = models.IntegerField(db_column="GATE_ERR_A", blank=True, null=True)
+    gate_err_b = models.IntegerField(db_column="GATE_ERR_B", blank=True, null=True)
+    gate_err_c = models.IntegerField(db_column="GATE_ERR_C", blank=True, null=True)
+    e_stop_fault = models.IntegerField(db_column="E_STOP_FAULT", blank=True, null=True)
+    overheat = models.IntegerField(db_column="OVERHEAT", blank=True, null=True)
+    dc_fuse_fault = models.IntegerField(db_column="DC_FUSE_FAULT", blank=True, null=True)
+    init_fault = models.IntegerField(db_column="INIT_FAULT", blank=True, null=True)
+    ac_fuse_open = models.IntegerField(db_column="AC_FUSE_OPEN", blank=True, null=True)
+    imd_fault = models.IntegerField(db_column="IMD_FAULT", blank=True, null=True)
+    vbat_err = models.IntegerField(db_column="VBAT_ERR", blank=True, null=True)
+    oc_bat = models.IntegerField(db_column="OC_BAT", blank=True, null=True)
+    ov_vdc = models.IntegerField(db_column="OV_VDC", blank=True, null=True)
+    uv_vdc = models.IntegerField(db_column="UV_VDC", blank=True, null=True)
+    sft_unb_dc_link = models.IntegerField(db_column="SFT_UNB_DC_LINK", blank=True, null=True)
+    eeprom_write_error = models.IntegerField(db_column="EEPROM_WRITE_ERROR", blank=True, null=True)
+    ov_source = models.IntegerField(db_column="OV_SOURCE", blank=True, null=True)
+    uv_source = models.IntegerField(db_column="UV_SOURCE", blank=True, null=True)
+    seq_source = models.IntegerField(db_column="SEQ_SOURCE", blank=True, null=True)
+    unb_source = models.IntegerField(db_column="UNB_SOURCE", blank=True, null=True)
+    inter_source = models.IntegerField(db_column="INTER_SOURCE", blank=True, null=True)
+    oc_la_fault = models.IntegerField(db_column="OC_LA_FAULT", blank=True, null=True)
+    oc_lb_fault = models.IntegerField(db_column="OC_LB_FAULT", blank=True, null=True)
+    oc_lc_fault = models.IntegerField(db_column="OC_LC_FAULT", blank=True, null=True)
+    offset_la = models.IntegerField(db_column="OFFSET_LA", blank=True, null=True)
+    offset_lb = models.IntegerField(db_column="OFFSET_LB", blank=True, null=True)
+    unb_current = models.IntegerField(db_column="UNB_CURRENT", blank=True, null=True)
+    freq_low = models.IntegerField(db_column="FREQ_LOW", blank=True, null=True)
+    freq_high = models.IntegerField(db_column="FREQ_HIGH", blank=True, null=True)
+    pms_e_stop = models.IntegerField(db_column="PMS_E_STOP", blank=True, null=True)
+    overload = models.IntegerField(db_column="OVERLOAD", blank=True, null=True)
+    communication_error = models.IntegerField(db_column="COMMUNICATION_ERROR", blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = "pcs"
+
+
 class Etc(models.Model):
     timestamp = models.DateTimeField(db_column="TIMESTAMP", primary_key=True)
     bank_id = models.IntegerField(db_column="BANK_ID")
@@ -631,6 +747,16 @@ class Etc(models.Model):
 
 
 class ESS2Etc(CommonEtcInfo):
+    sensor2_temperature = models.FloatField(db_column="SENSOR2_TEMPERATURE", blank=True, null=True)
+    sensor2_humidity = models.FloatField(db_column="SENSOR2_HUMIDITY", blank=True, null=True)
+    active_power_total = models.FloatField(db_column="ACTIVE_POWER_TOTAL", blank=True, null=True)
+    active_energy_total_high = models.FloatField(db_column="ACTIVE_ENERGY_TOTAL_HIGH", blank=True, null=True)
+
+    class Meta(CommonEtcInfo.Meta):
+        db_table = "etc"
+
+
+class ESS3Etc(CommonEtcInfo):
     sensor2_temperature = models.FloatField(db_column="SENSOR2_TEMPERATURE", blank=True, null=True)
     sensor2_humidity = models.FloatField(db_column="SENSOR2_HUMIDITY", blank=True, null=True)
     active_power_total = models.FloatField(db_column="ACTIVE_POWER_TOTAL", blank=True, null=True)

@@ -777,7 +777,7 @@ async function monitoringLogColumnInputHandler(event, url) {
 
 /* Initial task */
 // - Create monitoring list
-var operatingSiteMonitoringListColumnIds = ['operatingSite1MonitoringListColumn', 'operatingSite2MonitoringListColumn'];
+var operatingSiteMonitoringListColumnIds = ['operatingSite1MonitoringListColumn', 'operatingSite2MonitoringListColumn', 'operatingSite3MonitoringListColumn'];
 operatingSiteMonitoringListColumnIds.forEach((operatingSiteMonitoringListColumnId, operatingSiteMonitoringListColumnIdIndex) => {
     let operatingSite = operatingSiteMonitoringListColumnId.replace('MonitoringListColumn', '');
     let operatingSiteId = operatingSiteMonitoringListColumnIdIndex + 1;
@@ -934,7 +934,7 @@ monitoringListItemModalTriggerList.forEach(element => {
 // - Create monitoring log
 let initialMonitoringLogLoadInterval = {};
 
-var monitoringLogColumnIds = ['operatingSite1MonitoringLogColumn', 'operatingSite2MonitoringLogColumn'];
+var monitoringLogColumnIds = ['operatingSite1MonitoringLogColumn', 'operatingSite2MonitoringLogColumn', 'operatingSite3MonitoringLogColumn'];
 monitoringLogColumnIds.forEach(async (monitoringLogColumnId, index) => {
     let operatingSiteId = index + 1;
     let monitoringLogColumnElement = document.getElementById(monitoringLogColumnId);
@@ -1037,14 +1037,21 @@ operatingDataDownloadModalFormValidation.addField('#operatingDataDownloadModalSt
 ]).addRequiredGroup(
     '#operatingDataDownloadModalDataTypeCheckboxGroup',
     '1가지 이상의 데이터 타입을 선택하세요.'
+).addRequiredGroup(
+    '#operatingDataDownloadModalDataTypeRadioButtonGroup',
+    '데이터 비식별화 유무를 선택하세요.'
 ).onSuccess(event => {
     let checkedBoxElements = document.querySelectorAll('#operatingDataDownloadModalDataTypeCheckboxGroup input:checked');
+    let radioButtonElement = document.querySelector('#operatingDataDownloadModalDataTypeRadioButtonGroup input:checked');
+
     checkedBoxElements.forEach(element => {
         let operatingSiteId = document.querySelector('#operatingDataDownloadModalForm button[type=submit]').getAttribute('data-operating-site-id');
         let dataType = element.value;
         let startTime = document.getElementById('operatingDataDownloadModalStartDateTimeInput').value.replace(' ', 'T');
         let endTime = document.getElementById('operatingDataDownloadModalEndDateTimeInput').value.replace(' ', 'T');
-        let requestUrl = new URL(window.location.origin + '/api/ess/download/operating-sites/' + operatingSiteId + '/' + dataType + '/');
+        let downloadPath = (radioButtonElement.value == 'deIdentification') ? 'download/di' : 'download';
+        
+        let requestUrl = new URL(`${window.location.origin}/api/ess/${downloadPath}/operating-sites/${operatingSiteId}/${dataType}/`);
         requestUrl.searchParams.append('start-time', startTime);
         requestUrl.searchParams.append('end-time', endTime);
 

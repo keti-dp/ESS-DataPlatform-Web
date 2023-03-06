@@ -16,9 +16,14 @@
         min-height: 360px;
     }
 
-    .detail-visualization-chart {
+    .detail-sos-chart {
         width: 100%;
         min-height: 800px;
+    }
+
+    .detail-exsos-chart {
+        width: 100%;
+        min-height: 500px;
     }
 </style>
 {% endblock %}
@@ -51,6 +56,7 @@
                             <a class="nav-link ml-3 my-1" href="#itemSoh">SoH</a>
                             <a class="nav-link ml-3 my-1" href="#itemSoL">SoL</a>
                             <a class="nav-link ml-3 my-1" href="#itemSoS">SoS</a>
+                            <a class="nav-link ml-3 my-1" href="#itemEXSoS">EXSoS</a>
                         </nav>
                         <a class="nav-link" href="#itemEtc">기타</a>
                         <nav class="nav nav-pills flex-column">
@@ -65,7 +71,7 @@
                 <div data-bs-spy="scroll" data-bs-target="#mainContentNavbar" data-bs-offset="0" tabindex="0"
                     style="height: 100%; overflow-x: hidden; overflow-y: scroll;">
                     <h4 id="itemSafetyDiagnosticIndicator"><u>안전 진단 지표</u></h4>
-                    <p>배터리의 다양한 안전 상태 지표를 나타냅니다.</p>
+                    <p>ESS의 다양한 안전 상태 지표를 나타냅니다.</p>
 
                     <!-- [SoC] start -->
                     <h5 id="itemSoc">SoC <i class="bi bi-info-circle" data-bs-toggle="tooltip" data-bs-placement="top"
@@ -298,17 +304,18 @@
                                                 <div class="accordion-item">
                                                     <h2 class="accordion-header">
                                                         <button class="accordion-button collapsed" type="button"
-                                                            data-bs-toggle="collapse" data-bs-target="#collapseOne"
-                                                            aria-expanded="true" aria-controls="collapseOne">
+                                                            data-bs-toggle="collapse"
+                                                            data-bs-target="#detailRackSoSAccordionCollapseOne"
+                                                            aria-expanded="true"
+                                                            aria-controls="detailRackSoSAccordionCollapseOne">
                                                             상세 보기
                                                         </button>
                                                     </h2>
-                                                    <div id="collapseOne" class="accordion-collapse collapse"
-                                                        aria-labelledby="headingOne"
+                                                    <div id="detailRackSoSAccordionCollapseOne"
+                                                        class="accordion-collapse collapse" aria-labelledby="headingOne"
                                                         data-bs-parent="#detailRackSoSAccordion">
                                                         <div class="accordion-body">
-                                                            <div id="detailRackSoSChart"
-                                                                class="detail-visualization-chart">
+                                                            <div id="detailRackSoSChart" class="detail-sos-chart">
                                                             </div>
                                                         </div>
                                                     </div>
@@ -321,6 +328,96 @@
                         </div>
                     </div>
                     <!-- [SoS] end -->
+
+                    <!-- [EXSoS] start -->
+                    <div class="row">
+                        <h5 id="itemEXSoS">EXSoS <i class="bi bi-info-circle" data-bs-toggle="tooltip"
+                                data-bs-placement="top" title="" data-bs-original-title="SoS를 다른 지표를 통해 계산한 확장된 SoS. 
+                                통합 안전도 : 퍼지논리를 기반하여 전압 안전도와 온도 안전도를 하나의 안전도로 표현한 수치. 
+                                소속도 : 해당 수치가 각 퍼지집합(함수)에 속하는 정도를 0 ~ 1 사이 값으로 표시한 값."></i>
+                        </h5>
+                        <div class="col-xl-12 col-md-12">
+                            <div id="exSoSCard" class="card mx-2">
+                                <div class="card-header">
+                                    <div class="row">
+                                        <div class="col-8 my-auto">
+                                            <h5>EXSoS</h5>
+                                        </div>
+                                        <div class="col-4 text-right">
+                                            <button class="btn btn-sm" type="button" data-bs-toggle="modal"
+                                                data-bs-target="#essEXSoSVisualizationSearchModal"
+                                                data-visualization-type="exsos">
+                                                <span class="material-icons-two-tone">
+                                                    search
+                                                </span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <!-- Loading -->
+                                    <div class="row">
+                                        <div class="text-center">
+                                            <div class="spinner-border" role="status">
+                                                <span class="visually-hidden">Loading...</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row d-none">
+                                        <div class="col-lg-6 col-12">
+                                            <p>시온유 태양광 / Bank 1</p>
+                                            <div id="mainEXSoSChart" class="visualization-chart"></div>
+                                        </div>
+                                        <div class="col-lg-6 col-12">
+                                            <div id="detailEXSoSChartInfo" class="text-center"></div>
+                                            <div id="detailEXSoSChart" class="detail-exsos-chart"></div>
+                                        </div>
+                                    </div>
+                                    <div class="row m-t-20">
+                                        <div class="accordion" id="detailEXSoSAccordion">
+                                            <div class="accordion-item">
+                                                <h2 class="accordion-header">
+                                                    <button class="accordion-button" type="button"
+                                                        data-bs-toggle="collapse"
+                                                        data-bs-target="#detailEXSoSAccordionCollapseOne"
+                                                        aria-expanded="true"
+                                                        aria-controls="detailEXSoSAccordionCollapseOne">
+                                                        상세 보기
+                                                    </button>
+                                                </h2>
+                                                <div id="detailEXSoSAccordionCollapseOne"
+                                                    class="accordion-collapse collapse show"
+                                                    aria-labelledby="headingOne" data-bs-parent="#detailEXSoSAccordion">
+                                                    <div class="accordion-body">
+                                                        <div class="row">
+                                                            <div class="col">
+                                                                <div id="detailEXSoSSafetyStatusInfo"
+                                                                    class="text-center"></div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="row">
+                                                            <div class="col-lg-6 col-12">
+                                                                <div id="detailEXSoSVoltageSafetyChart"
+                                                                    class="detail-exsos-chart">
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-lg-6 col-12">
+                                                                <div id="detailEXSoSTemperatureSafetyChart"
+                                                                    class="detail-exsos-chart">
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- [EXSoS] end -->
 
                     <!-- [Etc] start -->
                     <div class="row">
@@ -364,7 +461,6 @@
                             </div>
                         </div>
 
-                        <!--  [전압] start -->
                         <h5 id="itemVoltage">전압</h5>
                         <div class="row">
                             <div class="col-xl-6 col-md-12">
@@ -439,6 +535,37 @@
                                         <div class="row d-none">
                                             <p>시온유 태양광 / Bank 1 / Rack 1</p>
                                             <div id="forecastingMinRackCellVoltageChart" class="visualization-chart">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-xl-6 col-md-12">
+                                <div id="multiStepForecastingMaxCellVoltageCard" class="card mx-2">
+                                    <div class="card-header">
+                                        <div class="row">
+                                            <div class="col-8 my-auto">
+                                                <h5>1일 최대 셀 전압 예측 <i class="bi bi-info-circle" data-bs-toggle="tooltip"
+                                                        data-bs-placement="top" title=""
+                                                        data-bs-original-title="1일 최대 셀 전압을 예측합니다."></i>
+                                                </h5>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="card-body">
+                                        <!-- Loading -->
+                                        <div class="row d-none">
+                                            <div class="text-center">
+                                                <div class="spinner-border" role="status">
+                                                    <span class="visually-hidden">Loading...</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <p>시온유 태양광 / Bank 1 / Rack 2</p>
+                                            <div id="multiStepForecastingMaxCellVoltageChart"
+                                                class="visualization-chart">
                                             </div>
                                         </div>
                                     </div>
@@ -915,6 +1042,88 @@
                                         placeholder="마지막 시간을 선택해주세요" />
                                     <span class='input-group-text'
                                         data-td-target='#essRackSoSVisualizationSearchModalFormEndDateTimePicker'
+                                        data-td-toggle='datetimepicker'>
+                                        <span class='fas fa-calendar'></span>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <button type="submit" class="btn btn-primary">검색</button>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- EXSoS visualization search modal -->
+        <div class="modal fade" id="essEXSoSVisualizationSearchModal" tabindex="-1"
+            aria-labelledby="essEXSoSVisualizationSearchModalFormLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="essEXSoSVisualizationSearchModalFormLabel">EXSoS 차트 검색</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form action="#" id="essEXSoSVisualizationSearchModalForm" autocomplete="off">
+                            <div class="form-group">
+                                <label class='form-label'>Mode:</label>
+                                <div class="input-group m-b-10">
+                                    <select id="essEXSoSVisualizationSearchModalFormModeSelect" class="form-select">
+                                        <option value="" selected disabled>Mode를 선택해주세요.</option>
+                                        <option value="1">Bank</option>
+                                        <option value="2">Rack</option>
+                                    </select>
+                                </div>
+                                <label class='form-label'>구성:</label>
+                                <div class="input-group m-b-10">
+                                    <select id="essEXSoSVisualizationSearchModalFormOperatingSiteSelect"
+                                        class="form-select">
+                                        <option value="" selected disabled>운영 사이트를 선택해주세요.</option>
+                                        <option value="1">시온유 태양광</option>
+                                        <option value="2">판리 태양광</option>
+                                        <option value="3">황금6호 태양광</option>
+                                    </select>
+                                </div>
+                                <div class="input-group m-b-10">
+                                    <select name="" id="essEXSoSVisualizationSearchModalFormBankSelect"
+                                        class="form-select" disabled>
+                                        <option value="" selected disabled>Bank를 선택해주세요.</option>
+                                    </select>
+                                </div>
+                                <div class="input-group m-b-10 d-none">
+                                    <select id="essEXSoSVisualizationSearchModalFormRackSelect" class="form-select"
+                                        disabled>
+                                        <option value="" selected disabled>Rack을 선택해주세요.</option>
+                                    </select>
+                                </div>
+                                <label class='form-label'>시간:</label>
+                                <div class='input-group log-event m-b-10'
+                                    id='essEXSoSVisualizationSearchModalFormStartDateTimePicker'
+                                    data-td-target-input='nearest' data-td-target-toggle='nearest'>
+                                    <input id='essEXSoSVisualizationSearchModalFormStartDateTimeInput' type='text'
+                                        class='form-control'
+                                        data-td-target='#essEXSoSVisualizationSearchModalFormStartDateTimePicker'
+                                        placeholder="시작 시간을 선택해주세요" />
+                                    <span class='input-group-text'
+                                        data-td-target='#essEXSoSVisualizationSearchModalFormStartDateTimePicker'
+                                        data-td-toggle='datetimepicker'>
+                                        <span class='fas fa-calendar'></span>
+                                    </span>
+                                </div>
+                                <div class='input-group log-event'
+                                    id='essEXSoSVisualizationSearchModalFormEndDateTimePicker'
+                                    data-td-target-input='nearest' data-td-target-toggle='nearest'>
+                                    <input id='essEXSoSVisualizationSearchModalFormEndDateTimeInput' type='text'
+                                        class='form-control'
+                                        data-td-target='#essEXSoSVisualizationSearchModalFormEndDateTimePicker'
+                                        placeholder="마지막 시간을 선택해주세요" />
+                                    <span class='input-group-text'
+                                        data-td-target='#essEXSoSVisualizationSearchModalFormEndDateTimePicker'
                                         data-td-toggle='datetimepicker'>
                                         <span class='fas fa-calendar'></span>
                                     </span>
