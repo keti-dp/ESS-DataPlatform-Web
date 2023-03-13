@@ -166,3 +166,22 @@ class StaticChartData(models.Model):
 
     class Meta:
         db_table = "static_chart_data"
+
+
+class ForecastingSoS(models.Model):
+    time = models.DateTimeField(primary_key=True)
+    operating_site = models.IntegerField(db_column="operating_site_id")
+    bank_id = models.IntegerField()
+    rack_id = models.IntegerField()
+    values = models.JSONField(blank=True, null=True)
+    version = models.CharField(max_length=50, blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = "forecasting_rack_sos"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["time", "operating_site", "bank_id", "rack_id"],
+                name="forecasting_rack_sos_time_operating_site_id_bank_id_rack_id_key",
+            )
+        ]
