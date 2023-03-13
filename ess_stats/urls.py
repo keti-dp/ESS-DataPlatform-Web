@@ -14,6 +14,7 @@ from .views import (
     EXSoSRackViewSet,
     MultiStepForecastingMaxCellVoltageViewSet,
     StaticChartDataView,
+    ForecastingSoSViewSet,
 )
 
 router = SimpleRouter()
@@ -55,6 +56,9 @@ multi_step_forecasting_max_cell_voltage_router.register(
     r"racks", MultiStepForecastingMaxCellVoltageViewSet, basename="racks"
 )
 
+forecasting_sos_router = SimpleRouter()
+forecasting_sos_router.register(r"racks", ForecastingSoSViewSet, basename="racks")
+
 
 urlpatterns = [
     path("avg-soh/operating-sites/<int:operating_site_id>/", include(nested_router.urls)),
@@ -87,4 +91,8 @@ urlpatterns = [
         include(multi_step_forecasting_max_cell_voltage_router.urls),
     ),
     path("static-chart-data/", StaticChartDataView.as_view()),
+    path(
+        "forecasting-rack-sos/operating-sites/<int:operating_site_id>/banks/<int:bank_id>/",
+        include(forecasting_sos_router.urls),
+    ),
 ]

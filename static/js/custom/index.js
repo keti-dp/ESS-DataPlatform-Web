@@ -386,11 +386,11 @@ async function createForecastingBankSoLChart() {
 }
 
 /**
- * Get main rack SoS chart series
+ * Get main rack SoS chart series list
  * @param {object} elementId 
- * @returns {object}
+ * @returns {Array}
  */
-function getMainRackSoSChartSeries(elementId) {
+function getMainRackSoSChartSeriesList(elementId, option) {
     let root = getChartRoot(elementId);
     let chartOption = {
         paddingRight: 100,
@@ -402,7 +402,7 @@ function getMainRackSoSChartSeries(elementId) {
         am5xy.DateAxis.new(root, {
             baseInterval: {
                 timeUnit: 'second',
-                count: 1,
+                count: 10,
             },
             dateFormat: {
                 minute: 'HH:mm',
@@ -427,28 +427,47 @@ function getMainRackSoSChartSeries(elementId) {
 
     let yAxis = chart.yAxes.push(
         am5xy.ValueAxis.new(root, {
+            max: 1,
             min: 0,
             extraTooltipPrecision: 1,
             renderer: am5xy.AxisRendererY.new(root, {})
         })
     );
 
-    let series = chart.series.push(
-        am5xy.SmoothedXLineSeries.new(root, {
-            name: 'SoS',
-            xAxis: xAxis,
-            yAxis: yAxis,
-            valueXField: 'time',
-            valueYField: 'value',
-            tooltip: am5.Tooltip.new(root, {
-                labelText: "[bold]{name}[/]\n{valueY.formatNumber('#.000')}",
-            }),
-        })
-    );
+    let seriesInfo = option['seriesInfo'];
+    let seriesList = seriesInfo.map(element => {
+        return chart.series.push(
+            am5xy.SmoothedXLineSeries.new(root, {
+                name: element['name'],
+                xAxis: xAxis,
+                yAxis: yAxis,
+                valueXField: 'time',
+                valueYField: element['value'],
+                tooltip: am5.Tooltip.new(root, {
+                    labelText: "[bold]{name}[/]\n{valueY.formatNumber('#.000')}",
+                }),
+            })
+        );
+    });
 
     // Customize series
-    series.strokes.template.setAll({
-        strokeWidth: 3
+    let firstForecastingModelName = seriesList[1].get('name');
+
+    seriesList.forEach(element => {
+        let strokesTemplateOption = {
+            strokeWidth: 3
+        };
+
+        // 'Observed' series is in front of everything
+        if (element.get('name') == 'Observed') {
+            element.toFront();
+        } else {
+            if (element.get('name') != firstForecastingModelName) {
+                element.hide();
+            }
+        }
+
+        element.strokes.template.setAll(strokesTemplateOption);
     });
 
     // Add axis range
@@ -467,7 +486,7 @@ function getMainRackSoSChartSeries(elementId) {
     let safeAxisLabel = safeAxisRange.get('label');
     safeAxisLabel.setAll({
         html: `Warning(${zeta})<br>(${safeLimitSoSValue})`,
-        background: am5.RoundedRectangle.new(series.root, {
+        background: am5.RoundedRectangle.new(root, {
             fill: am5.color(0xf5df4d),
         }),
         inside: true,
@@ -499,7 +518,7 @@ function getMainRackSoSChartSeries(elementId) {
     let warningAxisLabel = warningAxisRange.get('label');
     warningAxisLabel.setAll({
         html: `Unsafe(${zeta}<sup>4</sup>)<br>(${Math.pow(safeLimitSoSValue, 4).toFixed(4)})`,
-        background: am5.RoundedRectangle.new(series.root, {
+        background: am5.RoundedRectangle.new(root, {
             fill: am5.color(0xff0000),
         }),
         inside: true,
@@ -516,12 +535,71 @@ function getMainRackSoSChartSeries(elementId) {
         visible: true,
     });
 
+    forecastingAxisRange = xAxis.createAxisRange(xAxis.makeDataItem(option['axisRangeInfo']));
+
+    forecastingAxisRange.get('grid').setAll({
+        stroke: am5.color(0x999999),
+        strokeOpacity: 0.5,
+        strokeDasharray: [3],
+    });
+
+    forecastingAxisRange.get('axisFill').setAll({
+        fill: am5.color(0x999999),
+        fillOpacity: 0.2,
+        visible: true,
+    });
+
     chart.plotContainer.onPrivate("width", () => {
         safeAxisRange.get("label").markDirtyPosition();
         warningAxisRange.get("label").markDirtyPosition();
     });
 
-    return series;
+    // Set legend
+    let legend = chart.children.push(am5.Legend.new(root, {
+        centerX: am5.percent(50),
+        x: am5.percent(50),
+        layout: am5.GridLayout.new(root, {
+            maxColumns: 2,
+            fixedWidthGrid: true
+        })
+    }));
+
+    // Event legend
+    // When legend item container is hovered, dim all the series except the hovered one
+    legend.itemContainers.template.events.on("pointerover", function (e) {
+        let itemContainer = e.target;
+
+        // As series list is data of a legend, dataContext is series
+        let series = itemContainer.dataItem.dataContext;
+
+        chart.series.each(function (chartSeries) {
+            if (chartSeries != series) {
+                chartSeries.strokes.template.setAll({
+                    strokeOpacity: 0.15,
+                    stroke: am5.color(0x000000)
+                });
+            } else {
+                chartSeries.strokes.template.setAll({
+                    strokeWidth: 3
+                });
+            }
+        });
+    });
+
+    // When legend item container is unhovered, make all series as they are
+    legend.itemContainers.template.events.on("pointerout", function (e) {
+        chart.series.each(function (chartSeries) {
+            chartSeries.strokes.template.setAll({
+                strokeOpacity: 1,
+                strokeWidth: 3,
+                stroke: chartSeries.get("fill")
+            });
+        });
+    })
+
+    legend.data.setAll(chart.series.values);
+
+    return seriesList;
 }
 
 /**
@@ -570,7 +648,7 @@ function getDetailRackSoSChartSeriesList(elementId, option) {
 
     let xAxis = chart.xAxes.push(
         am5xy.DateAxis.new(root, {
-            baseInterval: { timeUnit: "second", count: 1 },
+            baseInterval: { timeUnit: "second", count: 10 },
             dateFormats: {
                 minute: 'HH:mm',
                 hour: 'HH:mm',
@@ -1319,7 +1397,7 @@ function getForecastingMaxMinRackCellChartData(data) {
  * @param {object} forecastingDiffObject 
  * @returns 
  */
-async function getForecastingMaxMinRackCellChartOption(chartData, defaultOption, forecastingDiffObject) {
+async function getForecastingChartOption(chartData, defaultOption, forecastingDiffObject) {
     // - Deep copy
     let forecastingMaxMinRackCellChartOption = JSON.parse(JSON.stringify(defaultOption));
 
@@ -2352,17 +2430,12 @@ essRackSoSVisualizationSearchModalFormValidation
         let responseData = await loadData(requestUrl);
 
         let mainSoSChartData = [];
+        let mainSoSChartDataObject = {};
         let detailSoSChartData = [];
 
         // Add main & detail SoS data
         responseData.forEach(element => {
             let time = DateTime.fromISO(element['time']).toMillis();
-
-            mainSoSChartData.push({
-                time: time,
-                value: element['sos_score'],
-            });
-
             let detailSoSChartDataItem = {
                 time: time,
             };
@@ -2374,7 +2447,86 @@ essRackSoSVisualizationSearchModalFormValidation
             detailSoSChartData.push(detailSoSChartDataItem);
         });
 
-        mainRackSoSChartSeries.data.setAll(mainSoSChartData);
+        forecastingSoSRequestUrl = new URL(`${window.location.origin}/api/ess/stats/forecasting-rack-sos/operating-sites/${operatingSiteId}/banks/${bankId}/racks/${rackId}/`);
+        forecastingSoSRequestUrl.searchParams.append('start-time', startTime);
+        forecastingSoSRequestUrl.searchParams.append('end-time', endTime);
+
+        forecastingSoSResponseData = await loadData(forecastingSoSRequestUrl);
+        forecastingSoSResponseData.forEach(element => {
+            // Discard by 1 second unit for overlaping the observed values and forecasting values
+            let fixedTime = `${element['time'].substring(0, element['time'].length - 1)}0`;
+
+            let values = element['values'];
+            let observedTime = DateTime.fromISO(fixedTime).toMillis();
+            let forecastingTime = DateTime.fromISO(fixedTime).plus({ minute: 10 }).toMillis();
+
+            if (mainSoSChartDataObject[observedTime]) {
+                mainSoSChartDataObject[observedTime]['observed'] = values['observed'];
+            } else {
+                mainSoSChartDataObject[observedTime] = {
+                    observed: values['observed']
+                };
+            }
+
+            delete values['observed'];
+
+            mainSoSChartDataObject[forecastingTime] = {
+                ...values
+            };
+        });
+
+        Object.keys(mainSoSChartDataObject).forEach(time => {
+            mainSoSChartData.push({
+                time: Number(time),
+                ...mainSoSChartDataObject[time]
+            });
+        });
+
+        mainSoSChartData.sort((a, b) => {
+            return a['time'] - b['time'];
+        });
+
+        // Set forecastingDiffObject
+        let forecastingDiffObject = {};
+        forecastingMainRackSoSDefaultOption['seriesInfo'].forEach(seriesInfoItem => {
+            forecastingDiffObject[seriesInfoItem['value']] = [];
+        });
+
+        mainSoSChartData.forEach(element => {
+            // Check object with all models (Default key: time, observed)
+            if (element['observed'] && Object.keys(element).length > 2) {
+                Object.keys(forecastingDiffObject).forEach(forecastingDiffObjectKey => {
+                    let forecastingDiff = Math.abs(element['observed'] - element[forecastingDiffObjectKey]);
+
+                    element[`${forecastingDiffObjectKey}Diff`] = forecastingDiff;
+                });
+            }
+        });
+
+        let forecastingSoSChartOption = await getForecastingChartOption(mainSoSChartData, forecastingMainRackSoSDefaultOption, forecastingDiffObject);
+
+        let forecastingSoSChartOptionInfoObject = {};
+        forecastingSoSChartOption['seriesInfo'].forEach(element => {
+            forecastingSoSChartOptionInfoObject[element['value']] = element['name'];
+        });
+
+        mainRackSoSChartSeriesList.forEach(series => {
+            series.data.setAll(mainSoSChartData);
+
+            // Change legend's name
+            let seriesName = series.get('name');
+            let modelName;
+
+            if (seriesName.includes('(')) {
+                let index = seriesName.indexOf('(');
+
+                modelName = seriesName.substring(0, index).toLowerCase();
+            } else {
+                modelName = seriesName.toLowerCase();
+            }
+
+            series.set('name', forecastingSoSChartOptionInfoObject[modelName]);
+        });
 
         detailRackSoSChartSeriesList.forEach(detailRackSoSChartSeries => {
             detailRackSoSChartSeries.data.setAll(detailSoSChartData);
@@ -2854,9 +3006,7 @@ forecastingObjectVisualizationSearchModalFormValidation
             }
         });
 
-        console.log(chartData);
-
-        let forecastingMaxMinRackCellChartOption = await getForecastingMaxMinRackCellChartOption(chartData, forecastingMaxMinRackCellChartDefaultOption, forecastingDiffObject);
+        let forecastingMaxMinRackCellChartOption = await getForecastingChartOption(chartData, forecastingMaxMinRackCellChartDefaultOption, forecastingDiffObject);
 
         window[`${forecastingObjectName}ChartSeriesList`].forEach(chartSeries => {
             chartSeries.data.setAll(chartData);
@@ -3067,30 +3217,54 @@ let detailRackSoSChartOption = {
     ],
 };
 
-let mainRackSoSChartSeries = getMainRackSoSChartSeries('mainRackSoSChart');
+let forecastingMainRackSoSDefaultOption = {
+    seriesInfo: [
+        {
+            name: "Observed",
+            value: 'observed'
+        }, {
+            name: "CatBoost",
+            value: 'catboost'
+        }, {
+            name: "Linear",
+            value: 'linear'
+        }, {
+            name: "LightGBM",
+            value: 'lightgbm'
+        }, {
+            name: "XGBoost",
+            value: 'xgboost'
+        },
+    ]
+};
+
+let mainRackSoSChartSeriesList;
 let detailRackSoSChartSeriesList = getDetailRackSoSChartSeriesList('detailRackSoSChart', detailRackSoSChartOption);
 
-endTime = DateTime.now().toFormat(customTimeDesignatorFullDateTimeFormat);
-startTime = DateTime.fromISO(endTime).minus({ hour: 1 }).toFormat(customTimeDesignatorFullDateTimeFormat);
+startTime = currentDateTime.minus({ hour: 1 }).toFormat(customTimeDesignatorFullDateTimeFormat);
+endTime = currentDateTime.toFormat(customTimeDesignatorFullDateTimeFormat);
 
 requestUrl = new URL(`${window.location.origin}/api/ess/stats/sos/operating-sites/1/banks/1/racks/1/`);
 requestUrl.searchParams.append('start-time', startTime);
 requestUrl.searchParams.append('end-time', endTime);
 
 loadData(requestUrl)
-    .then(responseData => {
+    .then(async (responseData) => {
         const mainRackSoSChartElementId = 'mainRackSoSChart';
         let rackSoSCardElement = document.getElementById('rackSoSCard');
         let mainSoSChartData = [];
         let detailSoSChartData = [];
 
+        let forecastingMainRackSoSNewOption = JSON.parse(JSON.stringify(forecastingMainRackSoSDefaultOption));
+        forecastingMainRackSoSNewOption['axisRangeInfo'] = {};
+
         // Add main & detail SoS data
-        responseData.forEach(element => {
+        responseData.forEach((element, index) => {
             let time = DateTime.fromISO(element['time']).toMillis();
 
             mainSoSChartData.push({
                 time: time,
-                value: element['sos_score'],
+                observed: element['sos_score'],
             });
 
             let detailSoSChartDataItem = {
@@ -3102,9 +3276,44 @@ loadData(requestUrl)
             });
 
             detailSoSChartData.push(detailSoSChartDataItem);
+
+            if (responseData.length - 1 == index) {
+                forecastingMainRackSoSNewOption['axisRangeInfo']['value'] = time;
+            }
         });
 
-        mainRackSoSChartSeries.data.setAll(mainSoSChartData);
+        forecastingSoSRequestUrl = new URL(`${window.location.origin}/api/ess/stats/forecasting-rack-sos/operating-sites/1/banks/1/racks/1/`);
+        forecastingSoSRequestUrl.searchParams.append('start-time', currentDateTime.minus({ minute: 10 }).toFormat(customTimeDesignatorFullDateTimeFormat));
+        forecastingSoSRequestUrl.searchParams.append('end-time', currentDateTime.toFormat(customTimeDesignatorFullDateTimeFormat));
+
+        forecastingSoSResponseData = await loadData(forecastingSoSRequestUrl);
+        forecastingSoSResponseData.forEach((element, index) => {
+            let time = DateTime.fromISO(element['time']).plus({ minute: 10 }).toMillis();
+            let values = element['values'];
+            delete values['observed'];
+
+            if (index == 0) {
+                Object.keys(values).forEach(key => {
+                    mainSoSChartData[mainSoSChartData.length - 1][key] = values[key];
+                });
+            }
+
+            if (mainSoSChartData[mainSoSChartData.length - 1]['time'] < time) {
+                mainSoSChartData.push({
+                    time: time,
+                    ...values
+                });
+            }
+
+            if (forecastingSoSResponseData.length - 1 == index) {
+                forecastingMainRackSoSNewOption['axisRangeInfo']['endValue'] = time;
+            }
+        });
+
+        mainRackSoSChartSeriesList = getMainRackSoSChartSeriesList('mainRackSoSChart', forecastingMainRackSoSNewOption);
+        mainRackSoSChartSeriesList.forEach(series => {
+            series.data.setAll(mainSoSChartData);
+        });
 
         detailRackSoSChartSeriesList.forEach(detailRackSoSChartSeries => {
             detailRackSoSChartSeries.data.setAll(detailSoSChartData);

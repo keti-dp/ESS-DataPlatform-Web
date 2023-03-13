@@ -11,6 +11,7 @@ from .models import (
     EXSoS,
     MultiStepForecastingMaxCellVoltage,
     StaticChartData,
+    ForecastingSoS,
 )
 
 
@@ -120,5 +121,15 @@ class StaticChartDataTestCase(TestCase):
     def test_limit_count(self):
         count = 10
         queryset = StaticChartData.objects.all()[:count]
+
+        self.assertGreaterEqual(len(queryset), 0)
+
+
+class ForecastingSoSTestCase(TestCase):
+    databases = {"ess_stats"}
+
+    def test_limit_count(self):
+        count = 10
+        queryset = ForecastingSoS.objects.all()[:count]
 
         self.assertGreaterEqual(len(queryset), 0)
