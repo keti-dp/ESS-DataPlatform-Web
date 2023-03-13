@@ -1075,9 +1075,22 @@ function changeDetailEXSoSSafetyChart(option) {
     let membership_degree_detail = dataObject['membership_degree_detail'];
     let chargeStatus = membership_degree_detail['status'];
     let voltage = membership_degree_detail['voltage'];
+    let voltageGap = membership_degree_detail['voltage_gap'];
     let temperature = membership_degree_detail['temperature'];
+    let temperatureGap = membership_degree_detail['temperature_gap'];
 
     let detailEXSoSSafetyStatusInfoElement = document.getElementById('detailEXSoSSafetyStatusInfo');
+
+    let rangeDataOption = [
+        {
+            rangeDataItemValue: voltage,
+            axisLabelText: '평균 전압'
+        },
+        {
+            rangeDataItemValue: temperature,
+            axisLabelText: '평균 온도'
+        },
+    ];
 
     switch (chargeStatus) {
         case 0:
@@ -1114,23 +1127,25 @@ function changeDetailEXSoSSafetyChart(option) {
                 series.data.setAll(JSON.parse(staticExSoSChartData)['temperature_imbalance_safety']);
             });
 
+            //  Clear rangeDataOption
+            rangeDataOption.length = 0;
+
+            // Change rangeDataOption
+            rangeDataOption.push({
+                rangeDataItemValue: voltageGap,
+                axisLabelText: '평균 전압차'
+            });
+            rangeDataOption.push({
+                rangeDataItemValue: temperatureGap,
+                axisLabelText: '평균 온도차'
+            });
+
             break;
         default:
             break;
     }
 
     // Set xAxis range
-    let rangeDataOption = [
-        {
-            rangeDataItemValue: voltage,
-            axisLabelText: '평균 전압'
-        },
-        {
-            rangeDataItemValue: temperature,
-            axisLabelText: '평균 온도'
-        },
-    ];
-
     [detailExSoSVoltageSafetySeriesList, detailExSoSTemperatureSafetySeriesList].forEach((detailExSoSSafetySeriesList, index) => {
         let detailExSoSSafetyChartXAxis = detailExSoSSafetySeriesList[0].get('xAxis');
         detailExSoSSafetyChartXAxis.axisRanges.clear();
