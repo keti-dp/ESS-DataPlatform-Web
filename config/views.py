@@ -10,7 +10,6 @@ from rest_framework.views import APIView, exception_handler
 
 class IndexView(APIView):
     renderer_classes = [TemplateHTMLRenderer]
-    template_name = "index.html"
 
     @staticmethod
     def custom_exception_handler(exc, context):
@@ -30,15 +29,24 @@ class IndexView(APIView):
         return self.custom_exception_handler
 
     def get(self, request):
+        template_name = "index.html"
+
+        if "/en/" in request.path:
+            template_name = f"en/{template_name}"
+
         with open("ess_protection_map.json", encoding="utf-8") as f:
             ess_protection_map = json.load(f)
 
-        return Response({"view": "index", "ess_protection_map": ess_protection_map})
+        return Response(
+            {
+                "ess_protection_map": ess_protection_map,
+            },
+            template_name=template_name,
+        )
 
 
 class DataMonitoringView(APIView):
     renderer_classes = [TemplateHTMLRenderer]
-    template_name = "monitoring/data_monitoring.html"
 
     @staticmethod
     def custom_exception_handler(exc, context):
@@ -58,15 +66,19 @@ class DataMonitoringView(APIView):
         return self.custom_exception_handler
 
     def get(self, request):
+        template_name = "monitoring/data_monitoring.html"
+
+        if "/en/" in request.path:
+            template_name = f"en/{template_name}"
+
         with open("ess_protection_map.json", encoding="utf-8") as f:
             ess_protection_map = json.load(f)
 
-        return Response({"view": "dashboard", "ess_protection_map": ess_protection_map})
+        return Response({"ess_protection_map": ess_protection_map}, template_name=template_name)
 
 
 class DemoView(APIView):
     renderer_classes = [TemplateHTMLRenderer]
-    template_name = "demo.html"
 
     @staticmethod
     def custom_exception_handler(exc, context):
@@ -86,4 +98,9 @@ class DemoView(APIView):
         return self.custom_exception_handler
 
     def get(self, request):
-        return Response({"view": "demo"})
+        template_name = "demo.html"
+
+        if "/en/" in request.path:
+            template_name = f"en/{template_name}"
+
+        return Response(template_name=template_name)

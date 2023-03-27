@@ -1,0 +1,244 @@
+{% extends "en/base.html" %}
+
+{% load static %}
+
+{% block title %}Demo{% endblock %}
+
+{% block html_head %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
+<style>
+    .filter-container {
+        --bs-gutter-x: 0;
+    }
+
+    .card {
+        margin: 5px;
+        height: 480px;
+    }
+
+    .visualization-chart {
+        width: 100%;
+        height: 300px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="pc-container">
+    <div class="pcoded-content">
+        <!-- [ breadcrumb ] start -->
+        <div class="page-header">
+            <div class="page-block">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <div class="page-header-title">
+                            <h5 class="m-b-10">Demo</h5>
+                        </div>
+                        <ul class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="{% url 'index' %}">Main</a></li>
+                            <li class="breadcrumb-item">Demo</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- [ breadcrumb ] end -->
+
+        <div class="row ml-1 mr-1 mb-1">
+            <ul class="nav bg-white">
+                <li class="nav-item" data-filter="all">
+                    <a class="nav-link active" aria-current="page" href="#">All</a>
+                </li>
+                <li class="nav-item" data-filter="1">
+                    <a class="nav-link" href="#">High SoC</a>
+                </li>
+                <li class="nav-item" data-filter="2">
+                    <a class="nav-link" href="#">Charge of Low Temperature Status</a>
+                </li>
+                <li class="nav-item" data-filter="3">
+                    <a class="nav-link" href="#">Over Charge, Over Discharge, Over Voltage</a>
+                </li>
+                <li class="nav-item" data-filter="4">
+                    <a class="nav-link" href="#">Voltage Imbalancing, Temperature Imbalancing</a>
+                </li>
+                <li class="nav-item" data-filter="5">
+                    <a class="nav-link" href="#">High Temperature</a>
+                </li>
+            </ul>
+        </div>
+
+        <div class="row filter-container">
+            <div class="col-12 col-sm-6 col-md-4 col-lg-3 filtr-item" data-category="1, 3, 4" data-sort="value">
+                <div id="highSoCCard" class="card">
+                    <div class="card-header">
+                        High SoC
+                    </div>
+                    <div class="card-body">
+                        <!-- Loading -->
+                        <div class="row">
+                            <div class="text-center">
+                                <div class="spinner-border" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <p class="d-none">Panri ESS / Bank 1</p>
+                            <div id="highSoCChart" class="visualization-chart"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-sm-6 col-md-4 col-lg-3 filtr-item" data-category="2" data-sort="value">
+                <div id="lowTemperatureChargeCard" class="card">
+                    <div class="card-header">
+                        Charge of Low Temperature Status
+                    </div>
+                    <div class="card-body">
+                        <!-- Loading -->
+                        <div class="row">
+                            <div class="text-center">
+                                <div class="spinner-border" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <p class="d-none">Sionyu ESS / Bank 1</p>
+                            <div id="lowTemperatureChargeChart" class="visualization-chart"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-sm-6 col-md-4 col-lg-3 filtr-item" data-category="3" data-sort="value">
+                <div id="overDischargeCard" class="card">
+                    <div class="card-header">
+                        Over Discharge
+                    </div>
+                    <div class="card-body">
+                        <!-- Loading -->
+                        <div class="row">
+                            <div class="text-center">
+                                <div class="spinner-border" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <p class="d-none">Panri ESS / Bank 2</p>
+                            <div id="overDischargeChart" class="visualization-chart"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-sm-6 col-md-4 col-lg-3 filtr-item" data-category="3" data-sort="value">
+                <div id="overVoltageCard" class="card">
+                    <div class="card-header">
+                        Over Voltage
+                    </div>
+                    <div class="card-body">
+                        <!-- Loading -->
+                        <div class="row">
+                            <div class="text-center">
+                                <div class="spinner-border" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <p class="d-none">Panri ESS / Bank 1</p>
+                            <div id="overVoltageChart" class="visualization-chart"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-sm-6 col-md-4 col-lg-3 filtr-item" data-category="4" data-sort="value">
+                <div id="voltageUnbalancingCard" class="card">
+                    <div class="card-header">
+                        Voltage Imbalancing
+                    </div>
+                    <div class="card-body">
+                        <!-- Loading -->
+                        <div class="row">
+                            <div class="text-center">
+                                <div class="spinner-border" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <p class="d-none">Sionyu ESS / Bank 1 / Rack 2</p>
+                            <div id="voltageUnbalancingChart" class="visualization-chart"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-sm-6 col-md-4 col-lg-3 filtr-item" data-category="4" data-sort="value">
+                <div id="temperatureUnbalancingCard" class="card">
+                    <div class="card-header">
+                        Temperature Imbalancing
+                    </div>
+                    <div class="card-body">
+                        <!-- Loading -->
+                        <div class="row">
+                            <div class="text-center">
+                                <div class="spinner-border" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <p class="d-none">Sionyu ESS / Bank 1 / Rack 2</p>
+                            <div id="temperatureUnbalancingChart" class="visualization-chart"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-sm-6 col-md-4 col-lg-3 filtr-item" data-category="5" data-sort="value">
+                <div id="highTemperatureCard" class="card">
+                    <div class="card-header">
+                        High Temperature
+                    </div>
+                    <div class="card-body">
+                        <!-- Loading -->
+                        <div class="row">
+                            <div class="text-center">
+                                <div class="spinner-border" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <p class="d-none">Sionyu ESS / Bank 1 / Rack 2</p>
+                            <div id="highTemperatureChart" class="visualization-chart"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- [ Main Content ] end -->
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<!-- Luxon Javascript -->
+<script src="https://cdn.jsdelivr.net/npm/luxon@2.1.1/build/global/luxon.min.js"></script>
+<!-- Filterizr Javascript -->
+<script src="https://unpkg.com/filterizr@2.2.4/dist/vanilla.filterizr.min.js"></script>
+<!-- AmChart Javascript -->
+<script src="https://cdn.amcharts.com/lib/5/index.js"></script>
+<script src="https://cdn.amcharts.com/lib/5/xy.js"></script>
+<script src="https://cdn.amcharts.com/lib/5/themes/Animated.js"></script>
+<script src="https://cdn.amcharts.com/lib/5/themes/Responsive.js"></script>
+
+<script type="module" src="{% static 'js/custom/en/demo.js' %}"></script>
+
+<script>
+    const options = {};
+    const filterizr = new Filterizr('.filter-container', options);
+</script>
+{% endblock %}
