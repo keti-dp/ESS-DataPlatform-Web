@@ -1,8 +1,8 @@
-{% extends "base.html" %}
+{% extends "en/base.html" %}
 
 {% load static %}
 
-{% block title %}데이터 모니터링{% endblock %}
+{% block title %}Data Monitoring{% endblock %}
 
 {% block html_head %}
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
@@ -98,19 +98,19 @@
                 <div class="row align-items-center">
                     <div class="col-md-6">
                         <div class="page-header-title">
-                            <h5 class="m-b-10">데이터 모니터링</h5>
+                            <h5 class="m-b-10">Data Monitoring</h5>
                         </div>
                         <ul class="breadcrumb">
-                            <li class="breadcrumb-item"><a href="{% url 'index' %}">메인</a></li>
-                            <li class="breadcrumb-item">데이터 모니터링</li>
+                            <li class="breadcrumb-item"><a href="{% url 'en-index' %}">Main</a></li>
+                            <li class="breadcrumb-item">Data Monitoring</li>
                         </ul>
                     </div>
                     <div class="col-md-1 offset-5">
                         <div class="form-check form-switch">
                             <input type="checkbox" class="form-check-input input-primary" id="testModSwitch">
-                            <label for="test-mod" class="form-check-label">Test 모드</label>
+                            <label for="test-mod" class="form-check-label">Test Mode</label>
                             <i class="bi bi-info-circle" data-bs-toggle="tooltip" data-bs-placement="top" title=""
-                                data-bs-original-title="이상 데이터가 매일 존재하는 시나리오"></i>
+                                data-bs-original-title="Scenarios which abnormal data exists every day"></i>
                         </div>
                     </div>
                 </div>
@@ -122,15 +122,15 @@
             <div class="col-xl-4 col-md-12">
                 <div id="primaryMonitoringCard" class="card">
                     <div class="card-header">
-                        <h5>기본 모니터링</h5>
+                        <h5>Primary Monitoring</h5>
                     </div>
                     <div class="card-body">
                         <div class="row">
                             <!-- Monitoring log area -->
                             <div id="primaryMonitoringLog" class="col-xl-6 col-md-12 overflow-auto">
-                                <h6>전체 장애 발생 알림 <i class="bi bi-info-circle" data-bs-toggle="tooltip"
+                                <h6>All error alerts <i class="bi bi-info-circle" data-bs-toggle="tooltip"
                                         data-bs-placement="top" title=""
-                                        data-bs-original-title="첫 페이지만 실시간으로 업데이트 합니다."></i></h6>
+                                        data-bs-original-title="Only a first page is updated in real time."></i></h6>
                                 <!-- Loading -->
                                 <div class="text-center">
                                     <div class="spinner-border" role="status">
@@ -141,21 +141,22 @@
                                 <div id="primaryMonitoringLogContainer" class="d-none"></div>
                                 <nav class="m-t-10 d-none" aria-label="grid page">
                                     <ul class="pagination justify-content-center">
-                                        <li class="page-item"><a href="#" class="page-link">이전</a></li>
-                                        <li class="page-item"><a href="#" class="page-link">다음</a></li>
+                                        <li class="page-item"><a href="#" class="page-link">Previous</a></li>
+                                        <li class="page-item"><a href="#" class="page-link">Next</a></li>
                                     </ul>
                                 </nav>
                             </div>
 
                             <!-- Monitoring log level type area  -->
                             <div id="primaryMonitoringLogLevelTypeCount" class="col-xl-6 col-md-12 overflow-auto">
-                                <h6>이상 감지 유형 <i class="bi bi-info-circle" data-bs-toggle="tooltip"
+                                <h6>Abnormal Detection Type <i class="bi bi-info-circle" data-bs-toggle="tooltip"
                                         data-bs-placement="top" title=""
-                                        data-bs-original-title="현재 날짜 기준으로 발생한 이상 감지 유형을 시각화합니다."></i></h6>
+                                        data-bs-original-title="Visulize the abnormal detection types on the today."></i>
+                                </h6>
                                 <select class="form-select form-select-sm mb-1">
-                                    <option value="1">시온유 태양광</option>
-                                    <option value="2">판리 태양광</option>
-                                    <option value="3">황금6호 태양광</option>
+                                    <option value="1">Sionyu ESS</option>
+                                    <option value="2">Panri ESS</option>
+                                    <option value="3">Hwangguem #6 ESS</option>
                                 </select>
                                 <!-- Monitoring log level type chart container -->
                                 <!-- Loading -->
@@ -176,17 +177,19 @@
                     <div class="card-header">
                         <div class="row">
                             <div class="col">
-                                <h5>시온유 태양광</h5>
+                                <h5>Sionyu ESS</h5>
                             </div>
                             <div class="col">
                                 <div class="row">
                                     <div class="col-10 text-right">
-                                        <i class="bi bi-circle-fill text-success"></i> 정상
-                                        <i class="bi bi-circle-fill text-danger"></i> 이상
-                                        <i class="bi bi-circle-fill text-secondary"></i> 미정
+                                        <i class="bi bi-circle-fill text-success"></i> Normal
+                                        <i class="bi bi-circle-fill text-danger"></i> Abnormal
+                                        <i class="bi bi-circle-fill text-secondary"></i> Unknown
                                         <i class="bi bi-info-circle" data-bs-toggle="tooltip" data-bs-placement="top"
-                                            title="" data-bs-original-title="'이상' 상태는 protection threshold values의 범위를 벗어난 값을 뜻하며, '경고' 상태와 '결함' 상태를 포함합니다.
-                                             '미정'은 '이상' 상태 중 '경고' 상태와 '실패' 상태 외 명확히 정의할 수 없는 상태를 의미합니다."></i>
+                                            title="" data-bs-original-title="The 'Abnormal' status is outside the scope of protection threshold values
+                                             and includes the 'Warning' and 'Fault' states. 
+                                             'Unknown' state refers to a condition that cannot be clearly defined other than 
+                                             the 'Warning' and 'Fault' states within the 'Abnormal' states."></i>
                                         </h6>
                                     </div>
                                     <div class="col-2 text-right">
@@ -198,13 +201,14 @@
                                                 </span>
                                             </button>
                                             <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
-                                                <li><a class="dropdown-item" href="#">ESS 정보 보기</a></li>
+                                                <li><a class="dropdown-item" href="#">View ESS Info</a></li>
                                                 <li><a class="dropdown-item" href="#" data-bs-toggle="modal"
                                                         data-bs-target="#monitoringLogViewModal"
-                                                        data-operating-site-id="1">지난 로그 보기</a></li>
+                                                        data-operating-site-id="1">View Previous Logs</a></li>
                                                 <li><a class="dropdown-item" href="#" data-bs-toggle="modal"
                                                         data-bs-target="#operatingDataDownloadModal"
-                                                        data-operating-site-id="1">운영 데이터 다운로드</a>
+                                                        data-operating-site-id="1">Download the operating site's
+                                                        data</a>
                                                 </li>
                                             </ul>
                                         </div>
@@ -221,11 +225,11 @@
                             <!-- Monitoring log area  -->
                             <div id="operatingSite1MonitoringLogColumn" class="col-xl-4 col-md-12 overflow-auto">
                                 <select class="form-select form-select-sm mb-1">
-                                    <option value="0">전체</option>
-                                    <option value="1">경고</option>
-                                    <option value="2">보호</option>
+                                    <option value="0">All</option>
+                                    <option value="1">Warning</option>
+                                    <option value="2">Fault</option>
                                 </select>
-                                <input class="form-control form-control-sm mb-1" type="text" placeholder="검색어를 입력하세요.">
+                                <input class="form-control form-control-sm mb-1" type="text" placeholder="Input text.">
                                 <!-- Loading -->
                                 <div class="text-center">
                                     <div class="spinner-border" role="status">
@@ -243,17 +247,19 @@
                     <div class="card-header">
                         <div class="row">
                             <div class="col">
-                                <h5>판리 태양광</h5>
+                                <h5>Panri ESS</h5>
                             </div>
                             <div class="col">
                                 <div class="row">
                                     <div class="col-10 text-right">
-                                        <i class="bi bi-circle-fill text-success"></i> 정상
-                                        <i class="bi bi-circle-fill text-danger"></i> 이상
-                                        <i class="bi bi-circle-fill text-secondary"></i> 미정
+                                        <i class="bi bi-circle-fill text-success"></i> Normal
+                                        <i class="bi bi-circle-fill text-danger"></i> Abnormal
+                                        <i class="bi bi-circle-fill text-secondary"></i> Unknown
                                         <i class="bi bi-info-circle" data-bs-toggle="tooltip" data-bs-placement="top"
-                                            title="" data-bs-original-title="'이상' 상태는 protection threshold values의 범위를 벗어난 값을 뜻하며, '경고' 상태와 '결함' 상태를 포함합니다.
-                                             '미정'은 '이상' 상태 중 '경고' 상태와 '실패' 상태 외 명확히 정의할 수 없는 상태를 의미합니다."></i>
+                                            title="" data-bs-original-title="The 'Abnormal' status is outside the scope of protection threshold values
+                                             and includes the 'Warning' and 'Fault' states. 
+                                             'Unknown' state refers to a condition that cannot be clearly defined other than 
+                                             the 'Warning' and 'Fault' states within the 'Abnormal' states."></i>
                                     </div>
                                     <div class="col-2 text-right">
                                         <div class="dropdown">
@@ -264,13 +270,14 @@
                                                 </span>
                                             </button>
                                             <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
-                                                <li><a class="dropdown-item" href="#">ESS 정보 보기</a></li>
+                                                <li><a class="dropdown-item" href="#">View ESS Info</a></li>
                                                 <li><a class="dropdown-item" href="#" data-bs-toggle="modal"
                                                         data-bs-target="#monitoringLogViewModal"
-                                                        data-operating-site-id="2">지난 로그 보기</a></li>
+                                                        data-operating-site-id="2">View Previous Logs</a></li>
                                                 <li><a class="dropdown-item" href="#" data-bs-toggle="modal"
                                                         data-bs-target="#operatingDataDownloadModal"
-                                                        data-operating-site-id="2">운영 데이터 다운로드</a></li>
+                                                        data-operating-site-id="2">Download the operating site's
+                                                        data</a></li>
                                             </ul>
                                         </div>
                                     </div>
@@ -286,11 +293,11 @@
                             <!-- Monitoring log area  -->
                             <div id="operatingSite2MonitoringLogColumn" class="col-xl-4 col-md-12 overflow-auto">
                                 <select class="form-select form-select-sm mb-1">
-                                    <option value="0">전체</option>
-                                    <option value="1">경고</option>
-                                    <option value="2">보호</option>
+                                    <option value="0">All</option>
+                                    <option value="1">Warning</option>
+                                    <option value="2">Fault</option>
                                 </select>
-                                <input class="form-control form-control-sm mb-1" type="text" placeholder="검색어를 입력하세요.">
+                                <input class="form-control form-control-sm mb-1" type="text" placeholder="Input text.">
                                 <!-- Loading -->
                                 <div class="text-center">
                                     <div class="spinner-border" role="status">
@@ -310,17 +317,19 @@
                     <div class="card-header">
                         <div class="row">
                             <div class="col">
-                                <h5>황금6호 태양광</h5>
+                                <h5>Hwangguem #6 ESS</h5>
                             </div>
                             <div class="col">
                                 <div class="row">
                                     <div class="col-10 text-right">
-                                        <i class="bi bi-circle-fill text-success"></i> 정상
-                                        <i class="bi bi-circle-fill text-danger"></i> 이상
-                                        <i class="bi bi-circle-fill text-secondary"></i> 미정
+                                        <i class="bi bi-circle-fill text-success"></i> Normal
+                                        <i class="bi bi-circle-fill text-danger"></i> Abnormal
+                                        <i class="bi bi-circle-fill text-secondary"></i> Unknown
                                         <i class="bi bi-info-circle" data-bs-toggle="tooltip" data-bs-placement="top"
-                                            title="" data-bs-original-title="'이상' 상태는 protection threshold values의 범위를 벗어난 값을 뜻하며, '경고' 상태와 '결함' 상태를 포함합니다.
-                                             '미정'은 '이상' 상태 중 '경고' 상태와 '실패' 상태 외 명확히 정의할 수 없는 상태를 의미합니다."></i>
+                                            title="" data-bs-original-title="The 'Abnormal' status is outside the scope of protection threshold values
+                                             and includes the 'Warning' and 'Fault' states. 
+                                             'Unknown' state refers to a condition that cannot be clearly defined other than 
+                                             the 'Warning' and 'Fault' states within the 'Abnormal' states."></i>
                                     </div>
                                     <div class="col-2 text-right">
                                         <div class="dropdown">
@@ -331,13 +340,14 @@
                                                 </span>
                                             </button>
                                             <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
-                                                <li><a class="dropdown-item" href="#">ESS 정보 보기</a></li>
+                                                <li><a class="dropdown-item" href="#">View ESS Info</a></li>
                                                 <li><a class="dropdown-item" href="#" data-bs-toggle="modal"
                                                         data-bs-target="#monitoringLogViewModal"
-                                                        data-operating-site-id="3">지난 로그 보기</a></li>
+                                                        data-operating-site-id="3">View Previous Logs</a></li>
                                                 <li><a class="dropdown-item" href="#" data-bs-toggle="modal"
                                                         data-bs-target="#operatingDataDownloadModal"
-                                                        data-operating-site-id="3">운영 데이터 다운로드</a></li>
+                                                        data-operating-site-id="3">Download the operating site's
+                                                        data</a></li>
                                             </ul>
                                         </div>
                                     </div>
@@ -353,11 +363,11 @@
                             <!-- Monitoring log area  -->
                             <div id="operatingSite3MonitoringLogColumn" class="col-xl-4 col-md-12 overflow-auto">
                                 <select class="form-select form-select-sm mb-1">
-                                    <option value="0">전체</option>
-                                    <option value="1">경고</option>
-                                    <option value="2">보호</option>
+                                    <option value="0">All</option>
+                                    <option value="1">Warning</option>
+                                    <option value="2">Fault</option>
                                 </select>
-                                <input class="form-control form-control-sm mb-1" type="text" placeholder="검색어를 입력하세요.">
+                                <input class="form-control form-control-sm mb-1" type="text" placeholder="Input text.">
                                 <!-- Loading -->
                                 <div class="text-center">
                                     <div class="spinner-border" role="status">
@@ -375,17 +385,19 @@
                     <div class="card-header">
                         <div class="row">
                             <div class="col">
-                                <h5>성덕 태양광</h5>
+                                <h5>Sungduk ESS</h5>
                             </div>
                             <div class="col">
                                 <div class="row">
                                     <div class="col-10 text-right">
-                                        <i class="bi bi-circle-fill text-success"></i> 정상
-                                        <i class="bi bi-circle-fill text-danger"></i> 이상
-                                        <i class="bi bi-circle-fill text-secondary"></i> 미정
+                                        <i class="bi bi-circle-fill text-success"></i> Normal
+                                        <i class="bi bi-circle-fill text-danger"></i> Abnormal
+                                        <i class="bi bi-circle-fill text-secondary"></i> Unknown
                                         <i class="bi bi-info-circle" data-bs-toggle="tooltip" data-bs-placement="top"
-                                            title="" data-bs-original-title="'이상' 상태는 protection threshold values의 범위를 벗어난 값을 뜻하며, '경고' 상태와 '결함' 상태를 포함합니다.
-                                             '미정'은 '이상' 상태 중 '경고' 상태와 '실패' 상태 외 명확히 정의할 수 없는 상태를 의미합니다."></i>
+                                            title="" data-bs-original-title="The 'Abnormal' status is outside the scope of protection threshold values
+                                             and includes the 'Warning' and 'Fault' states. 
+                                             'Unknown' state refers to a condition that cannot be clearly defined other than 
+                                             the 'Warning' and 'Fault' states within the 'Abnormal' states."></i>
                                     </div>
                                     <div class="col-2 text-right">
                                         <div class="dropdown">
@@ -396,13 +408,14 @@
                                                 </span>
                                             </button>
                                             <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
-                                                <li><a class="dropdown-item" href="#">ESS 정보 보기</a></li>
+                                                <li><a class="dropdown-item" href="#">View ESS Info</a></li>
                                                 <li><a class="dropdown-item" href="#" data-bs-toggle="modal"
                                                         data-bs-target="#monitoringLogViewModal"
-                                                        data-operating-site-id="4">지난 로그 보기</a></li>
+                                                        data-operating-site-id="4">View Previous Logs</a></li>
                                                 <li><a class="dropdown-item" href="#" data-bs-toggle="modal"
                                                         data-bs-target="#operatingDataDownloadModal"
-                                                        data-operating-site-id="4">운영 데이터 다운로드</a></li>
+                                                        data-operating-site-id="4">Download the operating site's
+                                                        data</a></li>
                                             </ul>
                                         </div>
                                     </div>
@@ -413,7 +426,7 @@
                     <div class="card-body">
                         <div class="row">
                             <div class="col">
-                                <p>서비스를 준비중입니다.</p>
+                                <p>Ready for service.</p>
                             </div>
                         </div>
                     </div>
@@ -424,17 +437,19 @@
                     <div class="card-header">
                         <div class="row">
                             <div class="col">
-                                <h5>백마 태양광</h5>
+                                <h5>Baekma ESS</h5>
                             </div>
                             <div class="col">
                                 <div class="row">
                                     <div class="col-10 text-right">
-                                        <i class="bi bi-circle-fill text-success"></i> 정상
-                                        <i class="bi bi-circle-fill text-danger"></i> 이상
-                                        <i class="bi bi-circle-fill text-secondary"></i> 미정
+                                        <i class="bi bi-circle-fill text-success"></i> Normal
+                                        <i class="bi bi-circle-fill text-danger"></i> Abnormal
+                                        <i class="bi bi-circle-fill text-secondary"></i> Unknown
                                         <i class="bi bi-info-circle" data-bs-toggle="tooltip" data-bs-placement="top"
-                                            title="" data-bs-original-title="'이상' 상태는 protection threshold values의 범위를 벗어난 값을 뜻하며, '경고' 상태와 '결함' 상태를 포함합니다.
-                                             '미정'은 '이상' 상태 중 '경고' 상태와 '실패' 상태 외 명확히 정의할 수 없는 상태를 의미합니다."></i>
+                                            title="" data-bs-original-title="The 'Abnormal' status is outside the scope of protection threshold values
+                                             and includes the 'Warning' and 'Fault' states. 
+                                             'Unknown' state refers to a condition that cannot be clearly defined other than 
+                                             the 'Warning' and 'Fault' states within the 'Abnormal' states."></i>
                                     </div>
                                     <div class="col-2 text-right">
                                         <div class="dropdown">
@@ -445,13 +460,14 @@
                                                 </span>
                                             </button>
                                             <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
-                                                <li><a class="dropdown-item" href="#">ESS 정보 보기</a></li>
+                                                <li><a class="dropdown-item" href="#">View ESS Info</a></li>
                                                 <li><a class="dropdown-item" href="#" data-bs-toggle="modal"
                                                         data-bs-target="#monitoringLogViewModal"
-                                                        data-operating-site-id="5">지난 로그 보기</a></li>
+                                                        data-operating-site-id="5">View Previous Logs</a></li>
                                                 <li><a class="dropdown-item" href="#" data-bs-toggle="modal"
                                                         data-bs-target="#operatingDataDownloadModal"
-                                                        data-operating-site-id="5">운영 데이터 다운로드</a></li>
+                                                        data-operating-site-id="5">Download the operating site's
+                                                        data</a></li>
                                             </ul>
                                         </div>
                                     </div>
@@ -462,7 +478,7 @@
                     <div class="card-body">
                         <div class="row">
                             <div class="col">
-                                <p>서비스를 준비중입니다.</p>
+                                <p>Ready for service.</p>
                             </div>
                         </div>
                     </div>
@@ -495,7 +511,7 @@
                                         <input id='monitoringListItemModalStartDateTimeInput' type='text'
                                             class='form-control'
                                             data-td-target='#monitoringListItemModalStartDateTimePicker'
-                                            placeholder="시작 날짜를 입력해주세요" />
+                                            placeholder="Set the start time." />
                                         <span class='input-group-text'
                                             data-td-target='#monitoringListItemModalStartDateTimePicker'
                                             data-td-toggle='datetimepicker'>
@@ -509,7 +525,7 @@
                                         <input id='monitoringListItemModalEndDateTimeInput' type='text'
                                             class='form-control'
                                             data-td-target='#monitoringListItemModalEndDateTimePicker'
-                                            placeholder="마지막 날짜를 입력해주세요" />
+                                            placeholder="Set the end time." />
                                         <span class='input-group-text'
                                             data-td-target='#monitoringListItemModalEndDateTimePicker'
                                             data-td-toggle='datetimepicker'>
@@ -522,7 +538,7 @@
                             <div id="monitoringListItemChart"></div>
 
                             <div class="form-group">
-                                <button type="submit" class="btn btn-primary">검색</button>
+                                <button type="submit" class="btn btn-primary">Search</button>
                             </div>
                         </form>
                     </div>
@@ -539,20 +555,21 @@
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="operatingDataDownloadModalLabel">운영 데이터 다운로드</h5>
+                        <h5 class="modal-title" id="operatingDataDownloadModalLabel">Download the operating site's data
+                        </h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
                         <form id="operatingDataDownloadModalForm">
                             <div class="form-group">
-                                <label for='linkedPickers1Input' class='form-label'>날짜:</label>
+                                <label for='linkedPickers1Input' class='form-label'>Date:</label>
                                 <div class='input-group log-event m-b-10'
                                     id='operatingDataDownloadModalStartDateTimePicker' data-td-target-input='nearest'
                                     data-td-target-toggle='nearest'>
                                     <input id='operatingDataDownloadModalStartDateTimeInput' type='text'
                                         class='form-control'
                                         data-td-target='#operatingDataDownloadModalStartDateTimePicker'
-                                        placeholder="시작 날짜를 입력해주세요" />
+                                        placeholder="Set the start time." />
                                     <span class='input-group-text'
                                         data-td-target='#operatingDataDownloadModalStartDateTimePicker'
                                         data-td-toggle='datetimepicker'>
@@ -564,7 +581,7 @@
                                     <input id='operatingDataDownloadModalEndDateTimeInput' type='text'
                                         class='form-control'
                                         data-td-target='#operatingDataDownloadModalEndDateTimePicker'
-                                        placeholder="마지막 날짜를 입력해주세요" />
+                                        placeholder="Set the end time." />
                                     <span class='input-group-text'
                                         data-td-target='#operatingDataDownloadModalEndDateTimePicker'
                                         data-td-toggle='datetimepicker'>
@@ -573,7 +590,7 @@
                                 </div>
                             </div>
                             <div class="form-group" id="operatingDataDownloadModalDataTypeCheckboxGroup">
-                                <label class="form-label">데이터 타입:</label>
+                                <label class="form-label">Data Type:</label>
                                 <div class="form-check">
                                     <input type="checkbox" class="form-check-input input-primary"
                                         id="operatingDataDownloadModalDataTypeCheckboxGroup1" value="bank">
@@ -596,13 +613,13 @@
                                 </div>
                             </div>
                             <div class="form-group" id="operatingDataDownloadModalDataTypeRadioButtonGroup">
-                                <label class="form-label">데이터 비식별화:</label>
+                                <label class="form-label">Data De-Identification:</label>
                                 <div class="form-check">
                                     <input class="form-check-input" type="radio"
                                         name="operatingDataDownloadModalDataTypeRadioButtonDefualt"
                                         id="operatingDataDownloadModalDataTypeRadioButtonGroup1" value="normal" checked>
                                     <label class="form-check-label"
-                                        for="operatingDataDownloadModalDataTypeRadioButtonGroup1">일반</label>
+                                        for="operatingDataDownloadModalDataTypeRadioButtonGroup1">General</label>
                                 </div>
                                 <div class="form-check">
                                     <input class="form-check-input" type="radio"
@@ -610,16 +627,16 @@
                                         id="operatingDataDownloadModalDataTypeRadioButtonGroup2"
                                         value="deIdentification">
                                     <label class="form-check-label"
-                                        for="operatingDataDownloadModalDataTypeRadioButtonGroup2">비식별화</label>
+                                        for="operatingDataDownloadModalDataTypeRadioButtonGroup2">De-Indentification</label>
                                 </div>
                             </div>
                             <div class="form-group">
-                                <button type="submit" class="btn btn-primary">다운로드</button>
+                                <button type="submit" class="btn btn-primary">Download</button>
                             </div>
                         </form>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                     </div>
                 </div>
             </div>
@@ -631,7 +648,7 @@
             <div class="modal-dialog modal-lg">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="monitoringLogViewModalLabel">지난 로그 보기</h5>
+                        <h5 class="modal-title" id="monitoringLogViewModalLabel">View Previous Logs</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
@@ -644,7 +661,7 @@
                                         <input id='monitoringLogViewModalStartDateTimeInput' type='text'
                                             class='form-control'
                                             data-td-target='#monitoringLogViewModalStartDateTimePicker'
-                                            placeholder="시작 날짜를 입력해주세요" />
+                                            placeholder="Set the start time." />
                                         <span class='input-group-text'
                                             data-td-target='#monitoringLogViewModalStartDateTimePicker'
                                             data-td-toggle='datetimepicker'>
@@ -658,7 +675,7 @@
                                         <input id='monitoringLogViewModalEndDateTimeInput' type='text'
                                             class='form-control'
                                             data-td-target='#monitoringLogViewModalEndDateTimePicker'
-                                            placeholder="마지막 날짜를 입력해주세요" />
+                                            placeholder="Set the end time." />
                                         <span class='input-group-text'
                                             data-td-target='#monitoringLogViewModalEndDateTimePicker'
                                             data-td-toggle='datetimepicker'>
@@ -678,18 +695,18 @@
                             </div>
                             <nav class="m-t-10 d-none" aria-label="grid page">
                                 <ul class="pagination justify-content-center">
-                                    <li class="page-item"><a href="#" class="page-link">이전</a></li>
-                                    <li class="page-item"><a href="#" class="page-link">다음</a></li>
+                                    <li class="page-item"><a href="#" class="page-link">Previous</a></li>
+                                    <li class="page-item"><a href="#" class="page-link">Next</a></li>
                                 </ul>
                             </nav>
 
                             <div class="form-group">
-                                <button type="submit" class="btn btn-primary">검색</button>
+                                <button type="submit" class="btn btn-primary">Search</button>
                             </div>
                         </form>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                     </div>
                 </div>
             </div>
@@ -715,7 +732,7 @@
     src="https://cdn.jsdelivr.net/npm/just-validate-plugin-date@1.1.0/dist/just-validate-plugin-date.production.min.js"></script>
 <script src="https://unpkg.com/ag-grid-community/dist/ag-grid-community.min.js"></script>
 
-<script src="{% static 'js/custom/data_monitoring.js' %}"></script>
+<script src="{% static 'js/custom/en/data_monitoring.js' %}"></script>
 <script>
     var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
     var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {

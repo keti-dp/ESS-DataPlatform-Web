@@ -28,6 +28,13 @@ urlpatterns = [
     path("demo/", DemoView.as_view(), name="demo"),
 ]
 
+# Add english url patterns
+urlpatterns += [
+    path("en/data-monitoring/", DataMonitoringView.as_view(), name="en-data-monitoring"),
+    path("en/demo/", DemoView.as_view(), name="en-demo"),
+    path("en/", IndexView.as_view(), name="en-index"),
+]
+
 if settings.DEBUG:
     import debug_toolbar
 

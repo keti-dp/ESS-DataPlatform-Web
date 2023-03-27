@@ -3,6 +3,7 @@ from django.db import models
 
 class ProtectionMapErrorCode(models.Model):
     description = models.CharField(max_length=100, blank=True, null=True)
+    description_eng = models.CharField(max_length=100, blank=True, null=True)
 
     class Meta:
         managed = False
@@ -25,6 +26,7 @@ class ProtectionMapFeature(models.Model):
     rack_id = models.IntegerField(db_column="RACK_ID")
     operating_site = models.IntegerField(db_column="OPERATING_SITE")
     description = models.CharField(max_length=300, blank=True, null=True, db_column="DESCRIPTION")
+    description_eng = models.CharField(max_length=300, blank=True, null=True, db_column="DESCRIPTION_ENG")
 
     class Meta:
         managed = False
@@ -39,6 +41,7 @@ class ProtectionMapFeatureTest(models.Model):
     rack_id = models.IntegerField(db_column="RACK_ID")
     operating_site = models.IntegerField(db_column="OPERATING_SITE")
     description = models.CharField(db_column="DESCRIPTION", max_length=300, blank=True, null=True)
+    description_eng = models.CharField(max_length=300, blank=True, null=True, db_column="DESCRIPTION_ENG")
 
     class Meta:
         managed = False
