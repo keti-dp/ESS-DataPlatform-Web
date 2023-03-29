@@ -1446,6 +1446,12 @@ async function getForecastingChartOption(chartData, defaultOption, forecastingDi
     return forecastingMaxMinRackCellChartOption;
 }
 
+/**
+ * Get multi step forecasting max cell voltage series list
+ * @param {string} elementId 
+ * @param {object} option 
+ * @returns {Array}
+ */
 function getMultiStepForecastingMaxCellVoltageSeriesList(elementId, option) {
     let root = getChartRoot(elementId);
     let chart = getInitialLineChart(root, option);
@@ -1453,7 +1459,7 @@ function getMultiStepForecastingMaxCellVoltageSeriesList(elementId, option) {
     let xAxis = chart.xAxes.push(am5xy.DateAxis.new(root, {
         baseInterval: {
             timeUnit: 'minute',
-            count: 5
+            count: 10
         },
         dateFormats: {
             hour: 'HH:mm',
@@ -1467,7 +1473,10 @@ function getMultiStepForecastingMaxCellVoltageSeriesList(elementId, option) {
             day: customFullDateFormat,
             week: customFullDateFormat,
         },
-        tooltip: am5.Tooltip.new(root, {})
+        tooltip: am5.Tooltip.new(root, {
+            themeTags: ["axis"],
+        }),
+        tooltipDateFormat: customFullDateTimeFormat,
     }));
 
     let yAxis = chart.yAxes.push(am5xy.ValueAxis.new(root, {
@@ -3047,6 +3056,233 @@ forecastingObjectVisualizationSearchModalFormValidation
         forecastingObjectChartElement.parentNode.classList.remove('d-none');
     });
 
+// Search multi step forecasting modal
+let multiStepForecastingSearchModalFormOperatingSiteSelectElement = document.getElementById('multiStepForecastingSearchModalFormOperatingSiteSelect');
+let multiStepForecastingSearchModalFormBankSelectElement = document.getElementById('multiStepForecastingSearchModalFormBankSelect');
+let multiStepForecastingSearchModalFormRackSelectElement = document.getElementById('multiStepForecastingSearchModalFormRackSelect');
+let multiStepForecastingSearchModalFormStartDateTimePickerElement = document.getElementById('multiStepForecastingSearchModalFormStartDateTimePicker');
+let multiStepForecastingSearchModalFormEndDateTimePickerElement = document.getElementById('multiStepForecastingSearchModalFormEndDateTimePicker');
+
+multiStepForecastingSearchModalFormOperatingSiteSelectElement.addEventListener('change', (event) => {
+    multiStepForecastingSearchModalFormBankSelectElement.innerHTML = '';
+    multiStepForecastingSearchModalFormBankSelectElement.insertAdjacentHTML('afterbegin', '<option value="" selected disabled>Select a bank.</option>');
+    multiStepForecastingSearchModalFormBankSelectElement.setAttribute('disabled', '');
+
+    multiStepForecastingSearchModalFormRackSelectElement.innerHTML = '';
+    multiStepForecastingSearchModalFormRackSelectElement.insertAdjacentHTML('afterbegin', '<option value="" selected disabled>Select a rack.</option>');
+    multiStepForecastingSearchModalFormRackSelectElement.setAttribute('disabled', '');
+
+    let operatingSiteId = event.target.value;
+    let essProtectionMapInfoRackCountObject = essProtectionMap['info']['rackCount'];
+
+    if (essProtectionMapInfoRackCountObject[`operatingSite${operatingSiteId}`]) {
+        let bankCount = Object.keys(essProtectionMapInfoRackCountObject[`operatingSite${operatingSiteId}`]).length;
+
+        for (i = 0; i < bankCount; i++) {
+            multiStepForecastingSearchModalFormBankSelectElement.insertAdjacentHTML('beforeend', `<option value="${i + 1}">${i + 1}</option>`)
+        }
+
+        multiStepForecastingSearchModalFormBankSelectElement.removeAttribute('disabled');
+    }
+});
+
+multiStepForecastingSearchModalFormBankSelectElement.addEventListener('change', (event) => {
+    multiStepForecastingSearchModalFormRackSelectElement.innerHTML = '';
+    multiStepForecastingSearchModalFormRackSelectElement.insertAdjacentHTML('afterbegin', '<option value="" selected disabled>Select a rack.</option>')
+
+    let operatingSiteId = multiStepForecastingSearchModalFormOperatingSiteSelectElement.value;
+    let bankId = event.target.value;
+    let essProtectionMapInfoRackCountObject = essProtectionMap['info']['rackCount'];
+
+    if (essProtectionMapInfoRackCountObject[`operatingSite${operatingSiteId}`]) {
+        let rackCount = essProtectionMapInfoRackCountObject[`operatingSite${operatingSiteId}`][`bank${bankId}`];
+
+        for (i = 0; i < rackCount; i++) {
+            multiStepForecastingSearchModalFormRackSelectElement.insertAdjacentHTML('beforeend', `<option value="${i + 1}">${i + 1}</option>`)
+        }
+        multiStepForecastingSearchModalFormRackSelectElement.removeAttribute('disabled');
+    } else {
+        multiStepForecastingSearchModalFormRackSelectElement.setAttribute('disabled', '');
+    }
+});
+
+const multiStepForecastingSearchModalFormStartDateTimeTempusDominus = new tempusDominus.TempusDominus(multiStepForecastingSearchModalFormStartDateTimePickerElement, {
+    display: {
+        components: {
+            decades: true,
+            year: true,
+            month: true,
+            date: true,
+            hours: false,
+            minutes: false,
+            seconds: false,
+        },
+    },
+    hooks: {
+        inputFormat: (context, date) => { return DateTime.fromISO(date.toISOString()).toFormat(customFullDateFormat) }
+    }
+});
+
+const multiStepForecastingSearchModalFormEndDateTimeTempusDominus = new tempusDominus.TempusDominus(multiStepForecastingSearchModalFormEndDateTimePickerElement, {
+    display: {
+        components: {
+            decades: true,
+            year: true,
+            month: true,
+            date: true,
+            hours: false,
+            minutes: false,
+            seconds: false,
+        },
+    },
+    hooks: {
+        inputFormat: (context, date) => { return DateTime.fromISO(date.toISOString()).toFormat(customFullDateFormat) }
+    },
+    useCurrent: false
+});
+
+multiStepForecastingSearchModalFormStartDateTimePickerElement.addEventListener(tempusDominus.Namespace.events.change, (e) => {
+    multiStepForecastingSearchModalFormEndDateTimeTempusDominus.updateOptions({
+        restrictions: {
+            minDate: e.detail.date
+        },
+    });
+});
+
+const multiStepForecastingSearchModalFormEndDateTimeTempusDominusSubscription = multiStepForecastingSearchModalFormEndDateTimeTempusDominus.subscribe(tempusDominus.Namespace.events.change, (e) => {
+    multiStepForecastingSearchModalFormStartDateTimeTempusDominus.updateOptions({
+        restrictions: {
+            maxDate: e.date
+        }
+    });
+});
+
+const multiStepForecastingSearchModalFormValidation = new JustValidate('#multiStepForecastingSearchModalForm', {
+    errorFieldCssClass: 'is-invalid',
+    focusInvalidField: true,
+    lockForm: true,
+    tooltip: {
+        position: 'right',
+    }
+});
+multiStepForecastingSearchModalFormValidation
+    .addField('#multiStepForecastingSearchModalFormOperatingSiteSelect', [
+        {
+            rule: 'required',
+            errorMessage: 'Select an operating site.'
+        }
+    ])
+    .addField('#multiStepForecastingSearchModalFormBankSelect', [
+        {
+            rule: 'required',
+            errorMessage: 'Select a bank.'
+        }
+    ])
+    .addField('#multiStepForecastingSearchModalFormRackSelect', [
+        {
+            rule: 'required',
+            errorMessage: 'Select a rack.'
+        }
+    ])
+    .addField('#multiStepForecastingSearchModalFormStartDateTimeInput', [
+        {
+            plugin: JustValidatePluginDate(fields => ({
+                required: true,
+                format: customFullDateFormat
+            })),
+            errorMessage: 'Set the start time.'
+        },
+    ]).addField('#multiStepForecastingSearchModalFormEndDateTimeInput', [
+        {
+            plugin: JustValidatePluginDate(fields => ({
+                required: true,
+                format: customFullDateFormat
+            })),
+            errorMessage: 'Set the end time.'
+        },
+    ])
+    .onSuccess(async (event) => {
+        let multiStepForecastingSearchModalElement = document.getElementById('multiStepForecastingSearchModal');
+        let cardElement = document.getElementById('multiStepForecastingMaxCellVoltageCard');
+        let chartElement = document.getElementById('multiStepForecastingMaxCellVoltageChart');
+        let loadingElement = cardElement.querySelector('.card-body .spinner-border');
+
+        // Off modal
+        bootstrap.Modal.getInstance(multiStepForecastingSearchModalElement).hide();
+
+        // Setup loading UI
+        chartElement.parentNode.classList.add('d-none');
+        loadingElement.classList.remove('d-none');
+
+        let operatingSiteId = multiStepForecastingSearchModalFormOperatingSiteSelectElement.value;
+        let bankId = multiStepForecastingSearchModalFormBankSelectElement.value;
+        let rackId = multiStepForecastingSearchModalFormRackSelectElement.value;
+        let startTime = DateTime.fromFormat(multiStepForecastingSearchModalFormStartDateTimeInput.value, customFullDateFormat).toFormat(customTimeDesignatorFullDateTimeFormat);
+        let endTime = DateTime.fromFormat(multiStepForecastingSearchModalFormEndDateTimeInput.value, customFullDateFormat).toFormat(customTimeDesignatorFullDateTimeFormat);
+
+        let responseDataRequestUrl = new URL(`${window.location.origin}/api/ess/stats/multi-step-forecasting-max-cell-voltage/operating-sites/${operatingSiteId}/banks/${bankId}/racks/${rackId}/`);
+        responseDataRequestUrl.searchParams.append('start-time', startTime);
+        responseDataRequestUrl.searchParams.append('end-time', endTime);
+
+        let observedDataRequestUrl = new URL(`${window.location.origin}/api/ess/operating-sites/${operatingSiteId}/banks/${bankId}/racks/${rackId}/`);
+        observedDataRequestUrl.searchParams.append('fields', 'timestamp,rack_max_cell_voltage')
+        observedDataRequestUrl.searchParams.append('start-time', startTime);
+        observedDataRequestUrl.searchParams.append('end-time', endTime);
+        observedDataRequestUrl.searchParams.append('no_page', '');
+
+        let responseData = await loadData(responseDataRequestUrl);
+        let observedData = await loadData(observedDataRequestUrl);
+
+        let valueDataObject = {};
+
+        observedData.forEach(element => {
+            let timeMillis = DateTime.fromISO(element['timestamp']).toMillis();
+            let value1 = element['rack_max_cell_voltage'];
+
+            valueDataObject[timeMillis] = {
+                value1: value1
+            };
+        });
+
+        responseData.forEach(element => {
+            let values = element['values'];
+            let timeList = values['time'];
+            
+            timeList.forEach((time, index) => {
+                let timeMillis = DateTime.fromFormat(time, customFullDateTimeFormat).toMillis();
+
+                if (valueDataObject[timeMillis]) {
+                    let value2 = values['lstm_attention'][index];
+
+                    valueDataObject[timeMillis]['value2'] = value2;
+                }
+            });
+        });
+
+        let chartData = [];
+
+        Object.keys(valueDataObject).forEach(timeMillis => {
+            if (Object.keys(valueDataObject[timeMillis]).length >= 2) {
+                chartData.push({
+                    time: Number.parseInt(timeMillis),
+                    ...valueDataObject[timeMillis]
+                });
+            }
+        });
+
+        multiStepForecastingMaxCellVoltageSeriesList.forEach(chartSeries => {
+            chartSeries.data.setAll(chartData);
+        });
+
+        cardElement.querySelector('.card-body p').textContent = `
+            ${multiStepForecastingSearchModalFormOperatingSiteSelectElement.options[multiStepForecastingSearchModalFormOperatingSiteSelectElement.selectedIndex].text} / Bank ${bankId} / Rack ${rackId}
+        `;
+
+        // Off loading UI
+        loadingElement.classList.add('d-none');
+        chartElement.parentNode.classList.remove('d-none');
+    });
+
 /* 
  * Initial tasks
  */
@@ -3687,30 +3923,37 @@ loadData(requestUrl)
 
 
 // Create multi step forecasting max cell voltage chart
-startTime = '2023-02-07T00:00:00';
-endTime = '2023-02-08T00:00:00';
-requestUrl = new URL(`${window.location.origin}/api/ess/stats/multi-step-forecasting-max-cell-voltage/operating-sites/1/banks/1/racks/2/`);
+let multiStepForecastingMaxCellVoltageSeriesList;
+let multiStepForecastingMaxCellChartDefaultOption = {
+    seriesInfo: [
+        {
+            name: "Observed",
+            value: 'value1'
+        }, {
+            name: "LSTM_Attention",
+            value: 'value2'
+        },
+    ]
+};
+
+startTime = currentDateTime.startOf('day').toFormat(customTimeDesignatorFullDateTimeFormat);
+endTime = currentDateTime.startOf('day').plus({ days: 1 }).toFormat(customTimeDesignatorFullDateTimeFormat);
+requestUrl = new URL(`${window.location.origin}/api/ess/stats/multi-step-forecasting-max-cell-voltage/operating-sites/1/banks/1/racks/1/`);
 requestUrl.searchParams.append('start-time', startTime);
 requestUrl.searchParams.append('end-time', endTime);
 
 loadData(requestUrl)
     .then(async (responseData) => {
-        let observedData = await loadData(`${window.location.origin}/api/ess/operating-sites/1/banks/1/racks/2/?fields=timestamp,rack_max_cell_voltage&start-time=${startTime}&end-time=${endTime}&no_page`);
+        let cardElementId = 'multiStepForecastingMaxCellVoltageCard';
+        let chartElementId = 'multiStepForecastingMaxCellVoltageChart';
+        let currentDate = currentDateTime.toFormat(customFullDateFormat);
 
-        let multiStepforecastingMaxCellChartDefaultOption = {
-            seriesInfo: [
-                {
-                    name: "Observed",
-                    value: 'value1'
-                }, {
-                    name: "LSTM",
-                    value: 'value2'
-                }, {
-                    name: "LSTM_Attention",
-                    value: 'value3'
-                },
-            ]
-        };
+        let observedDataRequestUrl = new URL(`${window.location.origin}/api/ess/operating-sites/1/banks/1/racks/1/`);
+        observedDataRequestUrl.searchParams.append('fields', 'timestamp,rack_max_cell_voltage');
+        observedDataRequestUrl.searchParams.append('date', currentDate);
+        observedDataRequestUrl.searchParams.append('no_page', '');
+
+        let observedData = await loadData(observedDataRequestUrl);
 
         let valueDataObject = {};
 
@@ -3722,27 +3965,47 @@ loadData(requestUrl)
 
         responseDataValues = responseData[0]['values'];
         responseDataValues['time'].forEach((element, index) => {
-            if (valueDataObject[DateTime.fromFormat(element, customFullDateTimeFormat).toMillis()]) {
-                valueDataObject[DateTime.fromFormat(element, customFullDateTimeFormat).toMillis()]['value2'] = responseDataValues['lstm'][index];
-                valueDataObject[DateTime.fromFormat(element, customFullDateTimeFormat).toMillis()]['value3'] = responseDataValues['lstm_attention'][index];
+            let timeMillis = DateTime.fromFormat(element, customFullDateTimeFormat).toMillis();
+            let value2 = responseDataValues['lstm_attention'][index];
+
+            if (valueDataObject[timeMillis]) {
+                valueDataObject[timeMillis]['value2'] = value2;
+            } else {
+                valueDataObject[timeMillis] = {
+                    value2: value2
+                }
             }
         });
 
         let chartData = [];
 
-        Object.keys(valueDataObject).forEach(element => {
-            if (Object.keys(valueDataObject[element]).length >= 2) {
+        Object.keys(valueDataObject).forEach(timeMillis => {
+            if (Object.keys(valueDataObject[timeMillis]).length >= 2) {
                 chartData.push({
-                    time: Number.parseInt(element),
-                    ...valueDataObject[element]
+                    time: Number.parseInt(timeMillis),
+                    ...valueDataObject[timeMillis]
+                });
+            }
+
+            if (timeMillis > currentDateTime.toMillis()) {
+                chartData.push({
+                    time: Number.parseInt(timeMillis),
+                    ...valueDataObject[timeMillis]
                 });
             }
         });
 
-        window['multiStepForecastingMaxCellVoltageSeriesList'] = getMultiStepForecastingMaxCellVoltageSeriesList('multiStepForecastingMaxCellVoltageChart', multiStepforecastingMaxCellChartDefaultOption);
-        window['multiStepForecastingMaxCellVoltageSeriesList'].forEach(chartSeries => {
+        multiStepForecastingMaxCellVoltageSeriesList = getMultiStepForecastingMaxCellVoltageSeriesList(chartElementId, multiStepForecastingMaxCellChartDefaultOption);
+        multiStepForecastingMaxCellVoltageSeriesList.forEach(chartSeries => {
             chartSeries.data.setAll(chartData);
         });
+
+        // Setup loading UI
+        let cardElement = document.getElementById(cardElementId);
+        cardElement.querySelector('.spinner-border').classList.add('d-none');
+
+        let chartElement = document.getElementById(chartElementId);
+        chartElement.parentNode.classList.remove('d-none');
     })
     .catch(error => console.log(error));
 

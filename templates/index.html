@@ -556,19 +556,27 @@
                                                         data-bs-original-title="1일 최대 셀 전압을 예측합니다."></i>
                                                 </h5>
                                             </div>
+                                            <div class="col-4 text-right">
+                                                <button class="btn btn-sm" type="button" data-bs-toggle="modal"
+                                                    data-bs-target="#multiStepForecastingSearchModal">
+                                                    <span class="material-icons-two-tone">
+                                                        search
+                                                    </span>
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                     <div class="card-body">
                                         <!-- Loading -->
-                                        <div class="row d-none">
+                                        <div class="row">
                                             <div class="text-center">
                                                 <div class="spinner-border" role="status">
                                                     <span class="visually-hidden">Loading...</span>
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="row">
-                                            <p>시온유 태양광 / Bank 1 / Rack 2</p>
+                                        <div class="row d-none">
+                                            <p>시온유 태양광 / Bank 1 / Rack 1</p>
                                             <div id="multiStepForecastingMaxCellVoltageChart"
                                                 class="visualization-chart">
                                             </div>
@@ -1205,6 +1213,81 @@
                                         placeholder="마지막 시간을 선택해주세요" />
                                     <span class='input-group-text'
                                         data-td-target='#forecastingObjectVisualizationSearchModalFormEndDateTimePicker'
+                                        data-td-toggle='datetimepicker'>
+                                        <span class='fas fa-calendar'></span>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <button type="submit" class="btn btn-primary">검색</button>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Multi step forecasting visualization search modal -->
+        <div class="modal fade" id="multiStepForecastingSearchModal" tabindex="-1"
+            aria-labelledby="multiStepForecastingSearchModalFormLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="multiStepForecastingSearchModalFormLabel">
+                            검색</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form action="#" id="multiStepForecastingSearchModalForm" autocomplete="off">
+                            <div class="form-group">
+                                <label class='form-label'>구성:</label>
+                                <div class="input-group m-b-10">
+                                    <select id="multiStepForecastingSearchModalFormOperatingSiteSelect"
+                                        class="form-select">
+                                        <option value="" selected disabled>운영 사이트를 선택해주세요.</option>
+                                        <option value="1">시온유 태양광</option>
+                                        <option value="2">판리 태양광</option>
+                                        <option value="3">황금6호 태양광</option>
+                                    </select>
+                                </div>
+                                <div class="input-group m-b-10">
+                                    <select name="" id="multiStepForecastingSearchModalFormBankSelect"
+                                        class="form-select" disabled>
+                                        <option value="" selected disabled>Bank를 선택해주세요.</option>
+                                    </select>
+                                </div>
+                                <div class="input-group m-b-10">
+                                    <select id="multiStepForecastingSearchModalFormRackSelect" class="form-select"
+                                        disabled>
+                                        <option value="" selected disabled>Rack를 선택해주세요.</option>
+                                    </select>
+                                </div>
+                                <label class='form-label'>시간:</label>
+                                <div class='input-group log-event m-b-10'
+                                    id='multiStepForecastingSearchModalFormStartDateTimePicker'
+                                    data-td-target-input='nearest' data-td-target-toggle='nearest'>
+                                    <input id='multiStepForecastingSearchModalFormStartDateTimeInput' type='text'
+                                        class='form-control'
+                                        data-td-target='#multiStepForecastingSearchModalFormStartDateTimePicker'
+                                        placeholder="시작 시간을 선택해주세요." />
+                                    <span class='input-group-text'
+                                        data-td-target='#multiStepForecastingSearchModalFormStartDateTimePicker'
+                                        data-td-toggle='datetimepicker'>
+                                        <span class='fas fa-calendar'></span>
+                                    </span>
+                                </div>
+                                <div class='input-group log-event'
+                                    id='multiStepForecastingSearchModalFormEndDateTimePicker'
+                                    data-td-target-input='nearest' data-td-target-toggle='nearest'>
+                                    <input id='multiStepForecastingSearchModalFormEndDateTimeInput' type='text'
+                                        class='form-control'
+                                        data-td-target='#multiStepForecastingSearchModalFormEndDateTimePicker'
+                                        placeholder="마지막 시간을 선택해주세요." />
+                                    <span class='input-group-text'
+                                        data-td-target='#multiStepForecastingSearchModalFormEndDateTimePicker'
                                         data-td-toggle='datetimepicker'>
                                         <span class='fas fa-calendar'></span>
                                     </span>
