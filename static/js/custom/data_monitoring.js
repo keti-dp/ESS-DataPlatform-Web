@@ -14,6 +14,13 @@ const customTimeDesignatorFullDateTimeFormat = `yyyy-MM-dd'T'HH:mm:ss`;
 const normalFullMonitoringLogUrl = `${window.location.origin}/api/ess-feature/protectionmap/`;
 const testFullMonitoringLogUrl = `${window.location.origin}/api/ess-feature/test/protectionmap/`;
 
+let currentUrlPath = window.location.pathname;
+
+if (currentUrlPath.includes('/en/')) {
+    // Set the localization of tempus dominus
+    tempusDominus.DefaultOptions.localization.locale = 'en';
+}
+
 async function loadData(requestUrl) {
     let response = await fetch(requestUrl);
 
@@ -246,7 +253,9 @@ function drawMonitoringListAndGetoperatingSiteInfoWarningFlag(operatingSiteId, o
  */
 function getPrimaryMonitoringLogAlertElement(data) {
     let primaryMonitoringLogAlertElement = document.createElement('div');
-    let alertMessage = `운영 사이트 ${data['operating_site']} / Bank ${data['bank_id']} / Rack ${data['rack_id']} - ${data['error_code']['description']} 발생`;
+    let description = window.location.pathname.includes('/en/') ? data['error_code']['description_eng'] : data['error_code']['description'];
+
+    let alertMessage = `${i18next.t('operatingSite')} ${data['operating_site']} / Bank ${data['bank_id']} / Rack ${data['rack_id']} - ${description}`;
     let alertLevel;
 
     switch (data['level']['id'].toString()) {
@@ -306,15 +315,17 @@ function getMonitoringLogAlertElement(data) {
             break;
     }
 
+    let description = window.location.pathname.includes('/en/') ? data['description_eng'] : data['description'];
+
     alertElement.setAttribute('class', `alert ${alertClass} m-b-5 p-l-10 p-t-0 p-b-0`);
     alertElement.setAttribute('role', 'alert');
-    alertElement.setAttribute('title', data['description']);
+    alertElement.setAttribute('title', description);
     alertElement.innerHTML = `
         <p class="text-truncate m-t-0 m-b-0">
             <small>Bank ${data['bank_id']} / Rack ${data['rack_id']}</small>
         </p>
         <p class="text-truncate m-t-0 m-b-0">
-            <small>${data['description']}</small>
+            <small>${description}</small>
         </p>
     `;
 
@@ -352,7 +363,7 @@ function getSuccessAlertElement(message) {
     let element = document.getElementById(elementId);
 
     if (Array.isArray(data) && data.length == 0) {
-        let message = `${DateTime.now().toFormat(customFullDateTimeFormat)}<br><strong>금일 정상 운영 중입니다.</strong>`;
+        let message = `${DateTime.now().toFormat(customFullDateTimeFormat)}<br><strong>${i18next.t('monitoringLogSuccessMessage', { ns: 'message' })}</strong>`;
 
         element.appendChild(getSuccessAlertElement(message));
     } else {
@@ -376,7 +387,7 @@ function loadLatestMonitoringLog(elementId, url, getAlertElementFunc) {
 
     loadData(requestUrl)
     .then(responseData => {
-        data = responseData['results'];
+        let data = responseData['results'];
         data.forEach(item => {
             let alertElement = getAlertElementFunc(item);
 
@@ -508,8 +519,8 @@ function getLineChartSeries(elementId, option = {}) {
 function setUpPaginationButton(data, paginationEl, paginationUlEl) {
     if (data['previous'] || data['next']) {
         paginationEl.classList.remove('d-none');
-        previousButtonElement = paginationUlEl.firstElementChild;
-        nextButtonElement = paginationUlEl.lastElementChild;
+        let previousButtonElement = paginationUlEl.firstElementChild;
+        let nextButtonElement = paginationUlEl.lastElementChild;
 
         if (data['previous']) {
             previousButtonElement.classList.remove('disabled');
@@ -609,7 +620,7 @@ async function primaryMonitoringLogLevelTypeCountSelectHandler(event, mod) {
 
     let data = await loadData(requestUrl);
     if (Array.isArray(data) && data.length == 0) {
-        let message = `${DateTime.now().toFormat(customFullDateTimeFormat)} <strong>금일 정상 운영 중입니다.</strong>`
+        let message = `${DateTime.now().toFormat(customFullDateTimeFormat)} <strong>${i18next.t('monitoringLogSuccessMessage', { ns: 'message' })}</strong>`
         let alertElement = getSuccessAlertElement(message);
 
         primaryMonitoringLogLevelTypeCountSelectElement.after(alertElement);
@@ -792,7 +803,7 @@ operatingSiteMonitoringListColumnIds.forEach((operatingSiteMonitoringListColumnI
 
         let rackCountOfBank = essProtectionMap['info']['rackCount'][operatingSite][operatingSiteBank];
 
-        for (i = 1; i <= rackCountOfBank; i++) {
+        for (let i = 1; i <= rackCountOfBank; i++) {
             operatingSiteMonitoringListColumnElement.appendChild(getOperatingSiteInfoMonitoringList(operatingSite, 'rack', [number, i]));
         }
 
@@ -898,7 +909,7 @@ monitoringListItemModalTriggerList.forEach(element => {
         let currentDate = DateTime.now().toISODate();
 
         let monitoringListItemModalTitleEl = document.getElementById('monitoringListItemModalLabel');
-        monitoringListItemModalTitleEl.innerHTML = `${operatingSiteInfoColumn.toUpperCase()} 시간별 모니터링 차트`;
+        monitoringListItemModalTitleEl.innerHTML = `${operatingSiteInfoColumn.toUpperCase()} ${i18next.t('monitoringChart')}`;
 
         requestUrl.searchParams.append('date', currentDate);
         requestUrl.searchParams.append('fields', `timestamp,${operatingSiteInfoColumn}`);
@@ -1024,7 +1035,7 @@ operatingDataDownloadModalFormValidation.addField('#operatingDataDownloadModalSt
             required: true,
             format: 'yyyy-MM-dd HH:mm:ss'
         })),
-        errorMessage: '날짜를 선택하세요.'
+        errorMessage: `${i18next.t('setTheStartDate', { ns: 'validation' })}`
     },
 ]).addField('#operatingDataDownloadModalEndDateTimeInput', [
     {
@@ -1032,14 +1043,14 @@ operatingDataDownloadModalFormValidation.addField('#operatingDataDownloadModalSt
             required: true,
             format: 'yyyy-MM-dd HH:mm:ss'
         })),
-        errorMessage: '날짜를 선택하세요.'
+        errorMessage: `${i18next.t('setTheEndDate', { ns: 'validation' })}`
     },
 ]).addRequiredGroup(
     '#operatingDataDownloadModalDataTypeCheckboxGroup',
-    '1가지 이상의 데이터 타입을 선택하세요.'
+    `${i18next.t('selectDataTypes', { ns: 'validation' })}`
 ).addRequiredGroup(
     '#operatingDataDownloadModalDataTypeRadioButtonGroup',
-    '데이터 비식별화 유무를 선택하세요.'
+    `${i18next.t('selectDataDe-Identification', { ns: 'validation' })}`
 ).onSuccess(event => {
     let checkedBoxElements = document.querySelectorAll('#operatingDataDownloadModalDataTypeCheckboxGroup input:checked');
     let radioButtonElement = document.querySelector('#operatingDataDownloadModalDataTypeRadioButtonGroup input:checked');
@@ -1158,7 +1169,7 @@ monitoringLogViewModalFormValidation.addField('#monitoringLogViewModalStartDateT
             required: true,
             format: customFullDateTimeFormat
         })),
-        errorMessage: '날짜를 선택하세요.'
+        errorMessage: `${i18next.t('setTheStartDate', { ns: 'validation' })}`
     },
 ]).addField('#monitoringLogViewModalEndDateTimeInput', [
     {
@@ -1166,7 +1177,7 @@ monitoringLogViewModalFormValidation.addField('#monitoringLogViewModalStartDateT
             required: true,
             format: customFullDateTimeFormat
         })),
-        errorMessage: '날짜를 선택하세요.'
+        errorMessage: `${i18next.t('setTheEndDate', { ns: 'validation' })}`
     },
 ]).onSuccess(event => {
     let monitoringLogViewModalGrid = document.getElementById('monitoringLogViewModalGrid');
@@ -1207,8 +1218,10 @@ monitoringLogViewModalFormValidation.addField('#monitoringLogViewModalStartDateT
             let row = {};
 
             for (const key of Object.keys(element)) {
-                if (element[key]['description']) {
-                    row[key] = element[key]['description'];
+                let description = window.location.pathname.includes('/en/') ? element[key]['description_eng'] : element[key]['description'];
+
+                if (description) {
+                    row[key] = description;
 
                     continue;
                 }
@@ -1272,8 +1285,10 @@ monitoringLogViewModalFormValidation.addField('#monitoringLogViewModalStartDateT
                     let row = {};
 
                     for (const key of Object.keys(element)) {
-                        if (element[key]['description']) {
-                            row[key] = element[key]['description'];
+                        let description = window.location.pathname.includes('/en/') ? element[key]['description_eng'] : element[key]['description'];
+
+                        if (description) {
+                            row[key] = description;
 
                             continue;
                         }
@@ -1404,7 +1419,7 @@ monitoringListItemModalFormValidation.addField('#monitoringListItemModalStartDat
             required: true,
             format: customFullDateTimeFormat
         })),
-        errorMessage: '시간을 선택하세요.'
+        errorMessage: `${i18next.t('setTheStartTime', { ns: 'validation' })}`
     },
 ]).addField('#monitoringListItemModalEndDateTimeInput', [
     {
@@ -1412,7 +1427,7 @@ monitoringListItemModalFormValidation.addField('#monitoringListItemModalStartDat
             required: true,
             format: customFullDateTimeFormat
         })),
-        errorMessage: '시간을 선택하세요.'
+        errorMessage: `${i18next.t('setTheEndTime', { ns: 'validation' })}`
     },
 ]).onSuccess(async (event) => {
     monitoringListItemModalFormElement.classList.add('d-none');
@@ -1509,12 +1524,12 @@ function getPrimaryMonitoringLogLevelTypeCountChartSeriesData(data) {
 
         switch (element['level'].toString()) {
             case essMonitoringLogLevel['warning']:
-                logLevelDescription = '경고(Warning)';
+                logLevelDescription = `${i18next.t('warning', { ns: 'message' })}`;
 
                 break;
             case essMonitoringLogLevel['danger']:
 
-                logLevelDescription = '보호(Fault)';
+                logLevelDescription = `${i18next.t('fault', { ns: 'message' })}`;
                 break;
             default:
                 break;
@@ -1590,7 +1605,7 @@ fetch(requestUrl).then(response => {
     throw new Error(response.statusText);
 }).then(responseData => {
     if (Array.isArray(responseData) && responseData.length == 0) {
-        let message = `${DateTime.now().toFormat(customFullDateTimeFormat)} <strong>금일 정상 운영 중입니다.</strong>`
+        let message = `${DateTime.now().toFormat(customFullDateTimeFormat)} <strong>${i18next.t('monitoringLogSuccessMessage', { ns: 'message' })}</strong>`
         let alertElement = getSuccessAlertElement(message);
 
         primaryMonitoringLogLevelTypeCountElement.appendChild(alertElement);
@@ -1698,7 +1713,7 @@ testModSwitchElement.addEventListener('change', event => {
         loadData(requestUrl)
         .then(responseData => {
             if (Array.isArray(responseData) && responseData.length == 0) {
-                let message = `${DateTime.now().toFormat(customFullDateTimeFormat)} <strong>금일 정상 운영 중입니다.</strong>`
+                let message = `${DateTime.now().toFormat(customFullDateTimeFormat)} <strong>${i18next.t('monitoringLogSuccessMessage', { ns: 'message' })}</strong>`
                 let alertElement = getSuccessAlertElement(message);
         
                 primaryMonitoringLogLevelTypeCountElement.appendChild(alertElement);
@@ -1795,7 +1810,7 @@ testModSwitchElement.addEventListener('change', event => {
         loadData(requestUrl)
         .then(responseData => {
             if (Array.isArray(responseData) && responseData.length == 0) {
-                let message = `${DateTime.now().toFormat(customFullDateTimeFormat)} <strong>금일 정상 운영 중입니다.</strong>`
+                let message = `${DateTime.now().toFormat(customFullDateTimeFormat)} <strong>${i18next.t('monitoringLogSuccessMessage', { ns: 'message' })}</strong>`
                 let alertElement = getSuccessAlertElement(message);
         
                 primaryMonitoringLogLevelTypeCountElement.appendChild(alertElement);
