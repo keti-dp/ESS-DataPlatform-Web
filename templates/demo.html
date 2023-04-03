@@ -53,7 +53,8 @@
                     <a class="nav-link" href="#">High SoC</a>
                 </li>
                 <li class="nav-item" data-filter="2">
-                    <a class="nav-link" href="#">저온 충전</a>
+                    <!-- <a class="nav-link" href="#">저온 충전</a> -->
+                    <a id="abutton" class="nav-link" href="#" data-i18n="lowCharge"></a>
                 </li>
                 <li class="nav-item" data-filter="3">
                     <a class="nav-link" href="#">과충전, 과방전, 과전압</a>
@@ -234,6 +235,9 @@
 <script src="https://cdn.amcharts.com/lib/5/xy.js"></script>
 <script src="https://cdn.amcharts.com/lib/5/themes/Animated.js"></script>
 <script src="https://cdn.amcharts.com/lib/5/themes/Responsive.js"></script>
+
+<!-- i18next -->
+<script src="https://unpkg.com/i18next@22.4.13/dist/umd/i18next.min.js"></script>
 
 <script type="module" src="{% static 'js/custom/demo.js' %}"></script>
 

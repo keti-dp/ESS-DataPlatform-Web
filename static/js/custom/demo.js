@@ -48,8 +48,6 @@ loadData(requestUrl)
     loadingElement.classList.add('d-none');
     chartElement.previousElementSibling.classList.remove('d-none');
 
-    console.log(chartElement.previousElementSibling);
-
     // When class attribute of chart container element(div) has a 'd-none', 'root.autoResize = false' not working 
     // chartElement.parentNode.classList.remove('d-none');
 })
@@ -79,7 +77,7 @@ loadData(requestUrl)
         }
     });
 
-    chartOption['seriesName'] = '온도';
+    chartOption['seriesName'] = i18next.t('temperature');
 
     let chartSeries = getLineChartSeries(chartElementId, chartOption);
     chartSeries.data.setAll(chartData);
@@ -114,7 +112,7 @@ loadData(requestUrl)
         }
     });
 
-    chartOption['seriesName'] = '전압';
+    chartOption['seriesName'] = i18next.t('voltage');
 
     let chartSeries = getLineChartSeries(chartElementId, chartOption);
     chartSeries.data.setAll(chartData);
@@ -149,7 +147,7 @@ loadData(requestUrl)
         }
     });
 
-    chartOption['seriesName'] = '전압';
+    chartOption['seriesName'] = i18next.t('voltage');
 
     let chartSeries = getLineChartSeries(chartElementId, chartOption);
     chartSeries.data.setAll(chartData);
@@ -184,7 +182,7 @@ loadData(requestUrl)
         }
     });
 
-    chartOption['seriesName'] = '최대-최소 전압 차이';
+    chartOption['seriesName'] = i18next.t('maxMinVoltageGap');
 
     let chartSeries = getLineChartSeries(chartElementId, chartOption);
     chartSeries.data.setAll(chartData);
@@ -219,7 +217,7 @@ loadData(requestUrl)
         }
     });
 
-    chartOption['seriesName'] = '최대-최소 온도 차이';
+    chartOption['seriesName'] = i18next.t('maxMinTemperatureGap');
 
     let chartSeries = getLineChartSeries(chartElementId, chartOption);
     chartSeries.data.setAll(chartData);
@@ -254,7 +252,7 @@ loadData(requestUrl)
         }
     });
 
-    chartOption['seriesName'] = '온도';
+    chartOption['seriesName'] = i18next.t('temperature');
 
     let chartSeries = getLineChartSeries(chartElementId, chartOption);
     chartSeries.data.setAll(chartData);

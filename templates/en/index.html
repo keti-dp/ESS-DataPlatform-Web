@@ -1099,7 +1099,7 @@
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="essEXSoSVisualizationSearchModalFormLabel">EXSoS 차트 Search</h5>
+                        <h5 class="modal-title" id="essEXSoSVisualizationSearchModalFormLabel">EXSoS Chart Search</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
@@ -1111,7 +1111,6 @@
                                         <option value="" selected disabled>Select a mode.</option>
                                         <option value="1">Bank</option>
                                         <option value="2">Rack</option>
-                                        <option value="3">Hwangguem #6 ESS</option>
                                     </select>
                                 </div>
                                 <label class='form-label'>Structure:</label>
@@ -1421,7 +1420,8 @@
 <script src="https://cdn.amcharts.com/lib/5/themes/Animated.js"></script>
 <!-- Tensorflow JavaScript -->
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@2.0.0/dist/tf.min.js"></script>
-<script src="{% static 'js/custom/en/index.js' %}"></script>
+
+<script type="module" src="{% static 'js/custom/index.js' %}"></script>
 
 <script>
     // Tooltip
