@@ -1081,27 +1081,20 @@ function changeDetailEXSoSSafetyChart(option) {
     let time = DateTime.fromMillis(dataObject['time']).toFormat(customFullDateTimeFormat);
     let membership_degree_detail = dataObject['membership_degree_detail'];
     let chargeStatus = membership_degree_detail['status'];
-    let voltage = membership_degree_detail['voltage'];
+    let maxVoltage = membership_degree_detail['max_voltage'];
+    let maxTemperature = membership_degree_detail['max_temperature'];;
+    let minVoltage = membership_degree_detail['min_voltage'];
+    let minTemperature = membership_degree_detail['min_temperature'];
     let voltageGap = membership_degree_detail['voltage_gap'];
-    let temperature = membership_degree_detail['temperature'];
     let temperatureGap = membership_degree_detail['temperature_gap'];
 
     let detailEXSoSSafetyStatusInfoElement = document.getElementById('detailEXSoSSafetyStatusInfo');
 
-    let rangeDataOption = [
-        {
-            rangeDataItemValue: voltage,
-            axisLabelText: `${i18next.t('average')} ${i18next.t('voltage')}`
-        },
-        {
-            rangeDataItemValue: temperature,
-            axisLabelText: `${i18next.t('average')} ${i18next.t('temperature')}`
-        },
-    ];
+    let rangeDataOption = [];
 
     switch (chargeStatus) {
         case 0:
-            detailEXSoSSafetyStatusInfoElement.innerHTML = `<p>${time} [${i18next.t('charge')} ${i18next.t('status')}]: ${voltage}V, ${temperature}&#8451</p>`
+            detailEXSoSSafetyStatusInfoElement.innerHTML = `<p>${time} [${i18next.t('charge')} ${i18next.t('status')}]: ${maxVoltage}V, ${maxTemperature}&#8451</p>`
             detailExSoSVoltageSafetySeriesList.forEach(series => {
                 series.data.setAll(JSON.parse(staticExSoSChartData)['over_voltage_safety']);
             });
@@ -1110,9 +1103,22 @@ function changeDetailEXSoSSafetyChart(option) {
                 series.data.setAll(JSON.parse(staticExSoSChartData)['over_temperature_safety']);
             });
 
+            //  Clear rangeDataOption
+            rangeDataOption.length = 0;
+
+            // Change rangeDataOption
+            rangeDataOption.push({
+                rangeDataItemValue: maxVoltage,
+                axisLabelText: `${i18next.t('max')} ${i18next.t('voltage')} ${i18next.t('average')}`
+            });
+            rangeDataOption.push({
+                rangeDataItemValue: maxTemperature,
+                axisLabelText: `${i18next.t('max')} ${i18next.t('temperature')} ${i18next.t('average')}`
+            });
+
             break;
         case 1:
-            detailEXSoSSafetyStatusInfoElement.innerHTML = `<p>${time} [${i18next.t('discharge')} ${i18next.t('status')}]: ${voltage}V, ${temperature}&#8451</p>`
+            detailEXSoSSafetyStatusInfoElement.innerHTML = `<p>${time} [${i18next.t('discharge')} ${i18next.t('status')}]: ${minVoltage}V, ${minTemperature}&#8451</p>`
 
             detailExSoSVoltageSafetySeriesList.forEach(series => {
                 series.data.setAll(JSON.parse(staticExSoSChartData)['under_voltage_safety']);
@@ -1122,9 +1128,22 @@ function changeDetailEXSoSSafetyChart(option) {
                 series.data.setAll(JSON.parse(staticExSoSChartData)['under_temperature_safety']);
             });
 
+            //  Clear rangeDataOption
+            rangeDataOption.length = 0;
+
+            // Change rangeDataOption
+            rangeDataOption.push({
+                rangeDataItemValue: minVoltage,
+                axisLabelText: `${i18next.t('min')} ${i18next.t('voltage')} ${i18next.t('average')}`
+            });
+            rangeDataOption.push({
+                rangeDataItemValue: minTemperature,
+                axisLabelText: `${i18next.t('min')} ${i18next.t('temperature')} ${i18next.t('average')}`
+            });
+
             break;
         case 2:
-            detailEXSoSSafetyStatusInfoElement.innerHTML = `<p>${time} [${i18next.t('rest')}]: ${voltage}V, ${temperature}&#8451</p>`
+            detailEXSoSSafetyStatusInfoElement.innerHTML = `<p>${time} [${i18next.t('rest')}]: ${voltageGap}V, ${temperatureGap}&#8451</p>`
 
             detailExSoSVoltageSafetySeriesList.forEach(series => {
                 series.data.setAll(JSON.parse(staticExSoSChartData)['voltage_imbalance_safety']);
@@ -1140,11 +1159,11 @@ function changeDetailEXSoSSafetyChart(option) {
             // Change rangeDataOption
             rangeDataOption.push({
                 rangeDataItemValue: voltageGap,
-                axisLabelText: `${i18next.t('average')} ${i18next.t('voltageGap')}`
+                axisLabelText: `${i18next.t('voltageGap')} ${i18next.t('average')}`
             });
             rangeDataOption.push({
                 rangeDataItemValue: temperatureGap,
-                axisLabelText: `${i18next.t('average')} ${i18next.t('temperatureGap')}`
+                axisLabelText: `${i18next.t('temperatureGap')} ${i18next.t('average')}`
             });
 
             break;
