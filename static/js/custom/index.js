@@ -1250,7 +1250,7 @@ function getForecastingMaxMinRackCellSeriesList(elementId, option) {
     let xAxis = chart.xAxes.push(am5xy.DateAxis.new(root, {
         baseInterval: {
             timeUnit: "second",
-            count: 1
+            count: 10
         },
         dateFormats: {
             hour: 'HH:mm',

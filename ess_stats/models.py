@@ -49,68 +49,48 @@ class ForecastingMaxRackCellVoltage(models.Model):
     operating_site = models.IntegerField(db_column="operating_site_id")
     bank_id = models.IntegerField()
     rack_id = models.IntegerField()
-    time = models.DateTimeField()
+    time = models.DateTimeField(primary_key=True)
     values = models.JSONField()
 
     class Meta:
+        managed = False
         db_table = "forecasting_max_rack_cell_voltage"
-        constraints = [
-            models.UniqueConstraint(
-                fields=["operating_site", "bank_id", "rack_id", "time"],
-                name="forecasting_max_rack_cell_voltage_unique",
-            )
-        ]
 
 
 class ForecastingMinRackCellVoltage(models.Model):
     operating_site = models.IntegerField(db_column="operating_site_id")
     bank_id = models.IntegerField()
     rack_id = models.IntegerField()
-    time = models.DateTimeField()
+    time = models.DateTimeField(primary_key=True)
     values = models.JSONField()
 
     class Meta:
+        managed = False
         db_table = "forecasting_min_rack_cell_voltage"
-        constraints = [
-            models.UniqueConstraint(
-                fields=["operating_site", "bank_id", "rack_id", "time"],
-                name="forecasting_min_rack_cell_voltage_unique",
-            )
-        ]
 
 
 class ForecastingMaxRackCellTemperature(models.Model):
     operating_site = models.IntegerField(db_column="operating_site_id")
     bank_id = models.IntegerField()
     rack_id = models.IntegerField()
-    time = models.DateTimeField()
+    time = models.DateTimeField(primary_key=True)
     values = models.JSONField()
 
     class Meta:
+        managed = False
         db_table = "forecasting_max_rack_cell_temperature"
-        constraints = [
-            models.UniqueConstraint(
-                fields=["operating_site", "bank_id", "rack_id", "time"],
-                name="forecasting_max_rack_cell_temperature_unique",
-            )
-        ]
 
 
 class ForecastingMinRackCellTemperature(models.Model):
     operating_site = models.IntegerField(db_column="operating_site_id")
     bank_id = models.IntegerField()
     rack_id = models.IntegerField()
-    time = models.DateTimeField()
+    time = models.DateTimeField(primary_key=True)
     values = models.JSONField()
 
     class Meta:
+        managed = False
         db_table = "forecasting_min_rack_cell_temperature"
-        constraints = [
-            models.UniqueConstraint(
-                fields=["operating_site", "bank_id", "rack_id", "time"],
-                name="forecasting_min_rack_cell_temperature_unique",
-            )
-        ]
 
 
 class SoS(models.Model):
