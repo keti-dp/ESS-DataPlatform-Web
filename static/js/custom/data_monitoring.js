@@ -788,7 +788,7 @@ async function monitoringLogColumnInputHandler(event, url) {
 
 /* Initial task */
 // - Create monitoring list
-var operatingSiteMonitoringListColumnIds = ['operatingSite1MonitoringListColumn', 'operatingSite2MonitoringListColumn', 'operatingSite3MonitoringListColumn'];
+var operatingSiteMonitoringListColumnIds = ['operatingSite2MonitoringListColumn', 'operatingSite3MonitoringListColumn'];
 operatingSiteMonitoringListColumnIds.forEach((operatingSiteMonitoringListColumnId, operatingSiteMonitoringListColumnIdIndex) => {
     let operatingSite = operatingSiteMonitoringListColumnId.replace('MonitoringListColumn', '');
     let operatingSiteId = operatingSiteMonitoringListColumnIdIndex + 1;
@@ -945,7 +945,7 @@ monitoringListItemModalTriggerList.forEach(element => {
 // - Create monitoring log
 let initialMonitoringLogLoadInterval = {};
 
-var monitoringLogColumnIds = ['operatingSite1MonitoringLogColumn', 'operatingSite2MonitoringLogColumn', 'operatingSite3MonitoringLogColumn'];
+var monitoringLogColumnIds = ['operatingSite2MonitoringLogColumn', 'operatingSite3MonitoringLogColumn'];
 monitoringLogColumnIds.forEach(async (monitoringLogColumnId, index) => {
     let operatingSiteId = index + 1;
     let monitoringLogColumnElement = document.getElementById(monitoringLogColumnId);
@@ -1247,8 +1247,8 @@ monitoringLogViewModalFormValidation.addField('#monitoringLogViewModalStartDateT
 
         if (responseData['previous'] || responseData['next']) {
             monitoringLogViewModalGridPagination.classList.remove('d-none');
-            previousButtonElement = monitoringLogViewModalGridPaginationUlElement.firstElementChild;
-            nextButtonElement = monitoringLogViewModalGridPaginationUlElement.lastElementChild;
+            let previousButtonElement = monitoringLogViewModalGridPaginationUlElement.firstElementChild;
+            let nextButtonElement = monitoringLogViewModalGridPaginationUlElement.lastElementChild;
 
             if (responseData['previous']) {
                 previousButtonElement.classList.remove('disabled');
@@ -1311,8 +1311,8 @@ monitoringLogViewModalFormValidation.addField('#monitoringLogViewModalStartDateT
 
                 if (responseData['previous'] || responseData['next']) {
                     monitoringLogViewModalGridPagination.classList.remove('d-none');
-                    previousButtonElement = monitoringLogViewModalGridPaginationUlElement.firstElementChild;
-                    nextButtonElement = monitoringLogViewModalGridPaginationUlElement.lastElementChild;
+                    let previousButtonElement = monitoringLogViewModalGridPaginationUlElement.firstElementChild;
+                    let nextButtonElement = monitoringLogViewModalGridPaginationUlElement.lastElementChild;
 
                     if (responseData['previous']) {
                         previousButtonElement.classList.remove('disabled');
