@@ -13,9 +13,9 @@
 <link rel="stylesheet"
     href="https://cdn.jsdelivr.net/npm/@eonasdan/tempus-dominus@6.0.0-beta1/dist/css/tempus-dominus.css">
 
-<script src="https://unpkg.com/ag-grid-community/dist/ag-grid-community.min.noStyle.js"></script>
-<link rel="stylesheet" href="https://unpkg.com/ag-grid-community/dist/styles/ag-grid.css">
-<link rel="stylesheet" href="https://unpkg.com/ag-grid-community/dist/styles/ag-theme-alpine.css">
+<script src="https://cdn.jsdelivr.net/npm/ag-grid-community/dist/ag-grid-community.min.noStyle.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community/styles/ag-grid.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community/styles/ag-theme-alpine.css">
 
 <style>
     .card>.card-body>.row>div {
@@ -154,9 +154,9 @@
                                         data-bs-original-title="Visulize the abnormal detection types on the today."></i>
                                 </h6>
                                 <select class="form-select form-select-sm mb-1">
-                                    <option value="1">Sionyu ESS</option>
                                     <option value="2">Panri ESS</option>
                                     <option value="3">Hwangguem #6 ESS</option>
+                                    <option value="1">Sionyu ESS(Not working)</option>
                                 </select>
                                 <!-- Monitoring log level type chart container -->
                                 <!-- Loading -->
@@ -167,76 +167,6 @@
                                 </div>
                                 <div id="primaryMonitoringLogLevelTypeCountChart" class="d-none" style="height: 300px;">
                                 </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-xl-4 col-md-12">
-                <div id="operatingSite1Card" class="card">
-                    <div class="card-header">
-                        <div class="row">
-                            <div class="col">
-                                <h5>Sionyu ESS</h5>
-                            </div>
-                            <div class="col">
-                                <div class="row">
-                                    <div class="col-10 text-right">
-                                        <i class="bi bi-circle-fill text-success"></i> Normal
-                                        <i class="bi bi-circle-fill text-danger"></i> Abnormal
-                                        <i class="bi bi-circle-fill text-secondary"></i> Unknown
-                                        <i class="bi bi-info-circle" data-bs-toggle="tooltip" data-bs-placement="top"
-                                            title="" data-bs-original-title="The 'Abnormal' status is outside the scope of protection threshold values
-                                             and includes the 'Warning' and 'Fault' states. 
-                                             'Unknown' state refers to a condition that cannot be clearly defined other than 
-                                             the 'Warning' and 'Fault' states within the 'Abnormal' states."></i>
-                                        </h6>
-                                    </div>
-                                    <div class="col-2 text-right">
-                                        <div class="dropdown">
-                                            <button class="btn dropdown-toggle" type="button" id="dropdownMenuButton1"
-                                                data-bs-toggle="dropdown" aria-expanded="false">
-                                                <span class="material-icons-two-tone">
-                                                    more_vert
-                                                </span>
-                                            </button>
-                                            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
-                                                <li><a class="dropdown-item" href="#">View ESS Info</a></li>
-                                                <li><a class="dropdown-item" href="#" data-bs-toggle="modal"
-                                                        data-bs-target="#monitoringLogViewModal"
-                                                        data-operating-site-id="1">View Previous Logs</a></li>
-                                                <li><a class="dropdown-item" href="#" data-bs-toggle="modal"
-                                                        data-bs-target="#operatingDataDownloadModal"
-                                                        data-operating-site-id="1">Download the operating site's
-                                                        data</a>
-                                                </li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <!-- Monitoring list area -->
-                            <div id="operatingSite1MonitoringListColumn" class="col-xl-8 col-md-12 overflow-auto"></div>
-
-                            <!-- Monitoring log area  -->
-                            <div id="operatingSite1MonitoringLogColumn" class="col-xl-4 col-md-12 overflow-auto">
-                                <select class="form-select form-select-sm mb-1">
-                                    <option value="0">All</option>
-                                    <option value="1">Warning</option>
-                                    <option value="2">Fault</option>
-                                </select>
-                                <input class="form-control form-control-sm mb-1" type="text" placeholder="Input text.">
-                                <!-- Loading -->
-                                <div class="text-center">
-                                    <div class="spinner-border" role="status">
-                                        <span class="visually-hidden">Loading...</span>
-                                    </div>
-                                </div>
-                                <div id="operatingSite1MonitoringLogColumnLogContainer"></div>
                             </div>
                         </div>
                     </div>
@@ -310,8 +240,6 @@
                     </div>
                 </div>
             </div>
-        </div>
-        <div class="row">
             <div class="col-xl-4 col-md-12">
                 <div class="card">
                     <div class="card-header">
@@ -380,6 +308,8 @@
                     </div>
                 </div>
             </div>
+        </div>
+        <div class="row">
             <div class="col-xl-4 col-md-12">
                 <div class="card">
                     <div class="card-header">
@@ -479,6 +409,51 @@
                         <div class="row">
                             <div class="col">
                                 <p>Ready for service.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-4 col-md-12">
+                <div id="operatingSite1Card" class="card">
+                    <div class="card-header">
+                        <div class="row">
+                            <div class="col">
+                                <h5>Sionyu ESS(Not working)</h5>
+                            </div>
+                            <div class="col">
+                                <div class="row">
+                                    <div class="col-10 text-right"></div>
+                                    <div class="col-2 text-right">
+                                        <div class="dropdown">
+                                            <button class="btn dropdown-toggle" type="button" id="dropdownMenuButton1"
+                                                data-bs-toggle="dropdown" aria-expanded="false">
+                                                <span class="material-icons-two-tone">
+                                                    more_vert
+                                                </span>
+                                            </button>
+                                            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+                                                <li><a class="dropdown-item" href="#">View ESS Info</a></li>
+                                                <li><a class="dropdown-item" href="#" data-bs-toggle="modal"
+                                                        data-bs-target="#monitoringLogViewModal"
+                                                        data-operating-site-id="1">View Previous Logs</a></li>
+                                                <li><a class="dropdown-item" href="#" data-bs-toggle="modal"
+                                                        data-bs-target="#operatingDataDownloadModal"
+                                                        data-operating-site-id="1">Download the operating site's
+                                                        data</a>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col">
+                                This operating site is not working, so we only provide data from 2021.09.17 to
+                                2023.04.13
                             </div>
                         </div>
                     </div>
@@ -730,7 +705,7 @@
 <script src="https://unpkg.com/just-validate@3.3.1/dist/just-validate.production.min.js"></script>
 <script
     src="https://cdn.jsdelivr.net/npm/just-validate-plugin-date@1.1.0/dist/just-validate-plugin-date.production.min.js"></script>
-<script src="https://unpkg.com/ag-grid-community/dist/ag-grid-community.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/ag-grid-community/dist/ag-grid-community.min.js"></script>
 
 <script type="module" src="{% static 'js/custom/data_monitoring.js' %}"></script>
 <script>

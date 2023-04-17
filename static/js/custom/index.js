@@ -310,7 +310,7 @@ async function createForecastingBankSoLChart() {
 
     let chartData = [];
 
-    let requestUrl = new URL(`${window.location.origin}/api/ess/stats/avg-soh/operating-sites/1/banks/1/`);
+    let requestUrl = new URL(`${window.location.origin}/api/ess/stats/avg-soh/operating-sites/2/banks/1/`);
 
     let avgBankSoHData = await loadData(requestUrl);
     avgBankSoHData.forEach(element => {
@@ -321,7 +321,7 @@ async function createForecastingBankSoLChart() {
     });
 
     // - Save forecasting SoL
-    requestUrl = new URL(`${window.location.origin}/api/ess/stats/forecasting-sol/operating-sites/1/banks/1/`);
+    requestUrl = new URL(`${window.location.origin}/api/ess/stats/forecasting-sol/operating-sites/2/banks/1/`);
 
     let forecastingBankSoLData = await loadData(requestUrl);
 
@@ -2497,11 +2497,11 @@ essRackSoSVisualizationSearchModalFormValidation
             detailSoSChartData.push(detailSoSChartDataItem);
         });
 
-        forecastingSoSRequestUrl = new URL(`${window.location.origin}/api/ess/stats/forecasting-rack-sos/operating-sites/${operatingSiteId}/banks/${bankId}/racks/${rackId}/`);
+        let forecastingSoSRequestUrl = new URL(`${window.location.origin}/api/ess/stats/forecasting-rack-sos/operating-sites/${operatingSiteId}/banks/${bankId}/racks/${rackId}/`);
         forecastingSoSRequestUrl.searchParams.append('start-time', startTime);
         forecastingSoSRequestUrl.searchParams.append('end-time', endTime);
 
-        forecastingSoSResponseData = await loadData(forecastingSoSRequestUrl);
+        let forecastingSoSResponseData = await loadData(forecastingSoSRequestUrl);
         forecastingSoSResponseData.forEach(element => {
             // Discard by 1 second unit for overlaping the observed values and forecasting values
             let fixedTime = `${element['time'].substring(0, element['time'].length - 1)}0`;
@@ -3333,11 +3333,11 @@ visualizationTypes.forEach(visualizationType => {
     let requestUrl;
 
     if (visualizationType.includes('bank')) {
-        requestUrl = new URL(`${window.location.origin}/api/ess/operating-sites/1/banks/1/stats/${visualizationType}`);
+        requestUrl = new URL(`${window.location.origin}/api/ess/operating-sites/2/banks/1/stats/${visualizationType}`);
     }
 
     if (visualizationType.includes('rack')) {
-        requestUrl = new URL(`${window.location.origin}/api/ess/operating-sites/1/banks/1/racks/1/stats/${visualizationType}`);
+        requestUrl = new URL(`${window.location.origin}/api/ess/operating-sites/2/banks/1/racks/1/stats/${visualizationType}`);
     }
 
     requestUrl.searchParams.append('time-bucket-width', '1hour');
@@ -3410,7 +3410,7 @@ visualizationTypes.forEach(visualizationType => {
 // Create avg bank SoH chart
 let avgBankSoHChartSeries = getAvgSoHChartSeries('avgBankSoHChart');
 
-let requestUrl = new URL(`${window.location.origin}/api/ess/stats/avg-soh/operating-sites/1/banks/1/`);
+let requestUrl = new URL(`${window.location.origin}/api/ess/stats/avg-soh/operating-sites/2/banks/1/`);
 
 loadData(requestUrl)
     .then(responseData => {
@@ -3435,7 +3435,7 @@ loadData(requestUrl)
 // Create avg rack SoH chart
 let avgRackSoHChartSeries = getAvgSoHChartSeries('avgRackSoHChart');
 
-requestUrl = new URL(`${window.location.origin}/api/ess/stats/avg-soh/operating-sites/1/banks/1/racks/1/`);
+requestUrl = new URL(`${window.location.origin}/api/ess/stats/avg-soh/operating-sites/2/banks/1/racks/1/`);
 
 loadData(requestUrl)
     .then(responseData => {
@@ -3521,7 +3521,7 @@ let detailRackSoSChartSeriesList = getDetailRackSoSChartSeriesList('detailRackSo
 let startTime = currentDateTime.minus({ hour: 1 }).toFormat(customTimeDesignatorFullDateTimeFormat);
 let endTime = currentDateTime.toFormat(customTimeDesignatorFullDateTimeFormat);
 
-requestUrl = new URL(`${window.location.origin}/api/ess/stats/sos/operating-sites/1/banks/1/racks/1/`);
+requestUrl = new URL(`${window.location.origin}/api/ess/stats/sos/operating-sites/2/banks/1/racks/1/`);
 requestUrl.searchParams.append('start-time', startTime);
 requestUrl.searchParams.append('end-time', endTime);
 
@@ -3559,7 +3559,7 @@ loadData(requestUrl)
             }
         });
 
-        let forecastingSoSRequestUrl = new URL(`${window.location.origin}/api/ess/stats/forecasting-rack-sos/operating-sites/1/banks/1/racks/1/`);
+        let forecastingSoSRequestUrl = new URL(`${window.location.origin}/api/ess/stats/forecasting-rack-sos/operating-sites/2/banks/1/racks/1/`);
         forecastingSoSRequestUrl.searchParams.append('start-time', currentDateTime.minus({ minute: 10 }).toFormat(customTimeDesignatorFullDateTimeFormat));
         forecastingSoSRequestUrl.searchParams.append('end-time', currentDateTime.toFormat(customTimeDesignatorFullDateTimeFormat));
 
@@ -3611,7 +3611,7 @@ let detailEXSoSChartSeriesList;
 let startDate = currentDateTime.toFormat(customFullDateFormat);
 let endDate = DateTime.fromFormat(startDate, customFullDateFormat).plus({ day: 1 }).toFormat(customFullDateFormat);
 
-requestUrl = new URL(`${window.location.origin}/api/ess/stats/ex-sos/operating-sites/1/banks/1/`);
+requestUrl = new URL(`${window.location.origin}/api/ess/stats/ex-sos/operating-sites/2/banks/1/`);
 requestUrl.searchParams.append('start-time', startDate);
 requestUrl.searchParams.append('end-time', endDate);
 requestUrl.searchParams.append('mode', 1);
@@ -3847,7 +3847,7 @@ forecastingObjects.forEach(forecastingObject => {
 startTime = currentDateTime.minus({ hour: 1 }).toFormat(customTimeDesignatorFullDateTimeFormat);
 endTime = currentDateTime.toFormat(customTimeDesignatorFullDateTimeFormat);
 
-requestUrl = new URL(`${window.location.origin}/api/ess/operating-sites/1/banks/1/racks/1/`);
+requestUrl = new URL(`${window.location.origin}/api/ess/operating-sites/2/banks/1/racks/1/`);
 requestUrl.searchParams.append('fields', fields);
 requestUrl.searchParams.append('start-time', startTime);
 requestUrl.searchParams.append('end-time', endTime);
@@ -3866,7 +3866,7 @@ loadData(requestUrl)
             let startTime = currentDateTime.minus({ minute: 10 }).toFormat(customTimeDesignatorFullDateTimeFormat);
             let endTime = currentDateTime.toFormat(customTimeDesignatorFullDateTimeFormat);
 
-            let requestUrl = new URL(`${window.location.origin}/api/ess/stats/${forecastingObject['urlPath']}/operating-sites/1/banks/1/racks/1/`);
+            let requestUrl = new URL(`${window.location.origin}/api/ess/stats/${forecastingObject['urlPath']}/operating-sites/2/banks/1/racks/1/`);
             requestUrl.searchParams.append('start-time', startTime);
             requestUrl.searchParams.append('end-time', endTime);
 
@@ -3960,7 +3960,7 @@ let multiStepForecastingMaxCellChartDefaultOption = {
 
 startTime = currentDateTime.startOf('day').toFormat(customTimeDesignatorFullDateTimeFormat);
 endTime = currentDateTime.startOf('day').plus({ days: 1 }).toFormat(customTimeDesignatorFullDateTimeFormat);
-requestUrl = new URL(`${window.location.origin}/api/ess/stats/multi-step-forecasting-max-cell-voltage/operating-sites/1/banks/1/racks/1/`);
+requestUrl = new URL(`${window.location.origin}/api/ess/stats/multi-step-forecasting-max-cell-voltage/operating-sites/2/banks/1/racks/1/`);
 requestUrl.searchParams.append('start-time', startTime);
 requestUrl.searchParams.append('end-time', endTime);
 
@@ -3970,7 +3970,7 @@ loadData(requestUrl)
         let chartElementId = 'multiStepForecastingMaxCellVoltageChart';
         let currentDate = currentDateTime.toFormat(customFullDateFormat);
 
-        let observedDataRequestUrl = new URL(`${window.location.origin}/api/ess/operating-sites/1/banks/1/racks/1/`);
+        let observedDataRequestUrl = new URL(`${window.location.origin}/api/ess/operating-sites/2/banks/1/racks/1/`);
         observedDataRequestUrl.searchParams.append('fields', 'timestamp,rack_max_cell_voltage');
         observedDataRequestUrl.searchParams.append('date', currentDate);
         observedDataRequestUrl.searchParams.append('no_page', '');
@@ -4148,7 +4148,7 @@ let maxRackCellVoltageSeries = voltageGapChart.series.push(am5xy.LineSeries.new(
 }));
 
 // Create voltageGap chart
-requestUrl = new URL(`${window.location.origin}/api/ess/operating-sites/1/banks/1/racks/1/?fields=timestamp,rack_max_cell_voltage,rack_min_cell_voltage&date=${getTodayDateFormat()}&no_page`)
+requestUrl = new URL(`${window.location.origin}/api/ess/operating-sites/2/banks/1/racks/1/?fields=timestamp,rack_max_cell_voltage,rack_min_cell_voltage&date=${getTodayDateFormat()}&no_page`)
 
 fetch(requestUrl)
     .then((response) => response.json())
