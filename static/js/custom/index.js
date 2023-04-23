@@ -919,7 +919,7 @@ function getDetailEXSoSChartSeriesList(elementId) {
         valueYField: 'valueY',
     }));
 
-    let seriesList = [negligibleSeries, marginalSeries, neutralSeries, criticalSeries, catastrophicSeries];
+    let seriesList = [catastrophicSeries, criticalSeries, neutralSeries, marginalSeries, negligibleSeries];
 
     seriesList.forEach(series => {
         series.strokes.template.setAll({
@@ -3269,7 +3269,7 @@ multiStepForecastingSearchModalFormValidation
         responseData.forEach(element => {
             let values = element['values'];
             let timeList = values['time'];
-            
+
             timeList.forEach((time, index) => {
                 let timeMillis = DateTime.fromFormat(time, customFullDateTimeFormat).toMillis();
 
