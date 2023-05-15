@@ -1,8 +1,8 @@
-{% extends "base.html" %}
+{% extends "en/base.html" %}
 
 {% load static %}
 
-{% block title %}메인{% endblock %}
+{% block title %}Main{% endblock %}
 
 {% block html_head %}
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
@@ -37,7 +37,7 @@
                 <div class="row align-items-center">
                     <div class="col-md-6">
                         <div class="page-header-title">
-                            <h5 class="m-b-10">메인</h5>
+                            <h5 class="m-b-10">Main</h5>
                         </div>
                     </div>
                 </div>
@@ -48,9 +48,9 @@
         <div class="row" style="position: relative;">
             <div class="col-2">
                 <nav id="mainContentNavbar" class="navbar navbar-light bg-light flex-column align-items-stretch p-3">
-                    <a class="navbar-brand" href="#">메인</a>
+                    <a class="navbar-brand" href="#">Main</a>
                     <nav class="nav nav-pills flex-column">
-                        <a class="nav-link" href="#itemSafetyDiagnosticIndicator">안전 진단 지표</a>
+                        <a class="nav-link" href="#itemSafetyDiagnosticIndicator">Safety Diagnostic Indicators</a>
                         <nav class="nav nav-pills flex-column">
                             <a class="nav-link ml-3 my-1" href="#itemSoc">SoC</a>
                             <a class="nav-link ml-3 my-1" href="#itemSoh">SoH</a>
@@ -58,11 +58,11 @@
                             <a class="nav-link ml-3 my-1" href="#itemSoS">SoS</a>
                             <a class="nav-link ml-3 my-1" href="#itemEXSoS">EXSoS</a>
                         </nav>
-                        <a class="nav-link" href="#itemEtc">기타</a>
+                        <a class="nav-link" href="#itemEtc">Etc</a>
                         <nav class="nav nav-pills flex-column">
-                            <a class="nav-link ml-3 my-1" href="#itemPower">전력</a>
-                            <a class="nav-link ml-3 my-1" href="#itemVoltage">전압</a>
-                            <a class="nav-link ml-3 my-1" href="#itemTemperature">온도</a>
+                            <a class="nav-link ml-3 my-1" href="#itemPower">Power</a>
+                            <a class="nav-link ml-3 my-1" href="#itemVoltage">Voltage</a>
+                            <a class="nav-link ml-3 my-1" href="#itemTemperature">Temperature</a>
                         </nav>
                     </nav>
                 </nav>
@@ -70,13 +70,13 @@
             <div class="col-10 vh-100">
                 <div data-bs-spy="scroll" data-bs-target="#mainContentNavbar" data-bs-offset="0" tabindex="0"
                     style="height: 100%; overflow-x: hidden; overflow-y: scroll;">
-                    <h4 id="itemSafetyDiagnosticIndicator"><u>안전 진단 지표</u></h4>
-                    <p>ESS의 다양한 안전 상태 지표를 나타냅니다.</p>
+                    <h4 id="itemSafetyDiagnosticIndicator"><u>Safety Diagnostic Indicators</u></h4>
+                    <p>Represents various safety status indicators for ESS.</p>
 
                     <!-- [SoC] start -->
                     <h5 id="itemSoc">SoC <i class="bi bi-info-circle" data-bs-toggle="tooltip" data-bs-placement="top"
-                            title="" data-bs-original-title="State of Charge는 배터리(또는 셀 또는 배터리 모듈) 용량에 대한 배터리의 충전 수준을 의미합니다.
-                             SoC의 단위는 백분율입니다. (0% : 비어 있음, 100% : 가득 참)"></i>
+                            title="" data-bs-original-title="SoC : State of charge means the level of charge of batteries (or cells, or battery modules) relative to its capacity.
+                             The units of SoC are percentage points. (0% : empty; 100% : full)"></i>
                     </h5>
                     <div class="row">
                         <div class="col-xl-6 col-md-12">
@@ -84,7 +84,7 @@
                                 <div class="card-header">
                                     <div class="row">
                                         <div class="col-8 my-auto">
-                                            <h5>시간별 평균 Bank SoC</h5>
+                                            <h5>Average Bank SoC By Hour</h5>
                                         </div>
                                         <div class="col-4 text-right">
                                             <button class="btn btn-sm" type="button" data-bs-toggle="modal"
@@ -107,7 +107,7 @@
                                         </div>
                                     </div>
                                     <div class="row d-none">
-                                        <p>판리 태양광 / Bank 1</p>
+                                        <p>Panri ESS / Bank 1</p>
                                         <div id="avgBankSocChart" class="visualization-chart"></div>
                                     </div>
                                 </div>
@@ -118,7 +118,7 @@
                                 <div class="card-header">
                                     <div class="row">
                                         <div class="col-8 my-auto">
-                                            <h5>시간별 평균 Rack SoC</h5>
+                                            <h5>Average Rack SoC By Hour</h5>
                                         </div>
                                         <div class="col-4 text-right">
                                             <button class="btn btn-sm" type="button" data-bs-toggle="modal"
@@ -141,7 +141,7 @@
                                         </div>
                                     </div>
                                     <div class="row d-none">
-                                        <p>판리 태양광 / Bank 1 / Rack 1</p>
+                                        <p>Panri ESS / Bank 1 / Rack 1</p>
                                         <div id="avgRackSocChart" class="visualization-chart"></div>
                                     </div>
                                 </div>
@@ -152,8 +152,9 @@
 
                     <!-- [SoH] start -->
                     <h5 id="itemSoh">SoH <i class="bi bi-info-circle" data-bs-toggle="tooltip" data-bs-placement="top"
-                            title="" data-bs-original-title="State of Health는 배터리 운영 사양과 비교하여 배터리(또는 셀 또는 배터리 모듈) 상태를 나타내는 수치입니다.
-                             SoH의 단위는 백분율입니다. (100% : 배터리의 상태가 배터리의 운영 사양과 일치함)"></i>
+                            title=""
+                            data-bs-original-title="SoH : State of health means the condition of batteries (or cells, or battery modules), compared to its ideal conditions.
+                             The units of SoH are percent points. (100% : the battery's conditions match the battery's specifications)"></i>
                     </h5>
                     <div class="row">
                         <div class="col-xl-6 col-md-12">
@@ -161,7 +162,7 @@
                                 <div class="card-header">
                                     <div class="row">
                                         <div class="col-8 my-auto">
-                                            <h5>일일 평균 Bank SoH</h5>
+                                            <h5>Daily Average Bank SoH</h5>
                                         </div>
                                         <div class="col-4 text-right">
                                             <button class="btn btn-sm" type="button" data-bs-toggle="modal"
@@ -184,7 +185,7 @@
                                         </div>
                                     </div>
                                     <div class="row d-none">
-                                        <p>판리 태양광 / Bank 1</p>
+                                        <p>Panri ESS / Bank 1</p>
                                         <div id="avgBankSoHChart" class="visualization-chart"></div>
                                     </div>
                                 </div>
@@ -195,7 +196,7 @@
                                 <div class="card-header">
                                     <div class="row">
                                         <div class="col-8 my-auto">
-                                            <h5>일일 평균 Rack SoH</h5>
+                                            <h5>Daily Average Rack SoH</h5>
                                         </div>
                                         <div class="col-4 text-right">
                                             <button class="btn btn-sm" type="button" data-bs-toggle="modal"
@@ -218,7 +219,7 @@
                                         </div>
                                     </div>
                                     <div class="row d-none">
-                                        <p>판리 태양광 / Bank 1 / Rack 1</p>
+                                        <p>Panri ESS / Bank 1 / Rack 1</p>
                                         <div id="avgRackSoHChart" class="visualization-chart"></div>
                                     </div>
                                 </div>
@@ -230,16 +231,17 @@
                     <!-- [SoL] start -->
                     <div class="row">
                         <h5 id="itemSoL">SoL <i class="bi bi-info-circle" data-bs-toggle="tooltip"
-                                data-bs-placement="top" title="" data-bs-original-title="State of Life는 배터리(또는 셀 또는 배터리 모듈)의 남은 수명 정보를 의미합니다.
-                                 배터리를 사용할 수 없게 되기 전에 배터리가 얼마나 더 오래 작동할 것으로 예상되는지에 대한 측정입니다. 
-                                 SoL의 단위는 백분율이고 지표의 유도 공식을 '(SoH - 80) * 5'로 정의합니다."></i>
+                                data-bs-placement="top" title=""
+                                data-bs-original-title="SoL : State of Life means the current condition or level of functionality of the batteries(or cells, or battey modules).
+                                 It is a measure of how much longer the battery is expected to be able to function before it becomes unusable. 
+                                 The units of SoL are percent points and it defines the SoL induction formula as '(SoH - 80) * 5'."></i>
                         </h5>
                         <div class="col-xl-6 col-md-12">
                             <div id="forecastingBankSoLCard" class="card mx-2">
                                 <div class="card-header">
                                     <div class="row">
                                         <div class="col-8 my-auto">
-                                            <h5>Bank SoL 예측</h5>
+                                            <h5>Forecasting Bank SoL</h5>
                                         </div>
                                     </div>
                                 </div>
@@ -253,7 +255,7 @@
                                         </div>
                                     </div>
                                     <div class="row d-none">
-                                        <p>판리 태양광 / Bank 1</p>
+                                        <p>Panri ESS / Bank 1</p>
                                         <div id="forecastingBankSoLChart" class="visualization-chart"></div>
                                     </div>
                                 </div>
@@ -265,16 +267,18 @@
                     <!-- [SoS] start -->
                     <div class="row">
                         <h5 id="itemSoS">SoS <i class="bi bi-info-circle" data-bs-toggle="tooltip"
-                                data-bs-placement="top" title=""
-                                data-bs-original-title="State of Safety는 PV-ESS 사이트의 전압, 전류, 온도 등 운영 데이터와 해당 사이트의 보호 임계값을 활용한 알고리즘으로 현재 운영 상태를 수치화하고,
-                                 선정된 상한 안전도를 통해 안전상태, 경고상태, 위험상태로 결과를 구분하여 표시하는 지표입니다. (0.4096 미만 : Unsafe, 0.4096 ~ 0.7999 : Warning, 0.8 ~1 : Safe)"></i>
+                                data-bs-placement="top" title="" data-bs-original-title="SoS : State of Safety means an indicator that uses PV-ESS operational data
+                                 (voltage, current, temperature, voltage difference, temperature difference, etc) 
+                                 and its protection threshold values to quantifies the current operational status. 
+                                 This shows to separate the total hazardous results into safety, warning, and unsafe levels. 
+                                 (less than 0.4096 : Unsafe, 0.4096 ~ 0.7999 : Warning, 0.8 ~1 : Safe)"></i>
                         </h5>
                         <div class="col-xl-6 col-md-12">
                             <div id="rackSoSCard" class="card mx-2">
                                 <div class="card-header">
                                     <div class="row">
                                         <div class="col-8 my-auto">
-                                            <h5>Rack SoS 예측</h5>
+                                            <h5>Forecasting Rack SoS</h5>
                                         </div>
                                         <div class="col-4 text-right">
                                             <button class="btn btn-sm" type="button" data-bs-toggle="modal"
@@ -298,7 +302,7 @@
                                     </div>
                                     <div class="row d-none">
                                         <div class="row">
-                                            <p>판리 태양광 / Bank 1 / Rack 1</p>
+                                            <p>Panri ESS / Bank 1 / Rack 1</p>
                                             <div id="mainRackSoSChart" class="visualization-chart"></div>
                                         </div>
                                         <div class="row m-t-20">
@@ -310,7 +314,7 @@
                                                             data-bs-target="#detailRackSoSAccordionCollapseOne"
                                                             aria-expanded="true"
                                                             aria-controls="detailRackSoSAccordionCollapseOne">
-                                                            상세 보기
+                                                            View Details
                                                         </button>
                                                     </h2>
                                                     <div id="detailRackSoSAccordionCollapseOne"
@@ -334,10 +338,13 @@
                     <!-- [EXSoS] start -->
                     <div class="row">
                         <h5 id="itemEXSoS">EXSoS <i class="bi bi-info-circle" data-bs-toggle="tooltip"
-                                data-bs-placement="top" title="" data-bs-original-title="'Extended SoS'는 퍼지 논리를 기반으로 PV-ESS의 운영 상태를 수치화한 지표입니다.
-                                 구체적으로 PV-ESS 사이트의 충전상태, 전압, 온도, 전압차, 온도차 등 배터리 제조 사양, 운영 임계치, 운영 데이터를 특징으로 사용하여 
-                                 전압 안전도 및 온도 안전도를 구하는 소속함수(매우안전, 안전, 보통, 위험, 매우위험으로 분류)를 생성하고, 
-                                 이를 OR 연산으로 통합된 소속도를 구하고 무게중심법을 통해 통합 안전도를 산출합니다."></i>
+                                data-bs-placement="top" title="" data-bs-original-title="ExSOS : 'Extended SoS' is an indicator that quantifies the operating state of a PV-ESS
+                                 based on fuzzy logic. Specifically, it creates membership functions 
+                                 (classified as negligible, marginal, neutral, critical, catastrophic) to determine the voltage safety degrees 
+                                 and temperature safety degrees using the battery specification, protection threshold values, 
+                                 and operational data (state of charge, voltage, temperature, voltage difference, temperature difference, etc) as features. 
+                                 and then, It obtains integrated degrees of membership from these safety degrees using OR operations 
+                                 and calculates the integrated safety degree using the centroid techniquye."></i>
                         </h5>
                         <div class="col-xl-12 col-md-12">
                             <div id="exSoSCard" class="card mx-2">
@@ -368,7 +375,7 @@
                                     </div>
                                     <div class="row d-none">
                                         <div class="col-lg-6 col-12">
-                                            <p>판리 태양광 / Bank 1</p>
+                                            <p>Panri ESS / Bank 1</p>
                                             <div id="mainEXSoSChart" class="visualization-chart"></div>
                                         </div>
                                         <div class="col-lg-6 col-12">
@@ -385,7 +392,7 @@
                                                         data-bs-target="#detailEXSoSAccordionCollapseOne"
                                                         aria-expanded="true"
                                                         aria-controls="detailEXSoSAccordionCollapseOne">
-                                                        상세 보기
+                                                        View Details
                                                     </button>
                                                 </h2>
                                                 <div id="detailEXSoSAccordionCollapseOne"
@@ -424,16 +431,16 @@
 
                     <!-- [Etc] start -->
                     <div class="row">
-                        <h4 id="itemEtc"><u>기타</u></h4>
-                        <p>안전 진단 지표 외의 데이터 분석 결과를 나타냅니다.</p>
-                        <h5 id="itemPower">전력</h5>
+                        <h4 id="itemEtc"><u>Etc</u></h4>
+                        <p>Represents another data analytics results.</p>
+                        <h5 id="itemPower">Power</h5>
                         <div class="row">
                             <div class="col-xl-6 col-md-12">
                                 <div id="avgBankPowerCard" class="card mx-2">
                                     <div class="card-header">
                                         <div class="row">
                                             <div class="col-8 my-auto">
-                                                <h5>시간별 평균 Bank 전력</h5>
+                                                <h5>Average Bank Power By Hour</h5>
                                             </div>
                                             <div class="col-4 text-right">
                                                 <button class="btn btn-sm" type="button" data-bs-toggle="modal"
@@ -456,7 +463,7 @@
                                             </div>
                                         </div>
                                         <div class="row d-none">
-                                            <p>판리 태양광 / Bank 1</p>
+                                            <p>Panri ESS / Bank 1</p>
                                             <div id="avgBankPowerChart" class="visualization-chart"></div>
                                         </div>
                                     </div>
@@ -464,17 +471,20 @@
                             </div>
                         </div>
 
-                        <h5 id="itemVoltage">전압</h5>
+                        <h5 id="itemVoltage">Voltage</h5>
                         <div class="row">
                             <div class="col-xl-6 col-md-12">
                                 <div id="forecastingMaxRackCellVoltageCard" class="card mx-2">
                                     <div class="card-header">
                                         <div class="row">
                                             <div class="col-8 my-auto">
-                                                <h5>10분 후 최대 Rack 셀 전압 예측 <i class="bi bi-info-circle"
-                                                        data-bs-toggle="tooltip" data-bs-placement="top" title=""
-                                                        data-bs-original-title="해당 지표는 데이터를 수집하는 현재 시점에서 10분 뒤까지 해당 PV-ESS 사이트의 셀 전압 예측값(10초마다 예측된 값)을 표시합니다.
-                                                         AI 모델은 Linear regression, Catboost, LightGBM, XGBoost를 사용하며, 시각화된 데이터만 사용하여 AI모델의 성능평가지표(RMSE)를 계산합니다."></i>
+                                                <h5>Forecasting Max Rack Cell Voltage, After 10 Minutes <i
+                                                        class="bi bi-info-circle" data-bs-toggle="tooltip"
+                                                        data-bs-placement="top" title=""
+                                                        data-bs-original-title="This indicator displays the predicted cell voltage values (predicted every 10 seconds)
+                                                         for the PV-ESS site up to 10 minutes from the current data collection time. 
+                                                         The AI model uses Linear regression, Catboost, LightGBM, and XGBoost, 
+                                                         and calculates the performance evaluation index (RMSE) of the AI model using only visualized data."></i>
                                                 </h5>
                                             </div>
                                             <div class="col-4 text-right">
@@ -498,7 +508,7 @@
                                             </div>
                                         </div>
                                         <div class="row d-none">
-                                            <p>판리 태양광 / Bank 1 / Rack 1</p>
+                                            <p>Panri ESS / Bank 1 / Rack 1</p>
                                             <div id="forecastingMaxRackCellVoltageChart" class="visualization-chart">
                                             </div>
                                         </div>
@@ -511,10 +521,13 @@
                                     <div class="card-header">
                                         <div class="row">
                                             <div class="col-8 my-auto">
-                                                <h5>10분 후 최소 Rack 셀 전압 예측 <i class="bi bi-info-circle"
-                                                        data-bs-toggle="tooltip" data-bs-placement="top" title=""
-                                                        data-bs-original-title="해당 지표는 데이터를 수집하는 현재 시점에서 10분 뒤까지 해당 PV-ESS 사이트의 셀 전압 예측값(10초마다 예측된 값)을 표시합니다.
-                                                         AI 모델은 Linear regression, Catboost, LightGBM, XGBoost를 사용하며, 시각화된 데이터만 사용하여 AI모델의 성능평가지표(RMSE)를 계산합니다."></i>
+                                                <h5>Forecasting Min Rack Cell Voltage, After 10 Minutes <i
+                                                        class="bi bi-info-circle" data-bs-toggle="tooltip"
+                                                        data-bs-placement="top" title=""
+                                                        data-bs-original-title="This indicator displays the predicted cell voltage values (predicted every 10 seconds)
+                                                         for the PV-ESS site up to 10 minutes from the current data collection time. 
+                                                         The AI model uses Linear regression, Catboost, LightGBM, and XGBoost, 
+                                                         and calculates the performance evaluation index (RMSE) of the AI model using only visualized data."></i>
                                                 </h5>
                                             </div>
                                             <div class="col-4 text-right">
@@ -538,7 +551,7 @@
                                             </div>
                                         </div>
                                         <div class="row d-none">
-                                            <p>판리 태양광 / Bank 1 / Rack 1</p>
+                                            <p>Panri ESS / Bank 1 / Rack 1</p>
                                             <div id="forecastingMinRackCellVoltageChart" class="visualization-chart">
                                             </div>
                                         </div>
@@ -551,9 +564,10 @@
                                     <div class="card-header">
                                         <div class="row">
                                             <div class="col-8 my-auto">
-                                                <h5>1일 최대 셀 전압 예측 <i class="bi bi-info-circle" data-bs-toggle="tooltip"
+                                                <h5>Forecasting Max Rack Cell Voltage, 1 Day <i
+                                                        class="bi bi-info-circle" data-bs-toggle="tooltip"
                                                         data-bs-placement="top" title=""
-                                                        data-bs-original-title="1일 최대 셀 전압을 예측합니다."></i>
+                                                        data-bs-original-title="Forecast Max Rack Cell Voltage, 1 Day"></i>
                                                 </h5>
                                             </div>
                                             <div class="col-4 text-right">
@@ -576,7 +590,7 @@
                                             </div>
                                         </div>
                                         <div class="row d-none">
-                                            <p>판리 태양광 / Bank 1 / Rack 1</p>
+                                            <p>Panri ESS / Bank 1 / Rack 1</p>
                                             <div id="multiStepForecastingMaxCellVoltageChart"
                                                 class="visualization-chart">
                                             </div>
@@ -593,7 +607,7 @@
                                     <div class="card-header">
                                         <div class="row">
                                             <div class="col-8 my-auto">
-                                                <h5>시간별 Rack Cell의 전압차</h5>
+                                                <h5>Rack Cell Voltage Gap</h5>
                                             </div>
                                             <div class="col-4 text-right">
 
@@ -610,7 +624,7 @@
                                             </div>
                                         </div>
                                         <div class="row">
-                                            <p>판리 태양광 / Bank 1 / Rack 1 </p>
+                                            <p>Panri ESS / Bank 1 / Rack1 </p>
                                             <div id="differencePowerChart" class="visualization-chart"></div>
 
                                         </div>
@@ -620,17 +634,20 @@
                         </div>
                         <!--  [전압차] end -->
                         <!--  [전압] end -->
-                        <h5 id="itemTemperature">온도</h5>
+                        <h5 id="itemTemperature">Temperature</h5>
                         <div class="row">
                             <div class="col-xl-6 col-md-12">
                                 <div id="forecastingMaxRackCellTemperatureCard" class="card mx-2">
                                     <div class="card-header">
                                         <div class="row">
                                             <div class="col-8 my-auto">
-                                                <h5>10분 후 최대 Rack 셀 온도 예측 <i class="bi bi-info-circle"
-                                                        data-bs-toggle="tooltip" data-bs-placement="top" title=""
-                                                        data-bs-original-title="해당 지표는 데이터를 수집하는 현재 시점에서 10분 뒤까지 해당 PV-ESS 사이트의 셀 온도 예측값(10초마다 예측된 값)을 표시합니다.
-                                                         AI 모델은 Linear regression, Catboost, LightGBM, XGBoost를 사용하며, 시각화된 데이터만 사용하여 AI모델의 성능평가지표(RMSE)를 계산합니다."></i>
+                                                <h5>Forecasting Max Rack Cell Temperature, After 10 Minutes <i
+                                                        class="bi bi-info-circle" data-bs-toggle="tooltip"
+                                                        data-bs-placement="top" title=""
+                                                        data-bs-original-title="This indicator displays the predicted cell temperature values (predicted every 10 seconds)
+                                                         for the PV-ESS site up to 10 minutes from the current data collection time. 
+                                                         The AI model uses Linear regression, Catboost, LightGBM, and XGBoost, 
+                                                         and calculates the performance evaluation index (RMSE) of the AI model using only visualized data."></i>
                                                 </h5>
                                             </div>
                                             <div class="col-4 text-right">
@@ -654,7 +671,7 @@
                                             </div>
                                         </div>
                                         <div class="row d-none">
-                                            <p>판리 태양광 / Bank 1 / Rack 1</p>
+                                            <p>Panri ESS / Bank 1 / Rack 1</p>
                                             <div id="forecastingMaxRackCellTemperatureChart"
                                                 class="visualization-chart">
                                             </div>
@@ -668,10 +685,13 @@
                                     <div class="card-header">
                                         <div class="row">
                                             <div class="col-8 my-auto">
-                                                <h5>10분 후 최소 Rack 셀 온도 예측 <i class="bi bi-info-circle"
-                                                        data-bs-toggle="tooltip" data-bs-placement="top" title=""
-                                                        data-bs-original-title="해당 지표는 데이터를 수집하는 현재 시점에서 10분 뒤까지 해당 PV-ESS 사이트의 셀 온도 예측값(10초마다 예측된 값)을 표시합니다.
-                                                         AI 모델은 Linear regression, Catboost, LightGBM, XGBoost를 사용하며, 시각화된 데이터만 사용하여 AI모델의 성능평가지표(RMSE)를 계산합니다."></i>
+                                                <h5>Forecasting Min Rack Cell Temperature, After 10 Minutes <i
+                                                        class="bi bi-info-circle" data-bs-toggle="tooltip"
+                                                        data-bs-placement="top" title=""
+                                                        data-bs-original-title="This indicator displays the predicted cell temperature values (predicted every 10 seconds)
+                                                         for the PV-ESS site up to 10 minutes from the current data collection time. 
+                                                         The AI model uses Linear regression, Catboost, LightGBM, and XGBoost, 
+                                                         and calculates the performance evaluation index (RMSE) of the AI model using only visualized data."></i>
                                                 </h5>
                                             </div>
                                             <div class="col-4 text-right">
@@ -695,7 +715,7 @@
                                             </div>
                                         </div>
                                         <div class="row d-none">
-                                            <p>판리 태양광 / Bank 1 / Rack 1</p>
+                                            <p>Panri ESS / Bank 1 / Rack 1</p>
                                             <div id="forecastingMinRackCellTemperatureChart"
                                                 class="visualization-chart">
                                             </div>
@@ -721,36 +741,36 @@
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="essBankVisualizationSearchModalFormLabel">검색</h5>
+                        <h5 class="modal-title" id="essBankVisualizationSearchModalFormLabel">Search</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
                         <form action="#" id="essBankVisualizationSearchModalForm" autocomplete="off">
                             <div class="form-group">
-                                <label class='form-label'>구성:</label>
+                                <label class='form-label'>Structure:</label>
                                 <div class="input-group m-b-10">
                                     <select id="essBankVisualizationSearchModalFormOperatingSiteSelect"
                                         class="form-select">
-                                        <option value="" selected disabled>운영 사이트를 선택해주세요.</option>
-                                        <option value="2">판리 태양광</option>
-                                        <option value="3">황금6호 태양광</option>
-                                        <option value="1">시온유 태양광(운영 중지)</option>
+                                        <option value="" selected disabled>Select an operating site.</option>
+                                        <option value="2">Panri ESS</option>
+                                        <option value="3">Hwangguem #6 ESS</option>
+                                        <option value="1">Sionyu ESS(Not working)</option>
                                     </select>
                                 </div>
                                 <div class="input-group m-b-10">
                                     <select id="essBankVisualizationSearchModalFormBankSelect" class="form-select"
                                         disabled>
-                                        <option value="" selected disabled>Bank를 선택해주세요.</option>
+                                        <option value="" selected disabled>Select a bank.</option>
                                     </select>
                                 </div>
-                                <label class='form-label'>시간:</label>
+                                <label class='form-label'>Time:</label>
                                 <div class='input-group log-event m-b-10'
                                     id='essBankVisualizationSearchModalFormStartDateTimePicker'
                                     data-td-target-input='nearest' data-td-target-toggle='nearest'>
                                     <input id='essBankVisualizationSearchModalFormStartDateTimeInput' type='text'
                                         class='form-control'
                                         data-td-target='#essBankVisualizationSearchModalFormStartDateTimePicker'
-                                        placeholder="시작 날짜를 선택해주세요" />
+                                        placeholder="Set the start date" />
                                     <span class='input-group-text'
                                         data-td-target='#essBankVisualizationSearchModalFormStartDateTimePicker'
                                         data-td-toggle='datetimepicker'>
@@ -763,7 +783,7 @@
                                     <input id='essBankVisualizationSearchModalFormEndDateTimeInput' type='text'
                                         class='form-control'
                                         data-td-target='#essBankVisualizationSearchModalFormEndDateTimePicker'
-                                        placeholder="마지막 날짜를 선택해주세요" />
+                                        placeholder="Set the end time." />
                                     <span class='input-group-text'
                                         data-td-target='#essBankVisualizationSearchModalFormEndDateTimePicker'
                                         data-td-toggle='datetimepicker'>
@@ -772,7 +792,7 @@
                                 </div>
                             </div>
                             <div class="form-group">
-                                <button type="submit" class="btn btn-primary">검색</button>
+                                <button type="submit" class="btn btn-primary">Search</button>
                             </div>
                         </form>
                     </div>
@@ -789,42 +809,42 @@
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="essRackVisualizationSearchModalFormLabel">검색</h5>
+                        <h5 class="modal-title" id="essRackVisualizationSearchModalFormLabel">Search</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
                         <form action="#" id="essRackVisualizationSearchModalForm" autocomplete="off">
                             <div class="form-group">
-                                <label class='form-label'>구성:</label>
+                                <label class='form-label'>Structure:</label>
                                 <div class="input-group m-b-10">
                                     <select id="essRackVisualizationSearchModalFormOperatingSiteSelect"
                                         class="form-select">
-                                        <option value="" selected disabled>운영 사이트를 선택해주세요.</option>
-                                        <option value="2">판리 태양광</option>
-                                        <option value="3">황금6호 태양광</option>
-                                        <option value="1">시온유 태양광(운영 중지)</option>
+                                        <option value="" selected disabled>Select an operating site.</option>
+                                        <option value="2">Panri ESS</option>
+                                        <option value="3">Hwangguem #6 ESS</option>
+                                        <option value="1">Sionyu ESS(Not working)</option>
                                     </select>
                                 </div>
                                 <div class="input-group m-b-10">
                                     <select name="" id="essRackVisualizationSearchModalFormBankSelect"
                                         class="form-select" disabled>
-                                        <option value="" selected disabled>Bank를 선택해주세요.</option>
+                                        <option value="" selected disabled>Select a bank.</option>
                                     </select>
                                 </div>
                                 <div class="input-group m-b-10">
                                     <select id="essRackVisualizationSearchModalFormRackSelect" class="form-select"
                                         disabled>
-                                        <option value="" selected disabled>Rack를 선택해주세요.</option>
+                                        <option value="" selected disabled>Select a rack.</option>
                                     </select>
                                 </div>
-                                <label class='form-label'>시간:</label>
+                                <label class='form-label'>Time:</label>
                                 <div class='input-group log-event m-b-10'
                                     id='essRackVisualizationSearchModalFormStartDateTimePicker'
                                     data-td-target-input='nearest' data-td-target-toggle='nearest'>
                                     <input id='essRackVisualizationSearchModalFormStartDateTimeInput' type='text'
                                         class='form-control'
                                         data-td-target='#essRackVisualizationSearchModalFormStartDateTimePicker'
-                                        placeholder="시작 날짜를 선택해주세요" />
+                                        placeholder="Set the start date" />
                                     <span class='input-group-text'
                                         data-td-target='#essRackVisualizationSearchModalFormStartDateTimePicker'
                                         data-td-toggle='datetimepicker'>
@@ -837,7 +857,7 @@
                                     <input id='essRackVisualizationSearchModalFormEndDateTimeInput' type='text'
                                         class='form-control'
                                         data-td-target='#essRackVisualizationSearchModalFormEndDateTimePicker'
-                                        placeholder="마지막 날짜를 선택해주세요" />
+                                        placeholder="Set the end time." />
                                     <span class='input-group-text'
                                         data-td-target='#essRackVisualizationSearchModalFormEndDateTimePicker'
                                         data-td-toggle='datetimepicker'>
@@ -846,7 +866,7 @@
                                 </div>
                             </div>
                             <div class="form-group">
-                                <button type="submit" class="btn btn-primary">검색</button>
+                                <button type="submit" class="btn btn-primary">Search</button>
                             </div>
                         </form>
                     </div>
@@ -863,36 +883,36 @@
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="essBankSoHVisualizationSearchModalFormLabel">검색</h5>
+                        <h5 class="modal-title" id="essBankSoHVisualizationSearchModalFormLabel">Search</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
                         <form action="#" id="essBankSoHVisualizationSearchModalForm" autocomplete="off">
                             <div class="form-group">
-                                <label class='form-label'>구성:</label>
+                                <label class='form-label'>Structure:</label>
                                 <div class="input-group m-b-10">
                                     <select id="essBankSoHVisualizationSearchModalFormOperatingSiteSelect"
                                         class="form-select">
-                                        <option value="" selected disabled>운영 사이트를 선택해주세요.</option>
-                                        <option value="2">판리 태양광</option>
-                                        <option value="3">황금6호 태양광</option>
-                                        <option value="1">시온유 태양광(운영 중지)</option>
+                                        <option value="" selected disabled>Select an operating site.</option>
+                                        <option value="2">Panri ESS</option>
+                                        <option value="3">Hwangguem #6 ESS</option>
+                                        <option value="1">Sionyu ESS(Not working)</option>
                                     </select>
                                 </div>
                                 <div class="input-group m-b-10">
                                     <select id="essBankSoHVisualizationSearchModalFormBankSelect" class="form-select"
                                         disabled>
-                                        <option value="" selected disabled>Bank를 선택해주세요.</option>
+                                        <option value="" selected disabled>Select a bank.</option>
                                     </select>
                                 </div>
-                                <label class='form-label'>시간:</label>
+                                <label class='form-label'>Time:</label>
                                 <div class='input-group log-event m-b-10'
                                     id='essBankSoHVisualizationSearchModalFormStartDateTimePicker'
                                     data-td-target-input='nearest' data-td-target-toggle='nearest'>
                                     <input id='essBankSoHVisualizationSearchModalFormStartDateTimeInput' type='text'
                                         class='form-control'
                                         data-td-target='#essBankSoHVisualizationSearchModalFormStartDateTimePicker'
-                                        placeholder="시작 날짜를 선택해주세요" />
+                                        placeholder="Set the start date" />
                                     <span class='input-group-text'
                                         data-td-target='#essBankSoHVisualizationSearchModalFormStartDateTimePicker'
                                         data-td-toggle='datetimepicker'>
@@ -905,7 +925,7 @@
                                     <input id='essBankSoHVisualizationSearchModalFormEndDateTimeInput' type='text'
                                         class='form-control'
                                         data-td-target='#essBankSoHVisualizationSearchModalFormEndDateTimePicker'
-                                        placeholder="마지막 날짜를 선택해주세요" />
+                                        placeholder="Set the end time." />
                                     <span class='input-group-text'
                                         data-td-target='#essBankSoHVisualizationSearchModalFormEndDateTimePicker'
                                         data-td-toggle='datetimepicker'>
@@ -914,7 +934,7 @@
                                 </div>
                             </div>
                             <div class="form-group">
-                                <button type="submit" class="btn btn-primary">검색</button>
+                                <button type="submit" class="btn btn-primary">Search</button>
                             </div>
                         </form>
                     </div>
@@ -931,42 +951,42 @@
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="essRackSoHVisualizationSearchModalFormLabel">검색</h5>
+                        <h5 class="modal-title" id="essRackSoHVisualizationSearchModalFormLabel">Search</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
                         <form action="#" id="essRackSoHVisualizationSearchModalForm" autocomplete="off">
                             <div class="form-group">
-                                <label class='form-label'>구성:</label>
+                                <label class='form-label'>Structure:</label>
                                 <div class="input-group m-b-10">
                                     <select id="essRackSoHVisualizationSearchModalFormOperatingSiteSelect"
                                         class="form-select">
-                                        <option value="" selected disabled>운영 사이트를 선택해주세요.</option>
-                                        <option value="2">판리 태양광</option>
-                                        <option value="3">황금6호 태양광</option>
-                                        <option value="1">시온유 태양광(운영 중지)</option>
+                                        <option value="" selected disabled>Select an operating site.</option>
+                                        <option value="2">Panri ESS</option>
+                                        <option value="3">Hwangguem #6 ESS</option>
+                                        <option value="1">Sionyu ESS(Not working)</option>
                                     </select>
                                 </div>
                                 <div class="input-group m-b-10">
                                     <select name="" id="essRackSoHVisualizationSearchModalFormBankSelect"
                                         class="form-select" disabled>
-                                        <option value="" selected disabled>Bank를 선택해주세요.</option>
+                                        <option value="" selected disabled>Select a bank.</option>
                                     </select>
                                 </div>
                                 <div class="input-group m-b-10">
                                     <select id="essRackSoHVisualizationSearchModalFormRackSelect" class="form-select"
                                         disabled>
-                                        <option value="" selected disabled>Rack를 선택해주세요.</option>
+                                        <option value="" selected disabled>Select a rack.</option>
                                     </select>
                                 </div>
-                                <label class='form-label'>시간:</label>
+                                <label class='form-label'>Time:</label>
                                 <div class='input-group log-event m-b-10'
                                     id='essRackSoHVisualizationSearchModalFormStartDateTimePicker'
                                     data-td-target-input='nearest' data-td-target-toggle='nearest'>
                                     <input id='essRackSoHVisualizationSearchModalFormStartDateTimeInput' type='text'
                                         class='form-control'
                                         data-td-target='#essRackSoHVisualizationSearchModalFormStartDateTimePicker'
-                                        placeholder="시작 날짜를 선택해주세요" />
+                                        placeholder="Set the start date" />
                                     <span class='input-group-text'
                                         data-td-target='#essRackSoHVisualizationSearchModalFormStartDateTimePicker'
                                         data-td-toggle='datetimepicker'>
@@ -979,7 +999,7 @@
                                     <input id='essRackSoHVisualizationSearchModalFormEndDateTimeInput' type='text'
                                         class='form-control'
                                         data-td-target='#essRackSoHVisualizationSearchModalFormEndDateTimePicker'
-                                        placeholder="마지막 날짜를 선택해주세요" />
+                                        placeholder="Set the end time." />
                                     <span class='input-group-text'
                                         data-td-target='#essRackSoHVisualizationSearchModalFormEndDateTimePicker'
                                         data-td-toggle='datetimepicker'>
@@ -988,7 +1008,7 @@
                                 </div>
                             </div>
                             <div class="form-group">
-                                <button type="submit" class="btn btn-primary">검색</button>
+                                <button type="submit" class="btn btn-primary">Search</button>
                             </div>
                         </form>
                     </div>
@@ -1005,42 +1025,42 @@
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="essRackSoSVisualizationSearchModalFormLabel">검색</h5>
+                        <h5 class="modal-title" id="essRackSoSVisualizationSearchModalFormLabel">Search</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
                         <form action="#" id="essRackSoSVisualizationSearchModalForm" autocomplete="off">
                             <div class="form-group">
-                                <label class='form-label'>구성:</label>
+                                <label class='form-label'>Structure:</label>
                                 <div class="input-group m-b-10">
                                     <select id="essRackSoSVisualizationSearchModalFormOperatingSiteSelect"
                                         class="form-select">
-                                        <option value="" selected disabled>운영 사이트를 선택해주세요.</option>
-                                        <option value="2">판리 태양광</option>
-                                        <option value="3">황금6호 태양광</option>
-                                        <option value="1">시온유 태양광(운영 중지)</option>
+                                        <option value="" selected disabled>Select an operating site.</option>
+                                        <option value="2">Panri ESS</option>
+                                        <option value="3">Hwangguem #6 ESS</option>
+                                        <option value="1">Sionyu ESS(Not working)</option>
                                     </select>
                                 </div>
                                 <div class="input-group m-b-10">
                                     <select name="" id="essRackSoSVisualizationSearchModalFormBankSelect"
                                         class="form-select" disabled>
-                                        <option value="" selected disabled>Bank를 선택해주세요.</option>
+                                        <option value="" selected disabled>Select a bank.</option>
                                     </select>
                                 </div>
                                 <div class="input-group m-b-10">
                                     <select id="essRackSoSVisualizationSearchModalFormRackSelect" class="form-select"
                                         disabled>
-                                        <option value="" selected disabled>Rack를 선택해주세요.</option>
+                                        <option value="" selected disabled>Select a rack.</option>
                                     </select>
                                 </div>
-                                <label class='form-label'>시간:</label>
+                                <label class='form-label'>Time:</label>
                                 <div class='input-group log-event m-b-10'
                                     id='essRackSoSVisualizationSearchModalFormStartDateTimePicker'
                                     data-td-target-input='nearest' data-td-target-toggle='nearest'>
                                     <input id='essRackSoSVisualizationSearchModalFormStartDateTimeInput' type='text'
                                         class='form-control'
                                         data-td-target='#essRackSoSVisualizationSearchModalFormStartDateTimePicker'
-                                        placeholder="시작 시간을 선택해주세요" />
+                                        placeholder="Set the start time." />
                                     <span class='input-group-text'
                                         data-td-target='#essRackSoSVisualizationSearchModalFormStartDateTimePicker'
                                         data-td-toggle='datetimepicker'>
@@ -1053,7 +1073,7 @@
                                     <input id='essRackSoSVisualizationSearchModalFormEndDateTimeInput' type='text'
                                         class='form-control'
                                         data-td-target='#essRackSoSVisualizationSearchModalFormEndDateTimePicker'
-                                        placeholder="마지막 시간을 선택해주세요" />
+                                        placeholder="Set the end time." />
                                     <span class='input-group-text'
                                         data-td-target='#essRackSoSVisualizationSearchModalFormEndDateTimePicker'
                                         data-td-toggle='datetimepicker'>
@@ -1062,7 +1082,7 @@
                                 </div>
                             </div>
                             <div class="form-group">
-                                <button type="submit" class="btn btn-primary">검색</button>
+                                <button type="submit" class="btn btn-primary">Search</button>
                             </div>
                         </form>
                     </div>
@@ -1079,7 +1099,7 @@
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="essEXSoSVisualizationSearchModalFormLabel">EXSoS 차트 검색</h5>
+                        <h5 class="modal-title" id="essEXSoSVisualizationSearchModalFormLabel">EXSoS Chart Search</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
@@ -1088,41 +1108,41 @@
                                 <label class='form-label'>Mode:</label>
                                 <div class="input-group m-b-10">
                                     <select id="essEXSoSVisualizationSearchModalFormModeSelect" class="form-select">
-                                        <option value="" selected disabled>Mode를 선택해주세요.</option>
+                                        <option value="" selected disabled>Select a mode.</option>
                                         <option value="1">Bank</option>
                                         <option value="2">Rack</option>
                                     </select>
                                 </div>
-                                <label class='form-label'>구성:</label>
+                                <label class='form-label'>Structure:</label>
                                 <div class="input-group m-b-10">
                                     <select id="essEXSoSVisualizationSearchModalFormOperatingSiteSelect"
                                         class="form-select">
-                                        <option value="" selected disabled>운영 사이트를 선택해주세요.</option>
-                                        <option value="2">판리 태양광</option>
-                                        <option value="3">황금6호 태양광</option>
-                                        <option value="1">시온유 태양광(운영 중지)</option>
+                                        <option value="" selected disabled>Select an operating site.</option>
+                                        <option value="2">Panri ESS</option>
+                                        <option value="3">Hwangguem #6 ESS</option>
+                                        <option value="1">Sionyu ESS(Not working)</option>
                                     </select>
                                 </div>
                                 <div class="input-group m-b-10">
                                     <select name="" id="essEXSoSVisualizationSearchModalFormBankSelect"
                                         class="form-select" disabled>
-                                        <option value="" selected disabled>Bank를 선택해주세요.</option>
+                                        <option value="" selected disabled>Select a bank.</option>
                                     </select>
                                 </div>
                                 <div class="input-group m-b-10 d-none">
                                     <select id="essEXSoSVisualizationSearchModalFormRackSelect" class="form-select"
                                         disabled>
-                                        <option value="" selected disabled>Rack을 선택해주세요.</option>
+                                        <option value="" selected disabled>Select a rack.</option>
                                     </select>
                                 </div>
-                                <label class='form-label'>시간:</label>
+                                <label class='form-label'>Time:</label>
                                 <div class='input-group log-event m-b-10'
                                     id='essEXSoSVisualizationSearchModalFormStartDateTimePicker'
                                     data-td-target-input='nearest' data-td-target-toggle='nearest'>
                                     <input id='essEXSoSVisualizationSearchModalFormStartDateTimeInput' type='text'
                                         class='form-control'
                                         data-td-target='#essEXSoSVisualizationSearchModalFormStartDateTimePicker'
-                                        placeholder="시작 시간을 선택해주세요" />
+                                        placeholder="Set the start time." />
                                     <span class='input-group-text'
                                         data-td-target='#essEXSoSVisualizationSearchModalFormStartDateTimePicker'
                                         data-td-toggle='datetimepicker'>
@@ -1135,7 +1155,7 @@
                                     <input id='essEXSoSVisualizationSearchModalFormEndDateTimeInput' type='text'
                                         class='form-control'
                                         data-td-target='#essEXSoSVisualizationSearchModalFormEndDateTimePicker'
-                                        placeholder="마지막 시간을 선택해주세요" />
+                                        placeholder="Set the end time." />
                                     <span class='input-group-text'
                                         data-td-target='#essEXSoSVisualizationSearchModalFormEndDateTimePicker'
                                         data-td-toggle='datetimepicker'>
@@ -1144,7 +1164,7 @@
                                 </div>
                             </div>
                             <div class="form-group">
-                                <button type="submit" class="btn btn-primary">검색</button>
+                                <button type="submit" class="btn btn-primary">Search</button>
                             </div>
                         </form>
                     </div>
@@ -1162,42 +1182,42 @@
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title" id="forecastingObjectVisualizationSearchModalFormLabel">
-                            검색</h5>
+                            Search</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
                         <form action="#" id="forecastingObjectVisualizationSearchModalForm" autocomplete="off">
                             <div class="form-group">
-                                <label class='form-label'>구성:</label>
+                                <label class='form-label'>Structure:</label>
                                 <div class="input-group m-b-10">
                                     <select id="forecastingObjectVisualizationSearchModalFormOperatingSiteSelect"
                                         class="form-select">
-                                        <option value="" selected disabled>운영 사이트를 선택해주세요.</option>
-                                        <option value="2">판리 태양광</option>
-                                        <option value="3">황금6호 태양광</option>
-                                        <option value="1">시온유 태양광(운영 중지)</option>
+                                        <option value="" selected disabled>Select an operating site.</option>
+                                        <option value="2">Panri ESS</option>
+                                        <option value="3">Hwangguem #6 ESS</option>
+                                        <option value="1">Sionyu ESS(Not working)</option>
                                     </select>
                                 </div>
                                 <div class="input-group m-b-10">
                                     <select name="" id="forecastingObjectVisualizationSearchModalFormBankSelect"
                                         class="form-select" disabled>
-                                        <option value="" selected disabled>Bank를 선택해주세요.</option>
+                                        <option value="" selected disabled>Select a bank.</option>
                                     </select>
                                 </div>
                                 <div class="input-group m-b-10">
                                     <select id="forecastingObjectVisualizationSearchModalFormRackSelect"
                                         class="form-select" disabled>
-                                        <option value="" selected disabled>Rack를 선택해주세요.</option>
+                                        <option value="" selected disabled>Select a rack.</option>
                                     </select>
                                 </div>
-                                <label class='form-label'>시간:</label>
+                                <label class='form-label'>Time:</label>
                                 <div class='input-group log-event m-b-10'
                                     id='forecastingObjectVisualizationSearchModalFormStartDateTimePicker'
                                     data-td-target-input='nearest' data-td-target-toggle='nearest'>
                                     <input id='forecastingObjectVisualizationSearchModalFormStartDateTimeInput'
                                         type='text' class='form-control'
                                         data-td-target='#forecastingObjectVisualizationSearchModalFormStartDateTimePicker'
-                                        placeholder="시작 시간을 선택해주세요" />
+                                        placeholder="Set the start time." />
                                     <span class='input-group-text'
                                         data-td-target='#forecastingObjectVisualizationSearchModalFormStartDateTimePicker'
                                         data-td-toggle='datetimepicker'>
@@ -1210,7 +1230,7 @@
                                     <input id='forecastingObjectVisualizationSearchModalFormEndDateTimeInput'
                                         type='text' class='form-control'
                                         data-td-target='#forecastingObjectVisualizationSearchModalFormEndDateTimePicker'
-                                        placeholder="마지막 시간을 선택해주세요" />
+                                        placeholder="Set the end time." />
                                     <span class='input-group-text'
                                         data-td-target='#forecastingObjectVisualizationSearchModalFormEndDateTimePicker'
                                         data-td-toggle='datetimepicker'>
@@ -1219,7 +1239,7 @@
                                 </div>
                             </div>
                             <div class="form-group">
-                                <button type="submit" class="btn btn-primary">검색</button>
+                                <button type="submit" class="btn btn-primary">Search</button>
                             </div>
                         </form>
                     </div>
@@ -1237,42 +1257,42 @@
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title" id="multiStepForecastingSearchModalFormLabel">
-                            검색</h5>
+                            Search</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
                         <form action="#" id="multiStepForecastingSearchModalForm" autocomplete="off">
                             <div class="form-group">
-                                <label class='form-label'>구성:</label>
+                                <label class='form-label'>Structure:</label>
                                 <div class="input-group m-b-10">
                                     <select id="multiStepForecastingSearchModalFormOperatingSiteSelect"
                                         class="form-select">
-                                        <option value="" selected disabled>운영 사이트를 선택해주세요.</option>
-                                        <option value="2">판리 태양광</option>
-                                        <option value="3">황금6호 태양광</option>
-                                        <option value="1">시온유 태양광(운영 중지)</option>
+                                        <option value="" selected disabled>Select an operating site.</option>
+                                        <option value="2">Panri ESS</option>
+                                        <option value="3">Hwangguem #6 ESS</option>
+                                        <option value="1">Sionyu ESS(Not working)</option>
                                     </select>
                                 </div>
                                 <div class="input-group m-b-10">
                                     <select name="" id="multiStepForecastingSearchModalFormBankSelect"
                                         class="form-select" disabled>
-                                        <option value="" selected disabled>Bank를 선택해주세요.</option>
+                                        <option value="" selected disabled>Select a bank.</option>
                                     </select>
                                 </div>
                                 <div class="input-group m-b-10">
                                     <select id="multiStepForecastingSearchModalFormRackSelect" class="form-select"
                                         disabled>
-                                        <option value="" selected disabled>Rack를 선택해주세요.</option>
+                                        <option value="" selected disabled>Select a rack.</option>
                                     </select>
                                 </div>
-                                <label class='form-label'>시간:</label>
+                                <label class='form-label'>Time:</label>
                                 <div class='input-group log-event m-b-10'
                                     id='multiStepForecastingSearchModalFormStartDateTimePicker'
                                     data-td-target-input='nearest' data-td-target-toggle='nearest'>
                                     <input id='multiStepForecastingSearchModalFormStartDateTimeInput' type='text'
                                         class='form-control'
                                         data-td-target='#multiStepForecastingSearchModalFormStartDateTimePicker'
-                                        placeholder="시작 시간을 선택해주세요." />
+                                        placeholder="Set the start time." />
                                     <span class='input-group-text'
                                         data-td-target='#multiStepForecastingSearchModalFormStartDateTimePicker'
                                         data-td-toggle='datetimepicker'>
@@ -1285,7 +1305,7 @@
                                     <input id='multiStepForecastingSearchModalFormEndDateTimeInput' type='text'
                                         class='form-control'
                                         data-td-target='#multiStepForecastingSearchModalFormEndDateTimePicker'
-                                        placeholder="마지막 시간을 선택해주세요." />
+                                        placeholder="Set the end time." />
                                     <span class='input-group-text'
                                         data-td-target='#multiStepForecastingSearchModalFormEndDateTimePicker'
                                         data-td-toggle='datetimepicker'>
@@ -1294,7 +1314,7 @@
                                 </div>
                             </div>
                             <div class="form-group">
-                                <button type="submit" class="btn btn-primary">검색</button>
+                                <button type="submit" class="btn btn-primary">Search</button>
                             </div>
                         </form>
                     </div>
@@ -1311,42 +1331,42 @@
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="essBankVoltageGapSearchModalFormLabel">검색</h5>
+                        <h5 class="modal-title" id="essBankVoltageGapSearchModalFormLabel">Search</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
                         <form action="#" id="essBankVoltageGapSearchModalForm" autocomplete="off">
                             <div class="form-group">
-                                <label class='form-label'>구성:</label>
+                                <label class='form-label'>Structure:</label>
                                 <div class="input-group m-b-10">
                                     <select id="essBankVoltageGapSearchModalFormOperatingSiteSelect"
                                         class="form-select">
-                                        <option value="" selected disabled>운영 사이트를 선택해주세요.</option>
-                                        <option value="2">판리 태양광</option>
-                                        <option value="3">황금6호 태양광</option>
-                                        <option value="1">시온유 태양광(운영 중지)</option>
+                                        <option value="" selected disabled>Select an operating site.</option>
+                                        <option value="2">Panri ESS</option>
+                                        <option value="3">Hwangguem #6 ESS</option>
+                                        <option value="1">Sionyu ESS(Not working)</option>
                                     </select>
                                 </div>
                                 <div class="input-group m-b-10">
                                     <select name="" id="essBankVoltageGapSearchModalFormBankSelect" class="form-select"
                                         disabled>
-                                        <option value="" selected disabled>Bank를 선택해주세요.</option>
+                                        <option value="" selected disabled>Select a bank.</option>
                                     </select>
                                 </div>
                                 <div class="input-group m-b-10">
                                     <select id="essBankVoltageGapSearchModalFormRackSelect" class="form-select"
                                         disabled>
-                                        <option value="" selected disabled>Rack를 선택해주세요.</option>
+                                        <option value="" selected disabled>Select a rack.</option>
                                     </select>
                                 </div>
-                                <label class='form-label'>시간:</label>
+                                <label class='form-label'>Time:</label>
                                 <div class='input-group log-event m-b-10'
                                     id='essBankVoltageGapSearchModalFormStartDateTimePicker'
                                     data-td-target-input='nearest' data-td-target-toggle='nearest'>
                                     <input id='essBankVoltageGapSearchModalFormStartDateTimeInput' type='text'
                                         class='form-control'
                                         data-td-target='#essBankVoltageGapSearchModalFormStartDateTimePicker'
-                                        placeholder="시작 시간을 선택해주세요" />
+                                        placeholder="Set the start time." />
                                     <span class='input-group-text'
                                         data-td-target='#essBankVoltageGapSearchModalFormStartDateTimePicker'
                                         data-td-toggle='datetimepicker'>
@@ -1359,7 +1379,7 @@
                                     <input id='essBankVoltageGapSearchModalFormEndDateTimeInput' type='text'
                                         class='form-control'
                                         data-td-target='#essBankVoltageGapSearchModalFormEndDateTimePicker'
-                                        placeholder="마지막 시간을 선택해주세요" />
+                                        placeholder="Set the end time." />
                                     <span class='input-group-text'
                                         data-td-target='#essBankVoltageGapSearchModalFormEndDateTimePicker'
                                         data-td-toggle='datetimepicker'>
@@ -1368,7 +1388,7 @@
                                 </div>
                             </div>
                             <div class="form-group">
-                                <button type="submit" class="btn btn-primary">검색</button>
+                                <button type="submit" class="btn btn-primary">Search</button>
                             </div>
                         </form>
                     </div>
@@ -1400,9 +1420,6 @@
 <script src="https://cdn.amcharts.com/lib/5/themes/Animated.js"></script>
 <!-- Tensorflow JavaScript -->
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@2.0.0/dist/tf.min.js"></script>
-
-<!-- i18next -->
-<script src="https://unpkg.com/i18next@22.4.13/dist/umd/i18next.min.js"></script>
 
 <script type="module" src="{% static 'js/custom/index.js' %}"></script>
 

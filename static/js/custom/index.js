@@ -10,6 +10,13 @@ const warningLimitSoSValue = Math.pow(safeLimitSoSValue, 4);
 let DateTime = luxon.DateTime;
 let currentDateTime = DateTime.now();
 
+let currentUrlPath = window.location.pathname;
+
+if (currentUrlPath.includes('/en/')) {
+    // Set the localization of tempus dominus
+    tempusDominus.DefaultOptions.localization.locale = 'en';
+}
+
 function getCamelCaseString(text, seperator = '-') {
     return text.split(seperator).map((element, index) => index > 0 ? element.charAt(0).toUpperCase() + element.substr(1) : element).join('');
 }
@@ -184,7 +191,7 @@ function getAvgSoHChartSeries(elementId) {
 
     let series = chart.series.push(
         am5xy.SmoothedXLineSeries.new(root, {
-            name: "평균 SoH",
+            name: `${i18next.t('average')} SoH`,
             xAxis: xAxis,
             yAxis: yAxis,
             valueXField: "date",
@@ -245,7 +252,7 @@ async function createForecastingBankSoLChart() {
     }));
 
     let observedSoLSeries = chart.series.push(am5xy.SmoothedXLineSeries.new(root, {
-        name: '관측 SoL',
+        name: `${i18next.t('observed')} SoL`,
         xAxis: xAxis,
         yAxis: yAxis,
         valueYField: 'observedSoL',
@@ -256,18 +263,18 @@ async function createForecastingBankSoLChart() {
     }));
 
     let forecastingSoLSeries = chart.series.push(am5xy.SmoothedXLineSeries.new(root, {
-        name: '예측 SoL',
+        name: `${i18next.t('forecasting')} SoL`,
         xAxis: xAxis,
         yAxis: yAxis,
         valueYField: 'value',
         valueXField: 'date',
         tooltip: am5.Tooltip.new(root, {
-            labelText: `[bold]{name}[/]\n상한 예측: {topLimitValue}\n예측: {valueY}\n하한 예측: {bottomLimitValue}`,
+            labelText: `[bold]{name}[/]\n${i18next.t('topLimit')} ${i18next.t('forecasting')}: {topLimitValue}\n${i18next.t('forecasting')}: {valueY}\n${i18next.t('bottomLimit')} ${i18next.t('forecasting')}: {bottomLimitValue}`,
         })
     }));
 
     let forecastingTopLimitSoLSeries = chart.series.push(am5xy.SmoothedXLineSeries.new(root, {
-        name: '상한 예측 SoL',
+        name: `${i18next.t('topLimit')} ${i18next.t('forecasting')} SoL`,
         xAxis: xAxis,
         yAxis: yAxis,
         valueYField: 'topLimitValue',
@@ -276,7 +283,7 @@ async function createForecastingBankSoLChart() {
     }));
 
     let forecastingBottomLimitSoLSeries = chart.series.push(am5xy.SmoothedXLineSeries.new(root, {
-        name: '하한 예측 SoL',
+        name: `${i18next.t('bottomLimit')} ${i18next.t('forecasting')} SoL`,
         xAxis: xAxis,
         yAxis: yAxis,
         valueYField: 'bottomLimitValue',
@@ -303,7 +310,7 @@ async function createForecastingBankSoLChart() {
 
     let chartData = [];
 
-    let requestUrl = new URL(`${window.location.origin}/api/ess/stats/avg-soh/operating-sites/1/banks/1/`);
+    let requestUrl = new URL(`${window.location.origin}/api/ess/stats/avg-soh/operating-sites/2/banks/1/`);
 
     let avgBankSoHData = await loadData(requestUrl);
     avgBankSoHData.forEach(element => {
@@ -314,7 +321,7 @@ async function createForecastingBankSoLChart() {
     });
 
     // - Save forecasting SoL
-    requestUrl = new URL(`${window.location.origin}/api/ess/stats/forecasting-sol/operating-sites/1/banks/1/`);
+    requestUrl = new URL(`${window.location.origin}/api/ess/stats/forecasting-sol/operating-sites/2/banks/1/`);
 
     let forecastingBankSoLData = await loadData(requestUrl);
 
@@ -386,11 +393,11 @@ async function createForecastingBankSoLChart() {
 }
 
 /**
- * Get main rack SoS chart series
+ * Get main rack SoS chart series list
  * @param {object} elementId 
- * @returns {object}
+ * @returns {Array}
  */
-function getMainRackSoSChartSeries(elementId) {
+function getMainRackSoSChartSeriesList(elementId, option) {
     let root = getChartRoot(elementId);
     let chartOption = {
         paddingRight: 100,
@@ -402,7 +409,7 @@ function getMainRackSoSChartSeries(elementId) {
         am5xy.DateAxis.new(root, {
             baseInterval: {
                 timeUnit: 'second',
-                count: 1,
+                count: 10,
             },
             dateFormat: {
                 minute: 'HH:mm',
@@ -427,28 +434,47 @@ function getMainRackSoSChartSeries(elementId) {
 
     let yAxis = chart.yAxes.push(
         am5xy.ValueAxis.new(root, {
+            max: 1,
             min: 0,
             extraTooltipPrecision: 1,
             renderer: am5xy.AxisRendererY.new(root, {})
         })
     );
 
-    let series = chart.series.push(
-        am5xy.SmoothedXLineSeries.new(root, {
-            name: 'SoS',
-            xAxis: xAxis,
-            yAxis: yAxis,
-            valueXField: 'time',
-            valueYField: 'value',
-            tooltip: am5.Tooltip.new(root, {
-                labelText: "[bold]{name}[/]\n{valueY.formatNumber('#.000')}",
-            }),
-        })
-    );
+    let seriesInfo = option['seriesInfo'];
+    let seriesList = seriesInfo.map(element => {
+        return chart.series.push(
+            am5xy.SmoothedXLineSeries.new(root, {
+                name: element['name'],
+                xAxis: xAxis,
+                yAxis: yAxis,
+                valueXField: 'time',
+                valueYField: element['value'],
+                tooltip: am5.Tooltip.new(root, {
+                    labelText: "[bold]{name}[/]\n{valueY.formatNumber('#.000')}",
+                }),
+            })
+        );
+    });
 
     // Customize series
-    series.strokes.template.setAll({
-        strokeWidth: 3
+    let firstForecastingModelName = seriesList[1].get('name');
+
+    seriesList.forEach(element => {
+        let strokesTemplateOption = {
+            strokeWidth: 3
+        };
+
+        // 'Observed' series is in front of everything
+        if (element.get('name') == 'Observed') {
+            element.toFront();
+        } else {
+            if (element.get('name') != firstForecastingModelName) {
+                element.hide();
+            }
+        }
+
+        element.strokes.template.setAll(strokesTemplateOption);
     });
 
     // Add axis range
@@ -467,7 +493,7 @@ function getMainRackSoSChartSeries(elementId) {
     let safeAxisLabel = safeAxisRange.get('label');
     safeAxisLabel.setAll({
         html: `Warning(${zeta})<br>(${safeLimitSoSValue})`,
-        background: am5.RoundedRectangle.new(series.root, {
+        background: am5.RoundedRectangle.new(root, {
             fill: am5.color(0xf5df4d),
         }),
         inside: true,
@@ -499,7 +525,7 @@ function getMainRackSoSChartSeries(elementId) {
     let warningAxisLabel = warningAxisRange.get('label');
     warningAxisLabel.setAll({
         html: `Unsafe(${zeta}<sup>4</sup>)<br>(${Math.pow(safeLimitSoSValue, 4).toFixed(4)})`,
-        background: am5.RoundedRectangle.new(series.root, {
+        background: am5.RoundedRectangle.new(root, {
             fill: am5.color(0xff0000),
         }),
         inside: true,
@@ -516,12 +542,71 @@ function getMainRackSoSChartSeries(elementId) {
         visible: true,
     });
 
+    let forecastingAxisRange = xAxis.createAxisRange(xAxis.makeDataItem(option['axisRangeInfo']));
+
+    forecastingAxisRange.get('grid').setAll({
+        stroke: am5.color(0x999999),
+        strokeOpacity: 0.5,
+        strokeDasharray: [3],
+    });
+
+    forecastingAxisRange.get('axisFill').setAll({
+        fill: am5.color(0x999999),
+        fillOpacity: 0.2,
+        visible: true,
+    });
+
     chart.plotContainer.onPrivate("width", () => {
         safeAxisRange.get("label").markDirtyPosition();
         warningAxisRange.get("label").markDirtyPosition();
     });
 
-    return series;
+    // Set legend
+    let legend = chart.children.push(am5.Legend.new(root, {
+        centerX: am5.percent(50),
+        x: am5.percent(50),
+        layout: am5.GridLayout.new(root, {
+            maxColumns: 2,
+            fixedWidthGrid: true
+        })
+    }));
+
+    // Event legend
+    // When legend item container is hovered, dim all the series except the hovered one
+    legend.itemContainers.template.events.on("pointerover", function (e) {
+        let itemContainer = e.target;
+
+        // As series list is data of a legend, dataContext is series
+        let series = itemContainer.dataItem.dataContext;
+
+        chart.series.each(function (chartSeries) {
+            if (chartSeries != series) {
+                chartSeries.strokes.template.setAll({
+                    strokeOpacity: 0.15,
+                    stroke: am5.color(0x000000)
+                });
+            } else {
+                chartSeries.strokes.template.setAll({
+                    strokeWidth: 3
+                });
+            }
+        });
+    });
+
+    // When legend item container is unhovered, make all series as they are
+    legend.itemContainers.template.events.on("pointerout", function (e) {
+        chart.series.each(function (chartSeries) {
+            chartSeries.strokes.template.setAll({
+                strokeOpacity: 1,
+                strokeWidth: 3,
+                stroke: chartSeries.get("fill")
+            });
+        });
+    })
+
+    legend.data.setAll(chart.series.values);
+
+    return seriesList;
 }
 
 /**
@@ -570,7 +655,7 @@ function getDetailRackSoSChartSeriesList(elementId, option) {
 
     let xAxis = chart.xAxes.push(
         am5xy.DateAxis.new(root, {
-            baseInterval: { timeUnit: "second", count: 1 },
+            baseInterval: { timeUnit: "second", count: 10 },
             dateFormats: {
                 minute: 'HH:mm',
                 hour: 'HH:mm',
@@ -591,7 +676,7 @@ function getDetailRackSoSChartSeriesList(elementId, option) {
 
     // xAxis.data.setAll(chartData);
 
-    seriesInfo = option['seriesInfo'];
+    let seriesInfo = option['seriesInfo'];
 
     let seriesList = seriesInfo.map(seriesInfoItem => {
         let yAxisDefaultSettings = {
@@ -687,7 +772,7 @@ function getMainEXSoSChartSeries(elementId, option) {
         valueXField: 'time',
         valueYField: 'value',
         tooltip: am5.Tooltip.new(root, {
-            labelText: `통합 안전도: {valueY}`
+            labelText: `${i18next.t('integratedSafety')}: {valueY}`
         })
     }));
 
@@ -776,7 +861,7 @@ function getDetailEXSoSChartSeriesList(elementId) {
         extraTooltipPrecision: 1
     }));
     xAxis.children.push(am5.Label.new(root, {
-        text: '[bold]통합 안전도',
+        text: `[bold]${i18next.t('integratedSafety')}`,
         x: am5.p50,
         centerX: am5.p50
     }));
@@ -789,7 +874,7 @@ function getDetailEXSoSChartSeriesList(elementId) {
     }));
     yAxis.children.unshift(am5.Label.new(root, {
         rotation: -90,
-        text: '[bold]소속도',
+        text: `[bold]${i18next.t('membership')}`,
         y: am5.p50,
         centerX: am5.p50
     })); // for the left axis, we need it to be the first child, so it's left-most of the other elements (hence unshift()).
@@ -834,7 +919,7 @@ function getDetailEXSoSChartSeriesList(elementId) {
         valueYField: 'valueY',
     }));
 
-    let seriesList = [negligibleSeries, marginalSeries, neutralSeries, criticalSeries, catastrophicSeries];
+    let seriesList = [catastrophicSeries, criticalSeries, neutralSeries, marginalSeries, negligibleSeries];
 
     seriesList.forEach(series => {
         series.strokes.template.setAll({
@@ -891,7 +976,7 @@ function getDetailExSoSSafetySeriesList(elementId, option) {
     );
     yAxis.children.unshift(am5.Label.new(root, {
         rotation: -90,
-        text: '[bold]소속도',
+        text: `[bold]${i18next.t('membership')}`,
         y: am5.p50,
         centerX: am5.p50
     }));
@@ -936,7 +1021,7 @@ function getDetailExSoSSafetySeriesList(elementId, option) {
 function changeDetailEXSoSChart(option) {
     let dataObject = option['dataObject'];
     let detailEXSoSChartInfoElement = document.getElementById('detailEXSoSChartInfo');
-    detailEXSoSChartInfoElement.innerHTML = `<p>${DateTime.fromMillis(dataObject['time']).toFormat(customFullDateTimeFormat)} [통합 안전도]: ${dataObject['value']}</p>`;
+    detailEXSoSChartInfoElement.innerHTML = `<p>${DateTime.fromMillis(dataObject['time']).toFormat(customFullDateTimeFormat)} [${i18next.t('integratedSafety')}]: ${dataObject['value']}</p>`;
 
     // Set integrated safety line in detail chart
     let detailEXSoSChartSeriesList = option['detailEXSoSChartSeriesList'];
@@ -958,7 +1043,7 @@ function changeDetailEXSoSChart(option) {
 
     let axisLabel = detailEXSoSChartXAxisRange.get('label');
     axisLabel.setAll({
-        text: `통합 안전도`,
+        text: `${i18next.t('integratedSafety')}`,
         background: am5.RoundedRectangle.new(detailEXSoSChartSeriesList[0].root, {
             fill: am5.color(0xf5df4d),
         }),
@@ -996,14 +1081,20 @@ function changeDetailEXSoSSafetyChart(option) {
     let time = DateTime.fromMillis(dataObject['time']).toFormat(customFullDateTimeFormat);
     let membership_degree_detail = dataObject['membership_degree_detail'];
     let chargeStatus = membership_degree_detail['status'];
-    let voltage = membership_degree_detail['voltage'];
-    let temperature = membership_degree_detail['temperature'];
+    let maxVoltage = membership_degree_detail['max_voltage'];
+    let maxTemperature = membership_degree_detail['max_temperature'];;
+    let minVoltage = membership_degree_detail['min_voltage'];
+    let minTemperature = membership_degree_detail['min_temperature'];
+    let voltageGap = membership_degree_detail['voltage_gap'];
+    let temperatureGap = membership_degree_detail['temperature_gap'];
 
     let detailEXSoSSafetyStatusInfoElement = document.getElementById('detailEXSoSSafetyStatusInfo');
 
+    let rangeDataOption = [];
+
     switch (chargeStatus) {
         case 0:
-            detailEXSoSSafetyStatusInfoElement.innerHTML = `<p>${time} [충전 상태]: ${voltage}V, ${temperature}&#8451</p>`
+            detailEXSoSSafetyStatusInfoElement.innerHTML = `<p>${time} [${i18next.t('charge')} ${i18next.t('status')}]: ${maxVoltage}V, ${maxTemperature}&#8451</p>`
             detailExSoSVoltageSafetySeriesList.forEach(series => {
                 series.data.setAll(JSON.parse(staticExSoSChartData)['over_voltage_safety']);
             });
@@ -1012,9 +1103,22 @@ function changeDetailEXSoSSafetyChart(option) {
                 series.data.setAll(JSON.parse(staticExSoSChartData)['over_temperature_safety']);
             });
 
+            //  Clear rangeDataOption
+            rangeDataOption.length = 0;
+
+            // Change rangeDataOption
+            rangeDataOption.push({
+                rangeDataItemValue: maxVoltage,
+                axisLabelText: `${i18next.t('max')} ${i18next.t('voltage')} ${i18next.t('average')}`
+            });
+            rangeDataOption.push({
+                rangeDataItemValue: maxTemperature,
+                axisLabelText: `${i18next.t('max')} ${i18next.t('temperature')} ${i18next.t('average')}`
+            });
+
             break;
         case 1:
-            detailEXSoSSafetyStatusInfoElement.innerHTML = `<p>${time} [방전 상태]: ${voltage}V, ${temperature}&#8451</p>`
+            detailEXSoSSafetyStatusInfoElement.innerHTML = `<p>${time} [${i18next.t('discharge')} ${i18next.t('status')}]: ${minVoltage}V, ${minTemperature}&#8451</p>`
 
             detailExSoSVoltageSafetySeriesList.forEach(series => {
                 series.data.setAll(JSON.parse(staticExSoSChartData)['under_voltage_safety']);
@@ -1024,9 +1128,22 @@ function changeDetailEXSoSSafetyChart(option) {
                 series.data.setAll(JSON.parse(staticExSoSChartData)['under_temperature_safety']);
             });
 
+            //  Clear rangeDataOption
+            rangeDataOption.length = 0;
+
+            // Change rangeDataOption
+            rangeDataOption.push({
+                rangeDataItemValue: minVoltage,
+                axisLabelText: `${i18next.t('min')} ${i18next.t('voltage')} ${i18next.t('average')}`
+            });
+            rangeDataOption.push({
+                rangeDataItemValue: minTemperature,
+                axisLabelText: `${i18next.t('min')} ${i18next.t('temperature')} ${i18next.t('average')}`
+            });
+
             break;
         case 2:
-            detailEXSoSSafetyStatusInfoElement.innerHTML = `<p>${time} [휴지기]: ${voltage}V, ${temperature}&#8451</p>`
+            detailEXSoSSafetyStatusInfoElement.innerHTML = `<p>${time} [${i18next.t('rest')}]: ${voltageGap}V, ${temperatureGap}&#8451</p>`
 
             detailExSoSVoltageSafetySeriesList.forEach(series => {
                 series.data.setAll(JSON.parse(staticExSoSChartData)['voltage_imbalance_safety']);
@@ -1036,23 +1153,25 @@ function changeDetailEXSoSSafetyChart(option) {
                 series.data.setAll(JSON.parse(staticExSoSChartData)['temperature_imbalance_safety']);
             });
 
+            //  Clear rangeDataOption
+            rangeDataOption.length = 0;
+
+            // Change rangeDataOption
+            rangeDataOption.push({
+                rangeDataItemValue: voltageGap,
+                axisLabelText: `${i18next.t('voltageGap')} ${i18next.t('average')}`
+            });
+            rangeDataOption.push({
+                rangeDataItemValue: temperatureGap,
+                axisLabelText: `${i18next.t('temperatureGap')} ${i18next.t('average')}`
+            });
+
             break;
         default:
             break;
     }
 
     // Set xAxis range
-    let rangeDataOption = [
-        {
-            rangeDataItemValue: voltage,
-            axisLabelText: '평균 전압'
-        },
-        {
-            rangeDataItemValue: temperature,
-            axisLabelText: '평균 온도'
-        },
-    ];
-
     [detailExSoSVoltageSafetySeriesList, detailExSoSTemperatureSafetySeriesList].forEach((detailExSoSSafetySeriesList, index) => {
         let detailExSoSSafetyChartXAxis = detailExSoSSafetySeriesList[0].get('xAxis');
         detailExSoSSafetyChartXAxis.axisRanges.clear();
@@ -1108,7 +1227,7 @@ function createAvgChartLine(chartSeries, data) {
 
     let avgAxisLabel = avgAxisRange.get('label');
     avgAxisLabel.setAll({
-        text: `평균 ${avgAxisRange.get('value').toFixed(2)}`,
+        text: `${i18next.t('average')} ${avgAxisRange.get('value').toFixed(2)}`,
         background: am5.RoundedRectangle.new(chartSeries.root, {
             fill: am5.color(0xf5df4d),
         }),
@@ -1131,7 +1250,7 @@ function getForecastingMaxMinRackCellSeriesList(elementId, option) {
     let xAxis = chart.xAxes.push(am5xy.DateAxis.new(root, {
         baseInterval: {
             timeUnit: "second",
-            count: 1
+            count: 10
         },
         dateFormats: {
             hour: 'HH:mm',
@@ -1161,12 +1280,12 @@ function getForecastingMaxMinRackCellSeriesList(elementId, option) {
 
         if (element['name'] == 'Observed') {
             tooltip = am5.Tooltip.new(root, {
-                labelText: `값: {valueY}, 셀 번호: {observedPosition}`,
+                labelText: `${i18next.t('value')}: {valueY}, ${i18next.t('cellPosition')}: {observedPosition}`,
                 pointerOrientation: "horizontal"
             });
         } else {
             tooltip = am5.Tooltip.new(root, {
-                labelText: `값: {valueY}`,
+                labelText: `${i18next.t('value')}: {valueY}`,
                 pointerOrientation: "horizontal"
             });
         }
@@ -1319,7 +1438,7 @@ function getForecastingMaxMinRackCellChartData(data) {
  * @param {object} forecastingDiffObject 
  * @returns 
  */
-async function getForecastingMaxMinRackCellChartOption(chartData, defaultOption, forecastingDiffObject) {
+async function getForecastingChartOption(chartData, defaultOption, forecastingDiffObject) {
     // - Deep copy
     let forecastingMaxMinRackCellChartOption = JSON.parse(JSON.stringify(defaultOption));
 
@@ -1349,6 +1468,12 @@ async function getForecastingMaxMinRackCellChartOption(chartData, defaultOption,
     return forecastingMaxMinRackCellChartOption;
 }
 
+/**
+ * Get multi step forecasting max cell voltage series list
+ * @param {string} elementId 
+ * @param {object} option 
+ * @returns {Array}
+ */
 function getMultiStepForecastingMaxCellVoltageSeriesList(elementId, option) {
     let root = getChartRoot(elementId);
     let chart = getInitialLineChart(root, option);
@@ -1356,7 +1481,7 @@ function getMultiStepForecastingMaxCellVoltageSeriesList(elementId, option) {
     let xAxis = chart.xAxes.push(am5xy.DateAxis.new(root, {
         baseInterval: {
             timeUnit: 'minute',
-            count: 5
+            count: 10
         },
         dateFormats: {
             hour: 'HH:mm',
@@ -1370,7 +1495,10 @@ function getMultiStepForecastingMaxCellVoltageSeriesList(elementId, option) {
             day: customFullDateFormat,
             week: customFullDateFormat,
         },
-        tooltip: am5.Tooltip.new(root, {})
+        tooltip: am5.Tooltip.new(root, {
+            themeTags: ["axis"],
+        }),
+        tooltipDateFormat: customFullDateTimeFormat,
     }));
 
     let yAxis = chart.yAxes.push(am5xy.ValueAxis.new(root, {
@@ -1387,7 +1515,7 @@ function getMultiStepForecastingMaxCellVoltageSeriesList(elementId, option) {
             valueXField: 'time',
             valueYField: element['value'],
             tooltip: am5.Tooltip.new(root, {
-                labelText: `값: {valueY}`,
+                labelText: `${i18next.t('value')}: {valueY}`,
                 pointerOrientation: "horizontal"
             })
         }));
@@ -1504,7 +1632,7 @@ let essRackVisualizationSearchModalFormEndDateTimeInputElement = document.getEle
 
 essBankVisualizationSearchModalFormOperatingSiteSelectElement.addEventListener('change', (event) => {
     essBankVisualizationSearchModalFormBankSelectElement.innerHTML = '';
-    essBankVisualizationSearchModalFormBankSelectElement.insertAdjacentHTML('afterbegin', '<option value="" selected disabled>Bank를 선택해주세요.</option>');
+    essBankVisualizationSearchModalFormBankSelectElement.insertAdjacentHTML('afterbegin', `<option value="" selected disabled>${i18next.t('selectABank', { ns: 'validation' })}</option>`);
     essBankVisualizationSearchModalFormBankSelectElement.setAttribute('disabled', '');
 
     let operatingSiteId = event.target.value;
@@ -1513,7 +1641,7 @@ essBankVisualizationSearchModalFormOperatingSiteSelectElement.addEventListener('
     if (essProtectionMapInfoRackCountObject[`operatingSite${operatingSiteId}`]) {
         let bankCount = Object.keys(essProtectionMapInfoRackCountObject[`operatingSite${operatingSiteId}`]).length;
 
-        for (i = 0; i < bankCount; i++) {
+        for (let i = 0; i < bankCount; i++) {
             essBankVisualizationSearchModalFormBankSelectElement.insertAdjacentHTML('beforeend', `<option value="${i + 1}">${i + 1}</option>`)
         }
         essBankVisualizationSearchModalFormBankSelectElement.removeAttribute('disabled');
@@ -1522,9 +1650,9 @@ essBankVisualizationSearchModalFormOperatingSiteSelectElement.addEventListener('
 
 essRackVisualizationSearchModalFormOperatingSiteSelectElement.addEventListener('change', (event) => {
     essRackVisualizationSearchModalFormBankSelectElement.innerHTML = '';
-    essRackVisualizationSearchModalFormBankSelectElement.insertAdjacentHTML('afterbegin', '<option value="" selected disabled>Bank를 선택해주세요.</option>');
+    essRackVisualizationSearchModalFormBankSelectElement.insertAdjacentHTML('afterbegin', `<option value="" selected disabled>${i18next.t('selectABank', { ns: 'validation' })}</option>`);
     essRackVisualizationSearchModalFormRackSelectElement.innerHTML = '';
-    essRackVisualizationSearchModalFormRackSelectElement.insertAdjacentHTML('afterbegin', '<option value="" selected disabled>Rack을 선택해주세요.</option>');
+    essRackVisualizationSearchModalFormRackSelectElement.insertAdjacentHTML('afterbegin', `<option value="" selected disabled>${i18next.t('selectARack', { ns: 'validation' })}</option>`);
     essRackVisualizationSearchModalFormBankSelectElement.setAttribute('disabled', '');
     essRackVisualizationSearchModalFormRackSelectElement.setAttribute('disabled', '');
 
@@ -1534,7 +1662,7 @@ essRackVisualizationSearchModalFormOperatingSiteSelectElement.addEventListener('
     if (essProtectionMapInfoRackCountObject[`operatingSite${operatingSiteId}`]) {
         let bankCount = Object.keys(essProtectionMapInfoRackCountObject[`operatingSite${operatingSiteId}`]).length;
 
-        for (i = 0; i < bankCount; i++) {
+        for (let i = 0; i < bankCount; i++) {
             essRackVisualizationSearchModalFormBankSelectElement.insertAdjacentHTML('beforeend', `<option value="${i + 1}">${i + 1}</option>`)
         }
 
@@ -1544,7 +1672,7 @@ essRackVisualizationSearchModalFormOperatingSiteSelectElement.addEventListener('
 
 essRackVisualizationSearchModalFormBankSelectElement.addEventListener('change', (event) => {
     essRackVisualizationSearchModalFormRackSelectElement.innerHTML = '';
-    essRackVisualizationSearchModalFormRackSelectElement.insertAdjacentHTML('afterbegin', '<option value="" selected disabled>Rack을 선택해주세요.</option>')
+    essRackVisualizationSearchModalFormRackSelectElement.insertAdjacentHTML('afterbegin', `<option value="" selected disabled>${i18next.t('selectARack', { ns: 'validation' })}</option>`)
 
     let operatingSiteId = essRackVisualizationSearchModalFormOperatingSiteSelectElement.value;
     let bankId = event.target.value;
@@ -1553,7 +1681,7 @@ essRackVisualizationSearchModalFormBankSelectElement.addEventListener('change', 
     if (essProtectionMapInfoRackCountObject[`operatingSite${operatingSiteId}`]) {
         let rackCount = essProtectionMapInfoRackCountObject[`operatingSite${operatingSiteId}`][`bank${bankId}`];
 
-        for (i = 0; i < rackCount; i++) {
+        for (let i = 0; i < rackCount; i++) {
             essRackVisualizationSearchModalFormRackSelectElement.insertAdjacentHTML('beforeend', `<option value="${i + 1}">${i + 1}</option>`)
         }
         essRackVisualizationSearchModalFormRackSelectElement.removeAttribute('disabled');
@@ -1618,13 +1746,13 @@ essBankVisualizationSearchModalFormValidation
     .addField('#essBankVisualizationSearchModalFormOperatingSiteSelect', [
         {
             rule: 'required',
-            errorMessage: '운영 사이트를 선택하세요.'
+            errorMessage: `${i18next.t('selectAnOperatingSite', { ns: 'validation' })}`
         }
     ])
     .addField('#essBankVisualizationSearchModalFormBankSelect', [
         {
             rule: 'required',
-            errorMessage: 'Bank를 선택하세요.'
+            errorMessage: `${i18next.t('selectABank', { ns: 'validation' })}`
         }
     ])
     .addField('#essBankVisualizationSearchModalFormStartDateTimeInput', [
@@ -1633,7 +1761,7 @@ essBankVisualizationSearchModalFormValidation
                 required: true,
                 format: customFullDateTimeFormat
             })),
-            errorMessage: '시작 시간을 선택하세요.'
+            errorMessage: `${i18next.t('setTheStartTime', { ns: 'validation' })}`
         },
     ]).addField('#essBankVisualizationSearchModalFormEndDateTimeInput', [
         {
@@ -1641,7 +1769,7 @@ essBankVisualizationSearchModalFormValidation
                 required: true,
                 format: customFullDateTimeFormat
             })),
-            errorMessage: '마지막 시간을 선택하세요.'
+            errorMessage: `${i18next.t('setTheEndTime', { ns: 'validation' })}`
         },
     ])
     .onSuccess((event) => {
@@ -1772,19 +1900,19 @@ essRackVisualizationSearchModalFormValidation
     .addField('#essRackVisualizationSearchModalFormOperatingSiteSelect', [
         {
             rule: 'required',
-            errorMessage: '운영 사이트를 선택하세요.'
+            errorMessage: `${i18next.t('selectAnOperatingSite', { ns: 'validation' })}`
         }
     ])
     .addField('#essRackVisualizationSearchModalFormBankSelect', [
         {
             rule: 'required',
-            errorMessage: 'Bank를 선택하세요.'
+            errorMessage: `${i18next.t('selectABank', { ns: 'validation' })}`
         }
     ])
     .addField('#essRackVisualizationSearchModalFormRackSelect', [
         {
             rule: 'required',
-            errorMessage: 'Rack를 선택하세요.'
+            errorMessage: `${i18next.t('selectARack', { ns: 'validation' })}`
         }
     ])
     .addField('#essRackVisualizationSearchModalFormStartDateTimeInput', [
@@ -1793,7 +1921,7 @@ essRackVisualizationSearchModalFormValidation
                 required: true,
                 format: customFullDateTimeFormat
             })),
-            errorMessage: '시작 시간을 선택하세요.'
+            errorMessage: `${i18next.t('setTheStartTime', { ns: 'validation' })}`
         },
     ]).addField('#essRackVisualizationSearchModalFormEndDateTimeInput', [
         {
@@ -1801,7 +1929,7 @@ essRackVisualizationSearchModalFormValidation
                 required: true,
                 format: customFullDateTimeFormat
             })),
-            errorMessage: '마지막 시간을 선택하세요.'
+            errorMessage: `${i18next.t('setTheEndTime', { ns: 'validation' })}`
         },
     ])
     .onSuccess((event) => {
@@ -1858,7 +1986,7 @@ let essBankSoHVisualizationSearchModalFormOperatingSiteSelectElement = document.
 let essBankSoHVisualizationSearchModalFormBankSelectElement = document.getElementById('essBankSoHVisualizationSearchModalFormBankSelect');
 essBankSoHVisualizationSearchModalFormOperatingSiteSelectElement.addEventListener('change', (event) => {
     essBankSoHVisualizationSearchModalFormBankSelectElement.innerHTML = '';
-    essBankSoHVisualizationSearchModalFormBankSelectElement.insertAdjacentHTML('afterbegin', '<option value="" selected disabled>Bank를 선택해주세요.</option>');
+    essBankSoHVisualizationSearchModalFormBankSelectElement.insertAdjacentHTML('afterbegin', `<option value="" selected disabled>${i18next.t('selectABank', { ns: 'validation' })}</option>`);
     essBankSoHVisualizationSearchModalFormBankSelectElement.setAttribute('disabled', '');
 
     let operatingSiteId = event.target.value;
@@ -1867,7 +1995,7 @@ essBankSoHVisualizationSearchModalFormOperatingSiteSelectElement.addEventListene
     if (essProtectionMapInfoRackCountObject[`operatingSite${operatingSiteId}`]) {
         let bankCount = Object.keys(essProtectionMapInfoRackCountObject[`operatingSite${operatingSiteId}`]).length;
 
-        for (i = 0; i < bankCount; i++) {
+        for (let i = 0; i < bankCount; i++) {
             essBankSoHVisualizationSearchModalFormBankSelectElement.insertAdjacentHTML('beforeend', `<option value="${i + 1}">${i + 1}</option>`)
         }
         essBankSoHVisualizationSearchModalFormBankSelectElement.removeAttribute('disabled');
@@ -1937,13 +2065,13 @@ essBankSoHVisualizationSearchModalFormValidation
     .addField('#essBankSoHVisualizationSearchModalFormOperatingSiteSelect', [
         {
             rule: 'required',
-            errorMessage: '운영 사이트를 선택하세요.'
+            errorMessage: `${i18next.t('selectAnOperatingSite', { ns: 'validation' })}`
         }
     ])
     .addField('#essBankSoHVisualizationSearchModalFormBankSelect', [
         {
             rule: 'required',
-            errorMessage: 'Bank를 선택하세요.'
+            errorMessage: `${i18next.t('selectABank', { ns: 'validation' })}`
         }
     ])
     .addField('#essBankSoHVisualizationSearchModalFormStartDateTimeInput', [
@@ -1952,7 +2080,7 @@ essBankSoHVisualizationSearchModalFormValidation
                 required: true,
                 format: customFullDateFormat
             })),
-            errorMessage: '시작 날짜를 선택하세요.'
+            errorMessage: `${i18next.t('setTheStartDate', { ns: 'validation' })}`
         },
     ]).addField('#essBankSoHVisualizationSearchModalFormEndDateTimeInput', [
         {
@@ -1960,7 +2088,7 @@ essBankSoHVisualizationSearchModalFormValidation
                 required: true,
                 format: customFullDateFormat
             })),
-            errorMessage: '마지막 날짜를 선택하세요.'
+            errorMessage: `${i18next.t('setTheEndDate', { ns: 'validation' })}`
         },
     ])
     .onSuccess(async (event) => {
@@ -2013,11 +2141,11 @@ let essRackSoHVisualizationSearchModalFormEndDateTimePickerElement = document.ge
 
 essRackSoHVisualizationSearchModalFormOperatingSiteSelectElement.addEventListener('change', (event) => {
     essRackSoHVisualizationSearchModalFormBankSelectElement.innerHTML = '';
-    essRackSoHVisualizationSearchModalFormBankSelectElement.insertAdjacentHTML('afterbegin', '<option value="" selected disabled>Bank를 선택해주세요.</option>');
+    essRackSoHVisualizationSearchModalFormBankSelectElement.insertAdjacentHTML('afterbegin', `<option value="" selected disabled>${i18next.t('selectABank', { ns: 'validation' })}</option>`);
     essRackSoHVisualizationSearchModalFormBankSelectElement.setAttribute('disabled', '');
 
     essRackSoHVisualizationSearchModalFormRackSelectElement.innerHTML = '';
-    essRackSoHVisualizationSearchModalFormRackSelectElement.insertAdjacentHTML('afterbegin', '<option value="" selected disabled>Rack을 선택해주세요.</option>');
+    essRackSoHVisualizationSearchModalFormRackSelectElement.insertAdjacentHTML('afterbegin', `<option value="" selected disabled>${i18next.t('selectARack', { ns: 'validation' })}</option>`);
     essRackSoHVisualizationSearchModalFormRackSelectElement.setAttribute('disabled', '');
 
     let operatingSiteId = event.target.value;
@@ -2026,7 +2154,7 @@ essRackSoHVisualizationSearchModalFormOperatingSiteSelectElement.addEventListene
     if (essProtectionMapInfoRackCountObject[`operatingSite${operatingSiteId}`]) {
         let bankCount = Object.keys(essProtectionMapInfoRackCountObject[`operatingSite${operatingSiteId}`]).length;
 
-        for (i = 0; i < bankCount; i++) {
+        for (let i = 0; i < bankCount; i++) {
             essRackSoHVisualizationSearchModalFormBankSelectElement.insertAdjacentHTML('beforeend', `<option value="${i + 1}">${i + 1}</option>`)
         }
 
@@ -2036,7 +2164,7 @@ essRackSoHVisualizationSearchModalFormOperatingSiteSelectElement.addEventListene
 
 essRackSoHVisualizationSearchModalFormBankSelectElement.addEventListener('change', (event) => {
     essRackSoHVisualizationSearchModalFormRackSelectElement.innerHTML = '';
-    essRackSoHVisualizationSearchModalFormRackSelectElement.insertAdjacentHTML('afterbegin', '<option value="" selected disabled>Rack을 선택해주세요.</option>')
+    essRackSoHVisualizationSearchModalFormRackSelectElement.insertAdjacentHTML('afterbegin', `<option value="" selected disabled>${i18next.t('selectARack', { ns: 'validation' })}</option>`)
 
     let operatingSiteId = essRackSoHVisualizationSearchModalFormOperatingSiteSelectElement.value;
     let bankId = event.target.value;
@@ -2045,7 +2173,7 @@ essRackSoHVisualizationSearchModalFormBankSelectElement.addEventListener('change
     if (essProtectionMapInfoRackCountObject[`operatingSite${operatingSiteId}`]) {
         let rackCount = essProtectionMapInfoRackCountObject[`operatingSite${operatingSiteId}`][`bank${bankId}`];
 
-        for (i = 0; i < rackCount; i++) {
+        for (let i = 0; i < rackCount; i++) {
             essRackSoHVisualizationSearchModalFormRackSelectElement.insertAdjacentHTML('beforeend', `<option value="${i + 1}">${i + 1}</option>`)
         }
         essRackSoHVisualizationSearchModalFormRackSelectElement.removeAttribute('disabled');
@@ -2117,19 +2245,19 @@ essRackSoHVisualizationSearchModalFormValidation
     .addField('#essRackSoHVisualizationSearchModalFormOperatingSiteSelect', [
         {
             rule: 'required',
-            errorMessage: '운영 사이트를 선택하세요.'
+            errorMessage: `${i18next.t('selectAnOperatingSite', { ns: 'validation' })}`
         }
     ])
     .addField('#essRackSoHVisualizationSearchModalFormBankSelect', [
         {
             rule: 'required',
-            errorMessage: 'Bank를 선택하세요.'
+            errorMessage: `${i18next.t('selectABank', { ns: 'validation' })}`
         }
     ])
     .addField('#essRackSoHVisualizationSearchModalFormRackSelect', [
         {
             rule: 'required',
-            errorMessage: 'Rack을 선택하세요.'
+            errorMessage: `${i18next.t('selectARack', { ns: 'validation' })}`
         }
     ])
     .addField('#essRackSoHVisualizationSearchModalFormStartDateTimeInput', [
@@ -2138,7 +2266,7 @@ essRackSoHVisualizationSearchModalFormValidation
                 required: true,
                 format: customFullDateFormat
             })),
-            errorMessage: '시작 날짜를 선택하세요.'
+            errorMessage: `${i18next.t('setTheStartDate', { ns: 'validation' })}`
         },
     ]).addField('#essRackSoHVisualizationSearchModalFormEndDateTimeInput', [
         {
@@ -2146,7 +2274,7 @@ essRackSoHVisualizationSearchModalFormValidation
                 required: true,
                 format: customFullDateFormat
             })),
-            errorMessage: '마지막 날짜를 선택하세요.'
+            errorMessage: `${i18next.t('setTheEndDate', { ns: 'validation' })}`
         },
     ])
     .onSuccess(async (event) => {
@@ -2200,11 +2328,11 @@ let essRackSoSVisualizationSearchModalFormEndDateTimePickerElement = document.ge
 
 essRackSoSVisualizationSearchModalFormOperatingSiteSelectElement.addEventListener('change', (event) => {
     essRackSoSVisualizationSearchModalFormBankSelectElement.innerHTML = '';
-    essRackSoSVisualizationSearchModalFormBankSelectElement.insertAdjacentHTML('afterbegin', '<option value="" selected disabled>Bank를 선택해주세요.</option>');
+    essRackSoSVisualizationSearchModalFormBankSelectElement.insertAdjacentHTML('afterbegin', `<option value="" selected disabled>${i18next.t('selectABank', { ns: 'validation' })}</option>`);
     essRackSoSVisualizationSearchModalFormBankSelectElement.setAttribute('disabled', '');
 
     essRackSoSVisualizationSearchModalFormRackSelectElement.innerHTML = '';
-    essRackSoSVisualizationSearchModalFormRackSelectElement.insertAdjacentHTML('afterbegin', '<option value="" selected disabled>Rack을 선택해주세요.</option>');
+    essRackSoSVisualizationSearchModalFormRackSelectElement.insertAdjacentHTML('afterbegin', `<option value="" selected disabled>${i18next.t('selectARack', { ns: 'validation' })}</option>`);
     essRackSoSVisualizationSearchModalFormRackSelectElement.setAttribute('disabled', '');
 
     let operatingSiteId = event.target.value;
@@ -2213,7 +2341,7 @@ essRackSoSVisualizationSearchModalFormOperatingSiteSelectElement.addEventListene
     if (essProtectionMapInfoRackCountObject[`operatingSite${operatingSiteId}`]) {
         let bankCount = Object.keys(essProtectionMapInfoRackCountObject[`operatingSite${operatingSiteId}`]).length;
 
-        for (i = 0; i < bankCount; i++) {
+        for (let i = 0; i < bankCount; i++) {
             essRackSoSVisualizationSearchModalFormBankSelectElement.insertAdjacentHTML('beforeend', `<option value="${i + 1}">${i + 1}</option>`)
         }
 
@@ -2223,7 +2351,7 @@ essRackSoSVisualizationSearchModalFormOperatingSiteSelectElement.addEventListene
 
 essRackSoSVisualizationSearchModalFormBankSelectElement.addEventListener('change', (event) => {
     essRackSoSVisualizationSearchModalFormRackSelectElement.innerHTML = '';
-    essRackSoSVisualizationSearchModalFormRackSelectElement.insertAdjacentHTML('afterbegin', '<option value="" selected disabled>Rack을 선택해주세요.</option>')
+    essRackSoSVisualizationSearchModalFormRackSelectElement.insertAdjacentHTML('afterbegin', `<option value="" selected disabled>${i18next.t('selectARack', { ns: 'validation' })}</option>`)
 
     let operatingSiteId = essRackSoSVisualizationSearchModalFormOperatingSiteSelectElement.value;
     let bankId = event.target.value;
@@ -2232,7 +2360,7 @@ essRackSoSVisualizationSearchModalFormBankSelectElement.addEventListener('change
     if (essProtectionMapInfoRackCountObject[`operatingSite${operatingSiteId}`]) {
         let rackCount = essProtectionMapInfoRackCountObject[`operatingSite${operatingSiteId}`][`bank${bankId}`];
 
-        for (i = 0; i < rackCount; i++) {
+        for (let i = 0; i < rackCount; i++) {
             essRackSoSVisualizationSearchModalFormRackSelectElement.insertAdjacentHTML('beforeend', `<option value="${i + 1}">${i + 1}</option>`)
         }
         essRackSoSVisualizationSearchModalFormRackSelectElement.removeAttribute('disabled');
@@ -2294,19 +2422,19 @@ essRackSoSVisualizationSearchModalFormValidation
     .addField('#essRackSoSVisualizationSearchModalFormOperatingSiteSelect', [
         {
             rule: 'required',
-            errorMessage: '운영 사이트를 선택하세요.'
+            errorMessage: `${i18next.t('selectAnOperatingSite', { ns: 'validation' })}`
         }
     ])
     .addField('#essRackSoSVisualizationSearchModalFormBankSelect', [
         {
             rule: 'required',
-            errorMessage: 'Bank를 선택하세요.'
+            errorMessage: `${i18next.t('selectABank', { ns: 'validation' })}`
         }
     ])
     .addField('#essRackSoSVisualizationSearchModalFormRackSelect', [
         {
             rule: 'required',
-            errorMessage: 'Rack을 선택하세요.'
+            errorMessage: `${i18next.t('selectARack', { ns: 'validation' })}`
         }
     ])
     .addField('#essRackSoSVisualizationSearchModalFormStartDateTimeInput', [
@@ -2315,7 +2443,7 @@ essRackSoSVisualizationSearchModalFormValidation
                 required: true,
                 format: customFullDateTimeFormat
             })),
-            errorMessage: '시작 시간을 선택하세요.'
+            errorMessage: `${i18next.t('setTheStartTime', { ns: 'validation' })}`
         },
     ]).addField('#essRackSoSVisualizationSearchModalFormEndDateTimeInput', [
         {
@@ -2323,7 +2451,7 @@ essRackSoSVisualizationSearchModalFormValidation
                 required: true,
                 format: customFullDateTimeFormat
             })),
-            errorMessage: '마지막 시간을 선택하세요.'
+            errorMessage: `${i18next.t('setTheEndTime', { ns: 'validation' })}`
         },
     ])
     .onSuccess(async (event) => {
@@ -2352,17 +2480,12 @@ essRackSoSVisualizationSearchModalFormValidation
         let responseData = await loadData(requestUrl);
 
         let mainSoSChartData = [];
+        let mainSoSChartDataObject = {};
         let detailSoSChartData = [];
 
         // Add main & detail SoS data
         responseData.forEach(element => {
             let time = DateTime.fromISO(element['time']).toMillis();
-
-            mainSoSChartData.push({
-                time: time,
-                value: element['sos_score'],
-            });
-
             let detailSoSChartDataItem = {
                 time: time,
             };
@@ -2374,7 +2497,86 @@ essRackSoSVisualizationSearchModalFormValidation
             detailSoSChartData.push(detailSoSChartDataItem);
         });
 
-        mainRackSoSChartSeries.data.setAll(mainSoSChartData);
+        let forecastingSoSRequestUrl = new URL(`${window.location.origin}/api/ess/stats/forecasting-rack-sos/operating-sites/${operatingSiteId}/banks/${bankId}/racks/${rackId}/`);
+        forecastingSoSRequestUrl.searchParams.append('start-time', startTime);
+        forecastingSoSRequestUrl.searchParams.append('end-time', endTime);
+
+        let forecastingSoSResponseData = await loadData(forecastingSoSRequestUrl);
+        forecastingSoSResponseData.forEach(element => {
+            // Discard by 1 second unit for overlaping the observed values and forecasting values
+            let fixedTime = `${element['time'].substring(0, element['time'].length - 1)}0`;
+
+            let values = element['values'];
+            let observedTime = DateTime.fromISO(fixedTime).toMillis();
+            let forecastingTime = DateTime.fromISO(fixedTime).plus({ minute: 10 }).toMillis();
+
+            if (mainSoSChartDataObject[observedTime]) {
+                mainSoSChartDataObject[observedTime]['observed'] = values['observed'];
+            } else {
+                mainSoSChartDataObject[observedTime] = {
+                    observed: values['observed']
+                };
+            }
+
+            delete values['observed'];
+
+            mainSoSChartDataObject[forecastingTime] = {
+                ...values
+            };
+        });
+
+        Object.keys(mainSoSChartDataObject).forEach(time => {
+            mainSoSChartData.push({
+                time: Number(time),
+                ...mainSoSChartDataObject[time]
+            });
+        });
+
+        mainSoSChartData.sort((a, b) => {
+            return a['time'] - b['time'];
+        });
+
+        // Set forecastingDiffObject
+        let forecastingDiffObject = {};
+        forecastingMainRackSoSDefaultOption['seriesInfo'].forEach(seriesInfoItem => {
+            forecastingDiffObject[seriesInfoItem['value']] = [];
+        });
+
+        mainSoSChartData.forEach(element => {
+            // Check object with all models (Default key: time, observed)
+            if (element['observed'] && Object.keys(element).length > 2) {
+                Object.keys(forecastingDiffObject).forEach(forecastingDiffObjectKey => {
+                    let forecastingDiff = Math.abs(element['observed'] - element[forecastingDiffObjectKey]);
+
+                    element[`${forecastingDiffObjectKey}Diff`] = forecastingDiff;
+                });
+            }
+        });
+
+        let forecastingSoSChartOption = await getForecastingChartOption(mainSoSChartData, forecastingMainRackSoSDefaultOption, forecastingDiffObject);
+
+        let forecastingSoSChartOptionInfoObject = {};
+        forecastingSoSChartOption['seriesInfo'].forEach(element => {
+            forecastingSoSChartOptionInfoObject[element['value']] = element['name'];
+        });
+
+        mainRackSoSChartSeriesList.forEach(series => {
+            series.data.setAll(mainSoSChartData);
+
+            // Change legend's name
+            let seriesName = series.get('name');
+            let modelName;
+
+            if (seriesName.includes('(')) {
+                let index = seriesName.indexOf('(');
+
+                modelName = seriesName.substring(0, index).toLowerCase();
+            } else {
+                modelName = seriesName.toLowerCase();
+            }
+
+            series.set('name', forecastingSoSChartOptionInfoObject[modelName]);
+        });
 
         detailRackSoSChartSeriesList.forEach(detailRackSoSChartSeries => {
             detailRackSoSChartSeries.data.setAll(detailSoSChartData);
@@ -2415,7 +2617,7 @@ essEXSoSVisualizationSearchModalFormModeSelectElement.addEventListener('change',
                 .addField('#essEXSoSVisualizationSearchModalFormRackSelect', [
                     {
                         rule: 'required',
-                        errorMessage: 'Rack을 선택하세요.'
+                        errorMessage: `${i18next.t('selectARack', { ns: 'validation' })}`
                     }
                 ])
             break;
@@ -2426,11 +2628,11 @@ essEXSoSVisualizationSearchModalFormModeSelectElement.addEventListener('change',
 
 essEXSoSVisualizationSearchModalFormOperatingSiteSelectElement.addEventListener('change', event => {
     essEXSoSVisualizationSearchModalFormBankSelectElement.innerHTML = '';
-    essEXSoSVisualizationSearchModalFormBankSelectElement.insertAdjacentHTML('afterbegin', '<option value="" selected disabled>Bank를 선택해주세요.</option>');
+    essEXSoSVisualizationSearchModalFormBankSelectElement.insertAdjacentHTML('afterbegin', `<option value="" selected disabled>${i18next.t('selectABank', { ns: 'validation' })}</option>`);
     essEXSoSVisualizationSearchModalFormBankSelectElement.setAttribute('disabled', '');
 
     essEXSoSVisualizationSearchModalFormRackSelectElement.innerHTML = '';
-    essEXSoSVisualizationSearchModalFormRackSelectElement.insertAdjacentHTML('afterbegin', '<option value="" selected disabled>Rack을 선택해주세요.</option>');
+    essEXSoSVisualizationSearchModalFormRackSelectElement.insertAdjacentHTML('afterbegin', `<option value="" selected disabled>${i18next.t('selectARack', { ns: 'validation' })}</option>`);
     essEXSoSVisualizationSearchModalFormRackSelectElement.setAttribute('disabled', '');
 
     let operatingSiteId = event.target.value;
@@ -2439,7 +2641,7 @@ essEXSoSVisualizationSearchModalFormOperatingSiteSelectElement.addEventListener(
     if (essProtectionMapInfoRackCountObject[`operatingSite${operatingSiteId}`]) {
         let bankCount = Object.keys(essProtectionMapInfoRackCountObject[`operatingSite${operatingSiteId}`]).length;
 
-        for (i = 0; i < bankCount; i++) {
+        for (let i = 0; i < bankCount; i++) {
             essEXSoSVisualizationSearchModalFormBankSelectElement.insertAdjacentHTML('beforeend', `<option value="${i + 1}">${i + 1}</option>`)
         }
 
@@ -2449,7 +2651,7 @@ essEXSoSVisualizationSearchModalFormOperatingSiteSelectElement.addEventListener(
 
 essEXSoSVisualizationSearchModalFormBankSelectElement.addEventListener('change', event => {
     essEXSoSVisualizationSearchModalFormRackSelectElement.innerHTML = '';
-    essEXSoSVisualizationSearchModalFormRackSelectElement.insertAdjacentHTML('afterbegin', '<option value="" selected disabled>Rack을 선택해주세요.</option>')
+    essEXSoSVisualizationSearchModalFormRackSelectElement.insertAdjacentHTML('afterbegin', `<option value="" selected disabled>${i18next.t('selectARack', { ns: 'validation' })}</option>`)
 
     let operatingSiteId = essEXSoSVisualizationSearchModalFormOperatingSiteSelectElement.value;
     let bankId = event.target.value;
@@ -2458,7 +2660,7 @@ essEXSoSVisualizationSearchModalFormBankSelectElement.addEventListener('change',
     if (essProtectionMapInfoRackCountObject[`operatingSite${operatingSiteId}`]) {
         let rackCount = essProtectionMapInfoRackCountObject[`operatingSite${operatingSiteId}`][`bank${bankId}`];
 
-        for (i = 0; i < rackCount; i++) {
+        for (let i = 0; i < rackCount; i++) {
             essEXSoSVisualizationSearchModalFormRackSelectElement.insertAdjacentHTML('beforeend', `<option value="${i + 1}">${i + 1}</option>`)
         }
         essEXSoSVisualizationSearchModalFormRackSelectElement.removeAttribute('disabled');
@@ -2520,25 +2722,25 @@ essEXSoSVisualizationSearchModalFormValidation
     .addField('#essEXSoSVisualizationSearchModalFormModeSelect', [
         {
             rule: 'required',
-            errorMessage: 'Mode를 선택하세요.'
+            errorMessage: `${i18next.t('selectAMode', { ns: 'validation' })}`
         }
     ])
     .addField('#essEXSoSVisualizationSearchModalFormOperatingSiteSelect', [
         {
             rule: 'required',
-            errorMessage: '운영 사이트를 선택하세요.'
+            errorMessage: `${i18next.t('selectAnOperatingSite', { ns: 'validation' })}`
         }
     ])
     .addField('#essEXSoSVisualizationSearchModalFormBankSelect', [
         {
             rule: 'required',
-            errorMessage: 'Bank를 선택하세요.'
+            errorMessage: `${i18next.t('selectABank', { ns: 'validation' })}`
         }
     ])
     .addField('#essEXSoSVisualizationSearchModalFormRackSelect', [
         {
             rule: 'required',
-            errorMessage: 'Rack을 선택하세요.'
+            errorMessage: `${i18next.t('selectARack', { ns: 'validation' })}`
         }
     ])
     .addField('#essEXSoSVisualizationSearchModalFormStartDateTimeInput', [
@@ -2547,7 +2749,7 @@ essEXSoSVisualizationSearchModalFormValidation
                 required: true,
                 format: customFullDateTimeFormat
             })),
-            errorMessage: '시작 시간을 선택하세요.'
+            errorMessage: `${i18next.t('setTheStartTime', { ns: 'validation' })}`
         },
     ])
     .addField('#essEXSoSVisualizationSearchModalFormEndDateTimeInput', [
@@ -2556,7 +2758,7 @@ essEXSoSVisualizationSearchModalFormValidation
                 required: true,
                 format: customFullDateTimeFormat
             })),
-            errorMessage: '마지막 시간을 선택하세요.'
+            errorMessage: `${i18next.t('setTheEndTime', { ns: 'validation' })}`
         },
     ])
     .onSuccess(async (event) => {
@@ -2653,11 +2855,11 @@ let forecastingObjectVisualizationSearchModalFormEndDateTimePickerElement = docu
 
 forecastingObjectVisualizationSearchModalFormOperatingSiteSelectElement.addEventListener('change', (event) => {
     forecastingObjectVisualizationSearchModalFormBankSelectElement.innerHTML = '';
-    forecastingObjectVisualizationSearchModalFormBankSelectElement.insertAdjacentHTML('afterbegin', '<option value="" selected disabled>Bank를 선택해주세요.</option>');
+    forecastingObjectVisualizationSearchModalFormBankSelectElement.insertAdjacentHTML('afterbegin', `<option value="" selected disabled>${i18next.t('selectABank', { ns: 'validation' })}</option>`);
     forecastingObjectVisualizationSearchModalFormBankSelectElement.setAttribute('disabled', '');
 
     forecastingObjectVisualizationSearchModalFormRackSelectElement.innerHTML = '';
-    forecastingObjectVisualizationSearchModalFormRackSelectElement.insertAdjacentHTML('afterbegin', '<option value="" selected disabled>Rack을 선택해주세요.</option>');
+    forecastingObjectVisualizationSearchModalFormRackSelectElement.insertAdjacentHTML('afterbegin', `<option value="" selected disabled>${i18next.t('selectARack', { ns: 'validation' })}</option>`);
     forecastingObjectVisualizationSearchModalFormRackSelectElement.setAttribute('disabled', '');
 
     let operatingSiteId = event.target.value;
@@ -2666,7 +2868,7 @@ forecastingObjectVisualizationSearchModalFormOperatingSiteSelectElement.addEvent
     if (essProtectionMapInfoRackCountObject[`operatingSite${operatingSiteId}`]) {
         let bankCount = Object.keys(essProtectionMapInfoRackCountObject[`operatingSite${operatingSiteId}`]).length;
 
-        for (i = 0; i < bankCount; i++) {
+        for (let i = 0; i < bankCount; i++) {
             forecastingObjectVisualizationSearchModalFormBankSelectElement.insertAdjacentHTML('beforeend', `<option value="${i + 1}">${i + 1}</option>`)
         }
 
@@ -2676,7 +2878,7 @@ forecastingObjectVisualizationSearchModalFormOperatingSiteSelectElement.addEvent
 
 forecastingObjectVisualizationSearchModalFormBankSelectElement.addEventListener('change', (event) => {
     forecastingObjectVisualizationSearchModalFormRackSelectElement.innerHTML = '';
-    forecastingObjectVisualizationSearchModalFormRackSelectElement.insertAdjacentHTML('afterbegin', '<option value="" selected disabled>Rack을 선택해주세요.</option>')
+    forecastingObjectVisualizationSearchModalFormRackSelectElement.insertAdjacentHTML('afterbegin', `<option value="" selected disabled>${i18next.t('selectARack', { ns: 'validation' })}</option>`)
 
     let operatingSiteId = forecastingObjectVisualizationSearchModalFormOperatingSiteSelectElement.value;
     let bankId = event.target.value;
@@ -2685,7 +2887,7 @@ forecastingObjectVisualizationSearchModalFormBankSelectElement.addEventListener(
     if (essProtectionMapInfoRackCountObject[`operatingSite${operatingSiteId}`]) {
         let rackCount = essProtectionMapInfoRackCountObject[`operatingSite${operatingSiteId}`][`bank${bankId}`];
 
-        for (i = 0; i < rackCount; i++) {
+        for (let i = 0; i < rackCount; i++) {
             forecastingObjectVisualizationSearchModalFormRackSelectElement.insertAdjacentHTML('beforeend', `<option value="${i + 1}">${i + 1}</option>`)
         }
         forecastingObjectVisualizationSearchModalFormRackSelectElement.removeAttribute('disabled');
@@ -2747,19 +2949,19 @@ forecastingObjectVisualizationSearchModalFormValidation
     .addField(`#forecastingObjectVisualizationSearchModalFormOperatingSiteSelect`, [
         {
             rule: 'required',
-            errorMessage: '운영 사이트를 선택하세요.'
+            errorMessage: `${i18next.t('selectAnOperatingSite', { ns: 'validation' })}`
         }
     ])
     .addField(`#forecastingObjectVisualizationSearchModalFormBankSelect`, [
         {
             rule: 'required',
-            errorMessage: 'Bank를 선택하세요.'
+            errorMessage: `${i18next.t('selectABank', { ns: 'validation' })}`
         }
     ])
     .addField(`#forecastingObjectVisualizationSearchModalFormRackSelect`, [
         {
             rule: 'required',
-            errorMessage: 'Rack을 선택하세요.'
+            errorMessage: `${i18next.t('selectARack', { ns: 'validation' })}`
         }
     ])
     .addField(`#forecastingObjectVisualizationSearchModalFormStartDateTimeInput`, [
@@ -2768,7 +2970,7 @@ forecastingObjectVisualizationSearchModalFormValidation
                 required: true,
                 format: customFullDateTimeFormat
             })),
-            errorMessage: '시작 시간을 선택하세요.'
+            errorMessage: `${i18next.t('setTheStartTime', { ns: 'validation' })}`
         },
     ]).addField(`#forecastingObjectVisualizationSearchModalFormEndDateTimeInput`, [
         {
@@ -2776,7 +2978,7 @@ forecastingObjectVisualizationSearchModalFormValidation
                 required: true,
                 format: customFullDateTimeFormat
             })),
-            errorMessage: '마지막 시간을 선택하세요.'
+            errorMessage: `${i18next.t('setTheEndTime', { ns: 'validation' })}`
         },
     ])
     .onSuccess(async (event) => {
@@ -2854,9 +3056,7 @@ forecastingObjectVisualizationSearchModalFormValidation
             }
         });
 
-        console.log(chartData);
-
-        let forecastingMaxMinRackCellChartOption = await getForecastingMaxMinRackCellChartOption(chartData, forecastingMaxMinRackCellChartDefaultOption, forecastingDiffObject);
+        let forecastingMaxMinRackCellChartOption = await getForecastingChartOption(chartData, forecastingMaxMinRackCellChartDefaultOption, forecastingDiffObject);
 
         window[`${forecastingObjectName}ChartSeriesList`].forEach(chartSeries => {
             chartSeries.data.setAll(chartData);
@@ -2876,6 +3076,233 @@ forecastingObjectVisualizationSearchModalFormValidation
         // Off loading UI
         forecastingObjectCardElement.querySelector('.card-body .spinner-border').classList.add('d-none');
         forecastingObjectChartElement.parentNode.classList.remove('d-none');
+    });
+
+// Search multi step forecasting modal
+let multiStepForecastingSearchModalFormOperatingSiteSelectElement = document.getElementById('multiStepForecastingSearchModalFormOperatingSiteSelect');
+let multiStepForecastingSearchModalFormBankSelectElement = document.getElementById('multiStepForecastingSearchModalFormBankSelect');
+let multiStepForecastingSearchModalFormRackSelectElement = document.getElementById('multiStepForecastingSearchModalFormRackSelect');
+let multiStepForecastingSearchModalFormStartDateTimePickerElement = document.getElementById('multiStepForecastingSearchModalFormStartDateTimePicker');
+let multiStepForecastingSearchModalFormEndDateTimePickerElement = document.getElementById('multiStepForecastingSearchModalFormEndDateTimePicker');
+
+multiStepForecastingSearchModalFormOperatingSiteSelectElement.addEventListener('change', (event) => {
+    multiStepForecastingSearchModalFormBankSelectElement.innerHTML = '';
+    multiStepForecastingSearchModalFormBankSelectElement.insertAdjacentHTML('afterbegin', `<option value="" selected disabled>${i18next.t('selectABank', { ns: 'validation' })}</option>`);
+    multiStepForecastingSearchModalFormBankSelectElement.setAttribute('disabled', '');
+
+    multiStepForecastingSearchModalFormRackSelectElement.innerHTML = '';
+    multiStepForecastingSearchModalFormRackSelectElement.insertAdjacentHTML('afterbegin', `<option value="" selected disabled>${i18next.t('selectARack', { ns: 'validation' })}</option>`);
+    multiStepForecastingSearchModalFormRackSelectElement.setAttribute('disabled', '');
+
+    let operatingSiteId = event.target.value;
+    let essProtectionMapInfoRackCountObject = essProtectionMap['info']['rackCount'];
+
+    if (essProtectionMapInfoRackCountObject[`operatingSite${operatingSiteId}`]) {
+        let bankCount = Object.keys(essProtectionMapInfoRackCountObject[`operatingSite${operatingSiteId}`]).length;
+
+        for (let i = 0; i < bankCount; i++) {
+            multiStepForecastingSearchModalFormBankSelectElement.insertAdjacentHTML('beforeend', `<option value="${i + 1}">${i + 1}</option>`)
+        }
+
+        multiStepForecastingSearchModalFormBankSelectElement.removeAttribute('disabled');
+    }
+});
+
+multiStepForecastingSearchModalFormBankSelectElement.addEventListener('change', (event) => {
+    multiStepForecastingSearchModalFormRackSelectElement.innerHTML = '';
+    multiStepForecastingSearchModalFormRackSelectElement.insertAdjacentHTML('afterbegin', `<option value="" selected disabled>${i18next.t('selectARack', { ns: 'validation' })}</option>`)
+
+    let operatingSiteId = multiStepForecastingSearchModalFormOperatingSiteSelectElement.value;
+    let bankId = event.target.value;
+    let essProtectionMapInfoRackCountObject = essProtectionMap['info']['rackCount'];
+
+    if (essProtectionMapInfoRackCountObject[`operatingSite${operatingSiteId}`]) {
+        let rackCount = essProtectionMapInfoRackCountObject[`operatingSite${operatingSiteId}`][`bank${bankId}`];
+
+        for (let i = 0; i < rackCount; i++) {
+            multiStepForecastingSearchModalFormRackSelectElement.insertAdjacentHTML('beforeend', `<option value="${i + 1}">${i + 1}</option>`)
+        }
+        multiStepForecastingSearchModalFormRackSelectElement.removeAttribute('disabled');
+    } else {
+        multiStepForecastingSearchModalFormRackSelectElement.setAttribute('disabled', '');
+    }
+});
+
+const multiStepForecastingSearchModalFormStartDateTimeTempusDominus = new tempusDominus.TempusDominus(multiStepForecastingSearchModalFormStartDateTimePickerElement, {
+    display: {
+        components: {
+            decades: true,
+            year: true,
+            month: true,
+            date: true,
+            hours: false,
+            minutes: false,
+            seconds: false,
+        },
+    },
+    hooks: {
+        inputFormat: (context, date) => { return DateTime.fromISO(date.toISOString()).toFormat(customFullDateFormat) }
+    }
+});
+
+const multiStepForecastingSearchModalFormEndDateTimeTempusDominus = new tempusDominus.TempusDominus(multiStepForecastingSearchModalFormEndDateTimePickerElement, {
+    display: {
+        components: {
+            decades: true,
+            year: true,
+            month: true,
+            date: true,
+            hours: false,
+            minutes: false,
+            seconds: false,
+        },
+    },
+    hooks: {
+        inputFormat: (context, date) => { return DateTime.fromISO(date.toISOString()).toFormat(customFullDateFormat) }
+    },
+    useCurrent: false
+});
+
+multiStepForecastingSearchModalFormStartDateTimePickerElement.addEventListener(tempusDominus.Namespace.events.change, (e) => {
+    multiStepForecastingSearchModalFormEndDateTimeTempusDominus.updateOptions({
+        restrictions: {
+            minDate: e.detail.date
+        },
+    });
+});
+
+const multiStepForecastingSearchModalFormEndDateTimeTempusDominusSubscription = multiStepForecastingSearchModalFormEndDateTimeTempusDominus.subscribe(tempusDominus.Namespace.events.change, (e) => {
+    multiStepForecastingSearchModalFormStartDateTimeTempusDominus.updateOptions({
+        restrictions: {
+            maxDate: e.date
+        }
+    });
+});
+
+const multiStepForecastingSearchModalFormValidation = new JustValidate('#multiStepForecastingSearchModalForm', {
+    errorFieldCssClass: 'is-invalid',
+    focusInvalidField: true,
+    lockForm: true,
+    tooltip: {
+        position: 'right',
+    }
+});
+multiStepForecastingSearchModalFormValidation
+    .addField('#multiStepForecastingSearchModalFormOperatingSiteSelect', [
+        {
+            rule: 'required',
+            errorMessage: `${i18next.t('selectAnOperatingSite', { ns: 'validation' })}`
+        }
+    ])
+    .addField('#multiStepForecastingSearchModalFormBankSelect', [
+        {
+            rule: 'required',
+            errorMessage: `${i18next.t('selectABank', { ns: 'validation' })}`
+        }
+    ])
+    .addField('#multiStepForecastingSearchModalFormRackSelect', [
+        {
+            rule: 'required',
+            errorMessage: `${i18next.t('selectARack', { ns: 'validation' })}`
+        }
+    ])
+    .addField('#multiStepForecastingSearchModalFormStartDateTimeInput', [
+        {
+            plugin: JustValidatePluginDate(fields => ({
+                required: true,
+                format: customFullDateFormat
+            })),
+            errorMessage: `${i18next.t('setTheStartTime', { ns: 'validation' })}`
+        },
+    ]).addField('#multiStepForecastingSearchModalFormEndDateTimeInput', [
+        {
+            plugin: JustValidatePluginDate(fields => ({
+                required: true,
+                format: customFullDateFormat
+            })),
+            errorMessage: `${i18next.t('setTheEndTime', { ns: 'validation' })}`
+        },
+    ])
+    .onSuccess(async (event) => {
+        let multiStepForecastingSearchModalElement = document.getElementById('multiStepForecastingSearchModal');
+        let cardElement = document.getElementById('multiStepForecastingMaxCellVoltageCard');
+        let chartElement = document.getElementById('multiStepForecastingMaxCellVoltageChart');
+        let loadingElement = cardElement.querySelector('.card-body .spinner-border');
+
+        // Off modal
+        bootstrap.Modal.getInstance(multiStepForecastingSearchModalElement).hide();
+
+        // Setup loading UI
+        chartElement.parentNode.classList.add('d-none');
+        loadingElement.classList.remove('d-none');
+
+        let operatingSiteId = multiStepForecastingSearchModalFormOperatingSiteSelectElement.value;
+        let bankId = multiStepForecastingSearchModalFormBankSelectElement.value;
+        let rackId = multiStepForecastingSearchModalFormRackSelectElement.value;
+        let startTime = DateTime.fromFormat(multiStepForecastingSearchModalFormStartDateTimeInput.value, customFullDateFormat).toFormat(customTimeDesignatorFullDateTimeFormat);
+        let endTime = DateTime.fromFormat(multiStepForecastingSearchModalFormEndDateTimeInput.value, customFullDateFormat).toFormat(customTimeDesignatorFullDateTimeFormat);
+
+        let responseDataRequestUrl = new URL(`${window.location.origin}/api/ess/stats/multi-step-forecasting-max-cell-voltage/operating-sites/${operatingSiteId}/banks/${bankId}/racks/${rackId}/`);
+        responseDataRequestUrl.searchParams.append('start-time', startTime);
+        responseDataRequestUrl.searchParams.append('end-time', endTime);
+
+        let observedDataRequestUrl = new URL(`${window.location.origin}/api/ess/operating-sites/${operatingSiteId}/banks/${bankId}/racks/${rackId}/`);
+        observedDataRequestUrl.searchParams.append('fields', 'timestamp,rack_max_cell_voltage')
+        observedDataRequestUrl.searchParams.append('start-time', startTime);
+        observedDataRequestUrl.searchParams.append('end-time', endTime);
+        observedDataRequestUrl.searchParams.append('no_page', '');
+
+        let responseData = await loadData(responseDataRequestUrl);
+        let observedData = await loadData(observedDataRequestUrl);
+
+        let valueDataObject = {};
+
+        observedData.forEach(element => {
+            let timeMillis = DateTime.fromISO(element['timestamp']).toMillis();
+            let value1 = element['rack_max_cell_voltage'];
+
+            valueDataObject[timeMillis] = {
+                value1: value1
+            };
+        });
+
+        responseData.forEach(element => {
+            let values = element['values'];
+            let timeList = values['time'];
+
+            timeList.forEach((time, index) => {
+                let timeMillis = DateTime.fromFormat(time, customFullDateTimeFormat).toMillis();
+
+                if (valueDataObject[timeMillis]) {
+                    let value2 = values['lstm_attention'][index];
+
+                    valueDataObject[timeMillis]['value2'] = value2;
+                }
+            });
+        });
+
+        let chartData = [];
+
+        Object.keys(valueDataObject).forEach(timeMillis => {
+            if (Object.keys(valueDataObject[timeMillis]).length >= 2) {
+                chartData.push({
+                    time: Number.parseInt(timeMillis),
+                    ...valueDataObject[timeMillis]
+                });
+            }
+        });
+
+        multiStepForecastingMaxCellVoltageSeriesList.forEach(chartSeries => {
+            chartSeries.data.setAll(chartData);
+        });
+
+        cardElement.querySelector('.card-body p').textContent = `
+            ${multiStepForecastingSearchModalFormOperatingSiteSelectElement.options[multiStepForecastingSearchModalFormOperatingSiteSelectElement.selectedIndex].text} / Bank ${bankId} / Rack ${rackId}
+        `;
+
+        // Off loading UI
+        loadingElement.classList.add('d-none');
+        chartElement.parentNode.classList.remove('d-none');
     });
 
 /* 
@@ -2906,11 +3333,11 @@ visualizationTypes.forEach(visualizationType => {
     let requestUrl;
 
     if (visualizationType.includes('bank')) {
-        requestUrl = new URL(`${window.location.origin}/api/ess/operating-sites/1/banks/1/stats/${visualizationType}`);
+        requestUrl = new URL(`${window.location.origin}/api/ess/operating-sites/2/banks/1/stats/${visualizationType}`);
     }
 
     if (visualizationType.includes('rack')) {
-        requestUrl = new URL(`${window.location.origin}/api/ess/operating-sites/1/banks/1/racks/1/stats/${visualizationType}`);
+        requestUrl = new URL(`${window.location.origin}/api/ess/operating-sites/2/banks/1/racks/1/stats/${visualizationType}`);
     }
 
     requestUrl.searchParams.append('time-bucket-width', '1hour');
@@ -2933,7 +3360,7 @@ visualizationTypes.forEach(visualizationType => {
             switch (visualizationType) {
                 case 'avg-bank-soc':
                     chartOption = {
-                        seriesName: '평균 SoC',
+                        seriesName: `${i18next.t('average')} SoC`,
                         yAxis: {
                             min: 0,
                             max: 100
@@ -2945,7 +3372,7 @@ visualizationTypes.forEach(visualizationType => {
                     break;
                 case 'avg-rack-soc':
                     chartOption = {
-                        seriesName: '평균 SoC',
+                        seriesName: `${i18next.t('average')} SoC`,
                         yAxis: {
                             min: 0,
                             max: 100
@@ -2957,7 +3384,7 @@ visualizationTypes.forEach(visualizationType => {
                     break;
                 case 'avg-bank-power':
                     chartOption = {
-                        seriesName: '평균 전력'
+                        seriesName: `${i18next.t('average')} ${i18next.t('power')}`
                     }
 
                     visualizationTypesObjects['chartSeries'][visualizationTypeCamelCaseString] = getLineChartSeries(chartElementId, chartOption);
@@ -2983,7 +3410,7 @@ visualizationTypes.forEach(visualizationType => {
 // Create avg bank SoH chart
 let avgBankSoHChartSeries = getAvgSoHChartSeries('avgBankSoHChart');
 
-requestUrl = new URL(`${window.location.origin}/api/ess/stats/avg-soh/operating-sites/1/banks/1/`);
+let requestUrl = new URL(`${window.location.origin}/api/ess/stats/avg-soh/operating-sites/2/banks/1/`);
 
 loadData(requestUrl)
     .then(responseData => {
@@ -3008,7 +3435,7 @@ loadData(requestUrl)
 // Create avg rack SoH chart
 let avgRackSoHChartSeries = getAvgSoHChartSeries('avgRackSoHChart');
 
-requestUrl = new URL(`${window.location.origin}/api/ess/stats/avg-soh/operating-sites/1/banks/1/racks/1/`);
+requestUrl = new URL(`${window.location.origin}/api/ess/stats/avg-soh/operating-sites/2/banks/1/racks/1/`);
 
 loadData(requestUrl)
     .then(responseData => {
@@ -3067,30 +3494,54 @@ let detailRackSoSChartOption = {
     ],
 };
 
-let mainRackSoSChartSeries = getMainRackSoSChartSeries('mainRackSoSChart');
+let forecastingMainRackSoSDefaultOption = {
+    seriesInfo: [
+        {
+            name: "Observed",
+            value: 'observed'
+        }, {
+            name: "CatBoost",
+            value: 'catboost'
+        }, {
+            name: "Linear",
+            value: 'linear'
+        }, {
+            name: "LightGBM",
+            value: 'lightgbm'
+        }, {
+            name: "XGBoost",
+            value: 'xgboost'
+        },
+    ]
+};
+
+let mainRackSoSChartSeriesList;
 let detailRackSoSChartSeriesList = getDetailRackSoSChartSeriesList('detailRackSoSChart', detailRackSoSChartOption);
 
-endTime = DateTime.now().toFormat(customTimeDesignatorFullDateTimeFormat);
-startTime = DateTime.fromISO(endTime).minus({ hour: 1 }).toFormat(customTimeDesignatorFullDateTimeFormat);
+let startTime = currentDateTime.minus({ hour: 1 }).toFormat(customTimeDesignatorFullDateTimeFormat);
+let endTime = currentDateTime.toFormat(customTimeDesignatorFullDateTimeFormat);
 
-requestUrl = new URL(`${window.location.origin}/api/ess/stats/sos/operating-sites/1/banks/1/racks/1/`);
+requestUrl = new URL(`${window.location.origin}/api/ess/stats/sos/operating-sites/2/banks/1/racks/1/`);
 requestUrl.searchParams.append('start-time', startTime);
 requestUrl.searchParams.append('end-time', endTime);
 
 loadData(requestUrl)
-    .then(responseData => {
+    .then(async (responseData) => {
         const mainRackSoSChartElementId = 'mainRackSoSChart';
         let rackSoSCardElement = document.getElementById('rackSoSCard');
         let mainSoSChartData = [];
         let detailSoSChartData = [];
 
+        let forecastingMainRackSoSNewOption = JSON.parse(JSON.stringify(forecastingMainRackSoSDefaultOption));
+        forecastingMainRackSoSNewOption['axisRangeInfo'] = {};
+
         // Add main & detail SoS data
-        responseData.forEach(element => {
+        responseData.forEach((element, index) => {
             let time = DateTime.fromISO(element['time']).toMillis();
 
             mainSoSChartData.push({
                 time: time,
-                value: element['sos_score'],
+                observed: element['sos_score'],
             });
 
             let detailSoSChartDataItem = {
@@ -3102,9 +3553,44 @@ loadData(requestUrl)
             });
 
             detailSoSChartData.push(detailSoSChartDataItem);
+
+            if (responseData.length - 1 == index) {
+                forecastingMainRackSoSNewOption['axisRangeInfo']['value'] = time;
+            }
         });
 
-        mainRackSoSChartSeries.data.setAll(mainSoSChartData);
+        let forecastingSoSRequestUrl = new URL(`${window.location.origin}/api/ess/stats/forecasting-rack-sos/operating-sites/2/banks/1/racks/1/`);
+        forecastingSoSRequestUrl.searchParams.append('start-time', currentDateTime.minus({ minute: 10 }).toFormat(customTimeDesignatorFullDateTimeFormat));
+        forecastingSoSRequestUrl.searchParams.append('end-time', currentDateTime.toFormat(customTimeDesignatorFullDateTimeFormat));
+
+        let forecastingSoSResponseData = await loadData(forecastingSoSRequestUrl);
+        forecastingSoSResponseData.forEach((element, index) => {
+            let time = DateTime.fromISO(element['time']).plus({ minute: 10 }).toMillis();
+            let values = element['values'];
+            delete values['observed'];
+
+            if (index == 0) {
+                Object.keys(values).forEach(key => {
+                    mainSoSChartData[mainSoSChartData.length - 1][key] = values[key];
+                });
+            }
+
+            if (mainSoSChartData[mainSoSChartData.length - 1]['time'] < time) {
+                mainSoSChartData.push({
+                    time: time,
+                    ...values
+                });
+            }
+
+            if (forecastingSoSResponseData.length - 1 == index) {
+                forecastingMainRackSoSNewOption['axisRangeInfo']['endValue'] = time;
+            }
+        });
+
+        mainRackSoSChartSeriesList = getMainRackSoSChartSeriesList('mainRackSoSChart', forecastingMainRackSoSNewOption);
+        mainRackSoSChartSeriesList.forEach(series => {
+            series.data.setAll(mainSoSChartData);
+        });
 
         detailRackSoSChartSeriesList.forEach(detailRackSoSChartSeries => {
             detailRackSoSChartSeries.data.setAll(detailSoSChartData);
@@ -3122,10 +3608,10 @@ loadData(requestUrl)
 // Create bank EXSoS chart
 let mainEXSoSChartSeries;
 let detailEXSoSChartSeriesList;
-startDate = currentDateTime.toFormat(customFullDateFormat);
-endDate = DateTime.fromFormat(startDate, customFullDateFormat).plus({ day: 1 }).toFormat(customFullDateFormat);
+let startDate = currentDateTime.toFormat(customFullDateFormat);
+let endDate = DateTime.fromFormat(startDate, customFullDateFormat).plus({ day: 1 }).toFormat(customFullDateFormat);
 
-requestUrl = new URL(`${window.location.origin}/api/ess/stats/ex-sos/operating-sites/1/banks/1/`);
+requestUrl = new URL(`${window.location.origin}/api/ess/stats/ex-sos/operating-sites/2/banks/1/`);
 requestUrl.searchParams.append('start-time', startDate);
 requestUrl.searchParams.append('end-time', endDate);
 requestUrl.searchParams.append('mode', 1);
@@ -3252,12 +3738,12 @@ let detailExSoSSafetyOption = {
         },
     ]
 };
-detailExSoSSafetyOption['xAxisText'] = '전압(V)';
+detailExSoSSafetyOption['xAxisText'] = `${i18next.t('voltage')}(V)`;
 
 let detailExSoSVoltageSafetySeriesList = getDetailExSoSSafetySeriesList('detailEXSoSVoltageSafetyChart', detailExSoSSafetyOption);
 
 // HTML Code 'Degree Celsius': &#8451;
-detailExSoSSafetyOption['xAxisText'] = '온도(&#8451;)';
+detailExSoSSafetyOption['xAxisText'] = `${i18next.t('temperature')}(&#8451;)`;
 
 let detailExSoSTemperatureSafetySeriesList = getDetailExSoSSafetySeriesList('detailEXSoSTemperatureSafetyChart', detailExSoSSafetyOption);
 let staticExSoSChartData = sessionStorage.getItem('staticExSoSChartData');
@@ -3361,7 +3847,7 @@ forecastingObjects.forEach(forecastingObject => {
 startTime = currentDateTime.minus({ hour: 1 }).toFormat(customTimeDesignatorFullDateTimeFormat);
 endTime = currentDateTime.toFormat(customTimeDesignatorFullDateTimeFormat);
 
-requestUrl = new URL(`${window.location.origin}/api/ess/operating-sites/1/banks/1/racks/1/`);
+requestUrl = new URL(`${window.location.origin}/api/ess/operating-sites/2/banks/1/racks/1/`);
 requestUrl.searchParams.append('fields', fields);
 requestUrl.searchParams.append('start-time', startTime);
 requestUrl.searchParams.append('end-time', endTime);
@@ -3380,7 +3866,7 @@ loadData(requestUrl)
             let startTime = currentDateTime.minus({ minute: 10 }).toFormat(customTimeDesignatorFullDateTimeFormat);
             let endTime = currentDateTime.toFormat(customTimeDesignatorFullDateTimeFormat);
 
-            let requestUrl = new URL(`${window.location.origin}/api/ess/stats/${forecastingObject['urlPath']}/operating-sites/1/banks/1/racks/1/`);
+            let requestUrl = new URL(`${window.location.origin}/api/ess/stats/${forecastingObject['urlPath']}/operating-sites/2/banks/1/racks/1/`);
             requestUrl.searchParams.append('start-time', startTime);
             requestUrl.searchParams.append('end-time', endTime);
 
@@ -3459,30 +3945,37 @@ loadData(requestUrl)
 
 
 // Create multi step forecasting max cell voltage chart
-startTime = '2023-02-07T00:00:00';
-endTime = '2023-02-08T00:00:00';
-requestUrl = new URL(`${window.location.origin}/api/ess/stats/multi-step-forecasting-max-cell-voltage/operating-sites/1/banks/1/racks/2/`);
+let multiStepForecastingMaxCellVoltageSeriesList;
+let multiStepForecastingMaxCellChartDefaultOption = {
+    seriesInfo: [
+        {
+            name: "Observed",
+            value: 'value1'
+        }, {
+            name: "LSTM_Attention",
+            value: 'value2'
+        },
+    ]
+};
+
+startTime = currentDateTime.startOf('day').toFormat(customTimeDesignatorFullDateTimeFormat);
+endTime = currentDateTime.startOf('day').plus({ days: 1 }).toFormat(customTimeDesignatorFullDateTimeFormat);
+requestUrl = new URL(`${window.location.origin}/api/ess/stats/multi-step-forecasting-max-cell-voltage/operating-sites/2/banks/1/racks/1/`);
 requestUrl.searchParams.append('start-time', startTime);
 requestUrl.searchParams.append('end-time', endTime);
 
 loadData(requestUrl)
     .then(async (responseData) => {
-        let observedData = await loadData(`${window.location.origin}/api/ess/operating-sites/1/banks/1/racks/2/?fields=timestamp,rack_max_cell_voltage&start-time=${startTime}&end-time=${endTime}&no_page`);
+        let cardElementId = 'multiStepForecastingMaxCellVoltageCard';
+        let chartElementId = 'multiStepForecastingMaxCellVoltageChart';
+        let currentDate = currentDateTime.toFormat(customFullDateFormat);
 
-        let multiStepforecastingMaxCellChartDefaultOption = {
-            seriesInfo: [
-                {
-                    name: "Observed",
-                    value: 'value1'
-                }, {
-                    name: "LSTM",
-                    value: 'value2'
-                }, {
-                    name: "LSTM_Attention",
-                    value: 'value3'
-                },
-            ]
-        };
+        let observedDataRequestUrl = new URL(`${window.location.origin}/api/ess/operating-sites/2/banks/1/racks/1/`);
+        observedDataRequestUrl.searchParams.append('fields', 'timestamp,rack_max_cell_voltage');
+        observedDataRequestUrl.searchParams.append('date', currentDate);
+        observedDataRequestUrl.searchParams.append('no_page', '');
+
+        let observedData = await loadData(observedDataRequestUrl);
 
         let valueDataObject = {};
 
@@ -3492,29 +3985,49 @@ loadData(requestUrl)
             };
         });
 
-        responseDataValues = responseData[0]['values'];
+        let responseDataValues = responseData[0]['values'];
         responseDataValues['time'].forEach((element, index) => {
-            if (valueDataObject[DateTime.fromFormat(element, customFullDateTimeFormat).toMillis()]) {
-                valueDataObject[DateTime.fromFormat(element, customFullDateTimeFormat).toMillis()]['value2'] = responseDataValues['lstm'][index];
-                valueDataObject[DateTime.fromFormat(element, customFullDateTimeFormat).toMillis()]['value3'] = responseDataValues['lstm_attention'][index];
+            let timeMillis = DateTime.fromFormat(element, customFullDateTimeFormat).toMillis();
+            let value2 = responseDataValues['lstm_attention'][index];
+
+            if (valueDataObject[timeMillis]) {
+                valueDataObject[timeMillis]['value2'] = value2;
+            } else {
+                valueDataObject[timeMillis] = {
+                    value2: value2
+                }
             }
         });
 
         let chartData = [];
 
-        Object.keys(valueDataObject).forEach(element => {
-            if (Object.keys(valueDataObject[element]).length >= 2) {
+        Object.keys(valueDataObject).forEach(timeMillis => {
+            if (Object.keys(valueDataObject[timeMillis]).length >= 2) {
                 chartData.push({
-                    time: Number.parseInt(element),
-                    ...valueDataObject[element]
+                    time: Number.parseInt(timeMillis),
+                    ...valueDataObject[timeMillis]
+                });
+            }
+
+            if (timeMillis > currentDateTime.toMillis()) {
+                chartData.push({
+                    time: Number.parseInt(timeMillis),
+                    ...valueDataObject[timeMillis]
                 });
             }
         });
 
-        window['multiStepForecastingMaxCellVoltageSeriesList'] = getMultiStepForecastingMaxCellVoltageSeriesList('multiStepForecastingMaxCellVoltageChart', multiStepforecastingMaxCellChartDefaultOption);
-        window['multiStepForecastingMaxCellVoltageSeriesList'].forEach(chartSeries => {
+        multiStepForecastingMaxCellVoltageSeriesList = getMultiStepForecastingMaxCellVoltageSeriesList(chartElementId, multiStepForecastingMaxCellChartDefaultOption);
+        multiStepForecastingMaxCellVoltageSeriesList.forEach(chartSeries => {
             chartSeries.data.setAll(chartData);
         });
+
+        // Setup loading UI
+        let cardElement = document.getElementById(cardElementId);
+        cardElement.querySelector('.spinner-border').classList.add('d-none');
+
+        let chartElement = document.getElementById(chartElementId);
+        chartElement.parentNode.classList.remove('d-none');
     })
     .catch(error => console.log(error));
 
@@ -3612,7 +4125,7 @@ let minRackCellVoltageSeries = voltageGapChart.series.push(am5xy.LineSeries.new(
     stroke: am5.color(0x00589b), // 'cobalt' color
     fill: am5.color(0x00589b),
     tooltip: am5.Tooltip.new(voltageGapChartRoot, {
-        labelText: "최소 전압 값 : {valueY} V",
+        labelText: `${i18next.t('min')} ${i18next.t('voltage')} ${i18next.t('value')} : {valueY} V`,
         pointerOrientation: "horizontal"
     })
 }));
@@ -3629,13 +4142,13 @@ let maxRackCellVoltageSeries = voltageGapChart.series.push(am5xy.LineSeries.new(
     fill: minRackCellVoltageSeries.get("stroke"),
     fill: am5.color("#0x00589b"),
     tooltip: am5.Tooltip.new(voltageGapChartRoot, {
-        labelText: "최대 전압 값 : {valueY} V",
+        labelText: `${i18next.t('max')} ${i18next.t('voltage')} ${i18next.t('value')} : {valueY} V`,
         pointerOrientation: "horizontal"
     })
 }));
 
 // Create voltageGap chart
-requestUrl = new URL(`${window.location.origin}/api/ess/operating-sites/1/banks/1/racks/1/?fields=timestamp,rack_max_cell_voltage,rack_min_cell_voltage&date=${getTodayDateFormat()}&no_page`)
+requestUrl = new URL(`${window.location.origin}/api/ess/operating-sites/2/banks/1/racks/1/?fields=timestamp,rack_max_cell_voltage,rack_min_cell_voltage&date=${getTodayDateFormat()}&no_page`)
 
 fetch(requestUrl)
     .then((response) => response.json())

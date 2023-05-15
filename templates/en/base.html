@@ -41,9 +41,6 @@
     <!-- Google Material Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Material+Icons+Two+Tone" rel="stylesheet">
 
-    <!-- i18next -->
-    <script src="https://unpkg.com/i18next@22.4.13/dist/umd/i18next.min.js"></script>
-
     <style>
         body {
             font-family: 'Noto Sans KR', sans-serif;
@@ -88,7 +85,7 @@
     <nav class="pc-sidebar ">
         <div class="navbar-wrapper">
             <div class="m-header">
-                <a href="{% url 'index' %}" class="b-brand">
+                <a href="{% url 'en-index' %}" class="b-brand">
                     <!-- ========   change your logo hear   ============ -->
                     <img src="{% static 'images/logo.png' %}" alt="" class="logo logo-lg">
                 </a>
@@ -99,24 +96,25 @@
                         <label>Menu</label>
                     </li>
                     <li class="pc-item">
-                        <a href="{% url 'index' %}" class="pc-link "><span class="pc-micon"><i
-                                    class="material-icons-two-tone">home</i></span><span class="pc-mtext">메인</span></a>
+                        <a href="{% url 'en-index' %}" class="pc-link "><span class="pc-micon"><i
+                                    class="material-icons-two-tone">home</i></span><span
+                                class="pc-mtext">Main</span></a>
                     </li>
                     <li class="pc-item pc-hasmenu">
                         <a href="#!" class="pc-link">
                             <span class="pc-micon">
                                 <i class="material-icons-two-tone">monitor_heart</i>
                             </span>
-                            <span class="pc-mtext">모니터링</span>
+                            <span class="pc-mtext">Monitoring</span>
                             <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
                         </a>
                         <ul class="pc-submenu">
-                            <li class="pc-item"><a class="pc-link" href="{% url 'data-monitoring' %}"
-                                    target="_blank">데이터 모니터링</a>
+                            <li class="pc-item"><a class="pc-link" href="{% url 'en-data-monitoring' %}"
+                                    target="_blank">Data Monitoring</a>
                             </li>
                             <li class="pc-item"><a class="pc-link"
                                     href="http://elastic.keti-dp.re.kr/app/dashboards#/view/e9a23e50-065e-11ed-afb9-53c596d841cd"
-                                    target="_blank">시스템 모니터링</a>
+                                    target="_blank">System Monitoring</a>
                             </li>
                         </ul>
                     </li>
@@ -125,7 +123,7 @@
                             <span class="pc-micon">
                                 <i class="material-icons-two-tone">web</i>
                             </span>
-                            <span class="pc-mtext">기타 서비스</span>
+                            <span class="pc-mtext">Other Services</span>
                             <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
                         </a>
                         <ul class="pc-submenu">
@@ -144,8 +142,8 @@
                         </ul>
                     </li>
                     <li class="pc-item">
-                        <a href="{% url 'demo' %}" class="pc-link "><span class="pc-micon"><i
-                                    class="material-icons-two-tone">web</i></span><span class="pc-mtext">데모</span></a>
+                        <a href="{% url 'en-demo' %}" class="pc-link "><span class="pc-micon"><i
+                                    class="material-icons-two-tone">web</i></span><span class="pc-mtext">Demo</span></a>
                     </li>
                 </ul>
             </div>
@@ -224,6 +222,8 @@
     <script src="{% static 'js/pcoded.min.js' %}"></script>
     <script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.1/dist/js.cookie.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jwt-decode@3.1.2/build/jwt-decode.min.js"></script>
+    <!-- i18next -->
+    <script src="https://unpkg.com/i18next@22.4.13/dist/umd/i18next.min.js"></script>
 
     <script type="module" src="{% static 'js/custom/base.js' %}"></script>
     {% block js %} {% endblock %}

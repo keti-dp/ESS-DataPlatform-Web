@@ -1,8 +1,8 @@
-{% extends "base.html" %}
+{% extends "en/base.html" %}
 
 {% load static %}
 
-{% block title %}메인{% endblock %}
+{% block title %}Demo{% endblock %}
 
 {% block html_head %}
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
@@ -32,11 +32,11 @@
                 <div class="row align-items-center">
                     <div class="col-md-6">
                         <div class="page-header-title">
-                            <h5 class="m-b-10">데모</h5>
+                            <h5 class="m-b-10">Demo</h5>
                         </div>
                         <ul class="breadcrumb">
-                            <li class="breadcrumb-item"><a href="{% url 'index' %}">메인</a></li>
-                            <li class="breadcrumb-item">데모</li>
+                            <li class="breadcrumb-item"><a href="{% url 'index' %}">Main</a></li>
+                            <li class="breadcrumb-item">Demo</li>
                         </ul>
                     </div>
                 </div>
@@ -53,17 +53,16 @@
                     <a class="nav-link" href="#">High SoC</a>
                 </li>
                 <li class="nav-item" data-filter="2">
-                    <!-- <a class="nav-link" href="#">저온 충전</a> -->
-                    <a id="abutton" class="nav-link" href="#" data-i18n="lowCharge"></a>
+                    <a class="nav-link" href="#">Charge of Low Temperature Status</a>
                 </li>
                 <li class="nav-item" data-filter="3">
-                    <a class="nav-link" href="#">과충전, 과방전, 과전압</a>
+                    <a class="nav-link" href="#">Over Charge, Over Discharge, Over Voltage</a>
                 </li>
                 <li class="nav-item" data-filter="4">
-                    <a class="nav-link" href="#">전압 불평형, 온도 불평형</a>
+                    <a class="nav-link" href="#">Voltage Imbalancing, Temperature Imbalancing</a>
                 </li>
                 <li class="nav-item" data-filter="5">
-                    <a class="nav-link" href="#">고온 상황</a>
+                    <a class="nav-link" href="#">High Temperature</a>
                 </li>
             </ul>
         </div>
@@ -84,7 +83,7 @@
                             </div>
                         </div>
                         <div class="row">
-                            <p class="d-none">판리 태양광 / Bank 1</p>
+                            <p class="d-none">Panri ESS / Bank 1</p>
                             <div id="highSoCChart" class="visualization-chart"></div>
                         </div>
                     </div>
@@ -94,7 +93,7 @@
             <div class="col-12 col-sm-6 col-md-4 col-lg-3 filtr-item" data-category="2" data-sort="value">
                 <div id="lowTemperatureChargeCard" class="card">
                     <div class="card-header">
-                        저온 충전
+                        Charge of Low Temperature Status
                     </div>
                     <div class="card-body">
                         <!-- Loading -->
@@ -106,7 +105,7 @@
                             </div>
                         </div>
                         <div class="row">
-                            <p class="d-none">시온유 태양광 / Bank 1</p>
+                            <p class="d-none">Sionyu ESS / Bank 1</p>
                             <div id="lowTemperatureChargeChart" class="visualization-chart"></div>
                         </div>
                     </div>
@@ -116,7 +115,7 @@
             <div class="col-12 col-sm-6 col-md-4 col-lg-3 filtr-item" data-category="3" data-sort="value">
                 <div id="overDischargeCard" class="card">
                     <div class="card-header">
-                        과방전
+                        Over Discharge
                     </div>
                     <div class="card-body">
                         <!-- Loading -->
@@ -128,7 +127,7 @@
                             </div>
                         </div>
                         <div class="row">
-                            <p class="d-none">판리 태양광 / Bank 2</p>
+                            <p class="d-none">Panri ESS / Bank 2</p>
                             <div id="overDischargeChart" class="visualization-chart"></div>
                         </div>
                     </div>
@@ -137,7 +136,7 @@
             <div class="col-12 col-sm-6 col-md-4 col-lg-3 filtr-item" data-category="3" data-sort="value">
                 <div id="overVoltageCard" class="card">
                     <div class="card-header">
-                        과전압
+                        Over Voltage
                     </div>
                     <div class="card-body">
                         <!-- Loading -->
@@ -149,7 +148,7 @@
                             </div>
                         </div>
                         <div class="row">
-                            <p class="d-none">판리 태양광 / Bank 1</p>
+                            <p class="d-none">Panri ESS / Bank 1</p>
                             <div id="overVoltageChart" class="visualization-chart"></div>
                         </div>
                     </div>
@@ -159,7 +158,7 @@
             <div class="col-12 col-sm-6 col-md-4 col-lg-3 filtr-item" data-category="4" data-sort="value">
                 <div id="voltageUnbalancingCard" class="card">
                     <div class="card-header">
-                        전압 불평형
+                        Voltage Imbalancing
                     </div>
                     <div class="card-body">
                         <!-- Loading -->
@@ -171,7 +170,7 @@
                             </div>
                         </div>
                         <div class="row">
-                            <p class="d-none">시온유 태양광 / Bank 1 / Rack 2</p>
+                            <p class="d-none">Sionyu ESS / Bank 1 / Rack 2</p>
                             <div id="voltageUnbalancingChart" class="visualization-chart"></div>
                         </div>
                     </div>
@@ -180,7 +179,7 @@
             <div class="col-12 col-sm-6 col-md-4 col-lg-3 filtr-item" data-category="4" data-sort="value">
                 <div id="temperatureUnbalancingCard" class="card">
                     <div class="card-header">
-                        온도 불평형
+                        Temperature Imbalancing
                     </div>
                     <div class="card-body">
                         <!-- Loading -->
@@ -192,7 +191,7 @@
                             </div>
                         </div>
                         <div class="row">
-                            <p class="d-none">시온유 태양광 / Bank 1 / Rack 2</p>
+                            <p class="d-none">Sionyu ESS / Bank 1 / Rack 2</p>
                             <div id="temperatureUnbalancingChart" class="visualization-chart"></div>
                         </div>
                     </div>
@@ -201,7 +200,7 @@
             <div class="col-12 col-sm-6 col-md-4 col-lg-3 filtr-item" data-category="5" data-sort="value">
                 <div id="highTemperatureCard" class="card">
                     <div class="card-header">
-                        고온 상황
+                        High Temperature
                     </div>
                     <div class="card-body">
                         <!-- Loading -->
@@ -213,7 +212,7 @@
                             </div>
                         </div>
                         <div class="row">
-                            <p class="d-none">시온유 태양광 / Bank 1 / Rack 2</p>
+                            <p class="d-none">Sionyu ESS / Bank 1 / Rack 2</p>
                             <div id="highTemperatureChart" class="visualization-chart"></div>
                         </div>
                     </div>
@@ -235,9 +234,6 @@
 <script src="https://cdn.amcharts.com/lib/5/xy.js"></script>
 <script src="https://cdn.amcharts.com/lib/5/themes/Animated.js"></script>
 <script src="https://cdn.amcharts.com/lib/5/themes/Responsive.js"></script>
-
-<!-- i18next -->
-<script src="https://unpkg.com/i18next@22.4.13/dist/umd/i18next.min.js"></script>
 
 <script type="module" src="{% static 'js/custom/demo.js' %}"></script>
 
