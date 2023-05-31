@@ -1,0 +1,59 @@
+{% extends "en/base.html" %}
+
+{% load static %}
+
+{% block title %}Simulation{% endblock %}
+
+{% block html_head %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jerosoler/Drawflow/dist/drawflow.min.css">
+<link rel="stylesheet" href="{% static 'css/simulation.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="pc-container">
+    <div class="pcoded-content">
+        <!-- [ breadcrumb ] start -->
+        <div class="page-header">
+            <div class="page-block">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <div class="page-header-title">
+                            <h5 class="m-b-10">Simulation</h5>
+                        </div>
+                        <ul class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="{% url 'index' %}">Main</a></li>
+                            <li class="breadcrumb-item">Simulation</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- [ breadcrumb ] end -->
+
+        <!-- [ Main Content ] start -->
+        <div class="row" style="position: relative;">
+            <div class="wrapper">
+                <div id="simulationResourcePanel" class="col-2"></div>
+                <div id="simulationPipelineWorkflowPanel" class="col-10">
+                    <div id="drawflow" ondrop="drop(event)" ondragover="allowDrop(event)">
+
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- [ Main Content ] end -->
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+{{ simulation_spec|json_script:"simulationSpec" }}
+
+<!-- i18next -->
+<script src="https://unpkg.com/i18next@22.4.13/dist/umd/i18next.min.js"></script>
+
+<script src="https://cdn.jsdelivr.net/gh/jerosoler/Drawflow/dist/drawflow.min.js"></script>
+
+<script type="module" src="{% static 'js/custom/simulation.js' %}"></script>
+{% endblock %}
