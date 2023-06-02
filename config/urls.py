@@ -16,7 +16,7 @@ Including another URLconf
 from django.conf import settings
 from django.contrib import admin
 from django.urls import include, path
-from .views import DataMonitoringView, DemoView, IndexView
+from .views import DataMonitoringView, DemoView, IndexView, SimulationView
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -24,14 +24,17 @@ urlpatterns = [
     path("api/ess/stats/", include("ess_stats.urls"), name="ess-stats"),
     path("api/ess/", include("ess.urls"), name="ess"),
     path("api/ess-feature/", include("ess_feature.urls"), name="ess-feature"),
+    path("api/simulation/", include("simulation.urls"), name="ess-simulation"),
     path("data-monitoring/", DataMonitoringView.as_view(), name="data-monitoring"),
     path("demo/", DemoView.as_view(), name="demo"),
+    path("simulation/", SimulationView.as_view(), name="simulation"),
 ]
 
 # Add english url patterns
 urlpatterns += [
     path("en/data-monitoring/", DataMonitoringView.as_view(), name="en-data-monitoring"),
     path("en/demo/", DemoView.as_view(), name="en-demo"),
+    path("en/simulation/", SimulationView.as_view(), name="en-simulation"),
     path("en/", IndexView.as_view(), name="en-index"),
 ]
 
