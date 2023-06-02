@@ -49,21 +49,21 @@ function getSimulationResourcePanelScript(simulationComponentsSpec, simulationPi
         let name = value['name'];
 
         componentElementListScript += `
-            <div class="drag-drawflow" draggable="true" ondragstart="drag(event)" data-node="${name}">
+            <div class="drag-drawflow" draggable="true" data-node="${name}">
                 <i class="fas fa-box"></i><span> ${name}</span>
             </div>
         `;
-    } 
+    }
 
     let pipelineElementListScript = `
-            <div class="pipeline-drawflow" onclick="editor.changeModule('Home'); changeModule(event);">
+            <div id="Home" class="pipeline-drawflow">
                 <i class="fas fa-project-diagram"></i><span> ${i18next.t('newPipeline')}</span>
             </div>
     `;
 
     for (const [simulationPipelinesKey, simulationPipelinesValue] of Object.entries(simulationPipelinesSpec)) {
         pipelineElementListScript += `
-            <div class="pipeline-drawflow" onclick="editor.changeModule('${simulationPipelinesKey}'); changeModule(event);">
+            <div id="${simulationPipelinesKey}" class="pipeline-drawflow">
                 <i class="fas fa-project-diagram"></i><span> ${simulationPipelinesKey}</span>
             </div>
         `;
@@ -334,6 +334,10 @@ function changeModule(event) {
 
     let button = event.currentTarget;
     button.classList.add('bg-primary');
+
+    let buttonId = button.id;
+
+    editor.changeModule(buttonId);
 }
 
 function changeMode(option) {
@@ -356,6 +360,13 @@ simulationResourcePanelElement.innerHTML = simulationResourcePanelScript;
 
 let drawFlowData = getDrawFlowData(simulationPipelinesSpec);
 let drawflowElement = document.getElementById('drawflow');
+drawflowElement.addEventListener('dragover', (event) => {
+    allowDrop(event);
+});
+drawflowElement.addEventListener('drop', (event) => {
+    drop(event);
+});
+
 let editor = new Drawflow(drawflowElement);
 editor.reroute = true;
 editor.start();
@@ -380,7 +391,17 @@ for (let index = 0; index < componentElements.length; index++) {
     componentElement.addEventListener('touchend', drop, false);
     componentElement.addEventListener('touchmove', positionMobile, false);
     componentElement.addEventListener('touchstart', drag, false);
+    componentElement.addEventListener('dragstart', event => {
+        drag(event);
+    });
 }
+
+let pipelineElements = document.querySelectorAll('.pipeline-drawflow');
+pipelineElements.forEach(pipelineElement => {
+    pipelineElement.addEventListener('click', (event) => {
+        changeModule(event);
+    });
+});
 
 // Clear event for simulation
 let simulationClearButton = document.getElementById('simulationClear');
