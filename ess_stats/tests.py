@@ -12,6 +12,7 @@ from .models import (
     MultiStepForecastingMaxCellVoltage,
     StaticChartData,
     ForecastingSoS,
+    SoCP,
 )
 
 
@@ -131,5 +132,15 @@ class ForecastingSoSTestCase(TestCase):
     def test_limit_count(self):
         count = 10
         queryset = ForecastingSoS.objects.all()[:count]
+
+        self.assertGreaterEqual(len(queryset), 0)
+
+
+class SoCPTestCase(TestCase):
+    databases = {"ess_stats"}
+
+    def test_limit_count(self):
+        count = 10
+        queryset = SoCP.objects.all()[:count]
 
         self.assertGreaterEqual(len(queryset), 0)
