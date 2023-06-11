@@ -12,6 +12,7 @@ from .models import (
     MultiStepForecastingMaxCellVoltage,
     StaticChartData,
     ForecastingSoS,
+    SoCP,
 )
 
 
@@ -89,4 +90,11 @@ class StaticChartDataSerializer(serializers.ModelSerializer):
 class ForecastingSoSSeriealizer(serializers.ModelSerializer):
     class Meta:
         model = ForecastingSoS
+        fields = "__all__"
+
+class SoCPSeriealizer(serializers.ModelSerializer):
+    value = serializers.JSONField()
+
+    class Meta:
+        model = SoCP
         fields = "__all__"

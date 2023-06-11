@@ -15,6 +15,7 @@ from .views import (
     MultiStepForecastingMaxCellVoltageViewSet,
     StaticChartDataView,
     ForecastingSoSViewSet,
+    SoCPViewSet,
 )
 
 router = SimpleRouter()
@@ -59,6 +60,9 @@ multi_step_forecasting_max_cell_voltage_router.register(
 forecasting_sos_router = SimpleRouter()
 forecasting_sos_router.register(r"racks", ForecastingSoSViewSet, basename="racks")
 
+socp_router = SimpleRouter()
+socp_router.register(r'racks', SoCPViewSet, basename='racks')
+
 
 urlpatterns = [
     path("avg-soh/operating-sites/<int:operating_site_id>/", include(nested_router.urls)),
@@ -94,5 +98,9 @@ urlpatterns = [
     path(
         "forecasting-rack-sos/operating-sites/<int:operating_site_id>/banks/<int:bank_id>/",
         include(forecasting_sos_router.urls),
+    ),
+    path(
+        "socp/operating-sites/<int:operating_site_id>/banks/<int:bank_id>/",
+        include(socp_router.urls),
     ),
 ]
