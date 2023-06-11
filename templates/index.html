@@ -57,6 +57,7 @@
                             <a class="nav-link ml-3 my-1" href="#itemSoL">SoL</a>
                             <a class="nav-link ml-3 my-1" href="#itemSoS">SoS</a>
                             <a class="nav-link ml-3 my-1" href="#itemEXSoS">EXSoS</a>
+                            <a class="nav-link ml-3 my-1" href="#itemSoCP">SoCP</a>
                         </nav>
                         <a class="nav-link" href="#itemEtc">기타</a>
                         <nav class="nav nav-pills flex-column">
@@ -421,6 +422,52 @@
                         </div>
                     </div>
                     <!-- [EXSoS] end -->
+
+                    <!-- [SoCP] start -->
+                    <div class="row">
+                        <h5 id="itemSoCP">SoCP <i class="bi bi-info-circle" data-bs-toggle="tooltip"
+                                data-bs-placement="top" title=""
+                                data-bs-original-title="'State of Cell Position'은 충전, 방전, 대기 상태에 따른 셀 포지션 호출 횟수 빈도를 나타냅니다."></i>
+                        </h5>
+                        <div class="col-md-12 col-xl-12">
+                            <div id="socpCard" class="card mx-2">
+                                <div class="card-header">
+                                    <div class="row">
+                                        <div class="col-8 my-auto">
+                                            <h5>SoCP</h5>
+                                        </div>
+                                        <div class="col-4 text-right">
+                                            <button class="btn btn-sm" type="button" data-bs-toggle="modal"
+                                                data-bs-target="#essSoCPVisualizationSearchModal"
+                                                data-visualization-type="socp">
+                                                <span class="material-icons-two-tone">
+                                                    search
+                                                </span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <!-- Loading -->
+                                    <div class="row d-none">
+                                        <div class="text-center">
+                                            <div class="spinner-border" role="status">
+                                                <span class="visually-hidden">Loading...</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-12">
+                                            <p>판리 태양광 / Bank 1 / Rack 1</p>
+                                            <div id="socpChart" class="visualization-chart">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- [SoCP] end -->
 
                     <!-- [Etc] start -->
                     <div class="row">

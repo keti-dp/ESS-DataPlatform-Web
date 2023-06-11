@@ -3781,6 +3781,140 @@ if (!staticExSoSChartData) {
     });
 }
 
+// Create SoCP chart
+// startTime = currentDateTime.toFormat(customFullDateFormat);
+// endTime = currentDateTime.plus({ days: 1 }).toFormat(customFullDateFormat);
+requestUrl = new URL(`${window.location.origin}/api/ess/stats/socp/operating-sites/2/banks/1/racks/1/`);
+requestUrl.searchParams.append('period', 1);
+requestUrl.searchParams.append('charge_status', 0);
+// requestUrl.searchParams.append('start-time', startTime);
+// requestUrl.searchParams.append('end-time', endTime);
+requestUrl.searchParams.append('start-time', '2023-06-10');
+requestUrl.searchParams.append('end-time', '2023-06-11');
+
+function getSoCPChartObject(elementId) {
+    let root = getChartRoot(elementId);
+    let chart = getInitialLineChart(root);
+
+    // Create axes
+    // https://www.amcharts.com/docs/v5/charts/xy-chart/axes/
+    let xAxis = chart.xAxes.push(am5xy.ValueAxis.new(root, {
+        renderer: am5xy.AxisRendererX.new(root, {
+            strokeOpacity: 0.1
+        }),
+        min: 0
+    }));
+
+    let yAxis = chart.yAxes.push(am5xy.CategoryAxis.new(root, {
+        categoryField: "soc_range",
+        renderer: am5xy.AxisRendererY.new(root, {
+        }),
+        cellStartLocation: 0.1,
+        cellEndLocation: 0.9
+    }));
+
+    let chartObject = {
+        root: root,
+        chart: chart,
+        xAxis: xAxis,
+        yAxis: yAxis
+    }
+
+    return chartObject;
+}
+
+function createSoCPSeries(chartObject, chartData, field, name) {
+    let root = chartObject['root'];
+    let chart = chartObject['chart'];
+    let xAxis = chartObject['xAxis'];
+    let yAxis = chartObject['yAxis'];
+
+    let series = chart.series.push(am5xy.ColumnSeries.new(root, {
+        name: name,
+        xAxis: xAxis,
+        yAxis: yAxis,
+        valueXField: field,
+        categoryYField: "soc_range",
+        sequencedInterpolation: true,
+        tooltip: am5.Tooltip.new(root, {
+            pointerOrientation: "right",
+            labelText: "[bold]셀({name}번)[/]: 빈도수 - {valueX}"
+        })
+    }));
+
+    series.columns.template.setAll({
+        width: am5.p100,
+        strokeOpacity: 0
+    });
+
+
+    series.bullets.push(function () {
+        return am5.Bullet.new(root, {
+            locationX: 1,
+            locationY: 0.5,
+            sprite: am5.Label.new(root, {
+                centerY: am5.p50,
+                text: "{valueX}",
+                populateText: true
+            })
+        });
+    });
+
+    series.bullets.push(function () {
+        return am5.Bullet.new(root, {
+            locationX: 1,
+            locationY: 0.5,
+            sprite: am5.Label.new(root, {
+                centerX: am5.p100,
+                centerY: am5.p50,
+                text: "{name}",
+                fill: am5.color(0xffffff),
+                populateText: true
+            })
+        });
+    });
+
+    series.data.setAll(chartData);
+}
+
+
+loadData(requestUrl)
+    .then(requestData => {
+        let chartData = [];
+        let socpSeriesNames = new Set();
+
+        requestData.forEach(element => {
+            let data = {};
+            let socRange = `${element['soc_range']}`;
+            data['soc_range'] = socRange;
+
+            let responseDataValue = element['value'];
+
+            Object.entries(responseDataValue).forEach(([key, value]) => {
+                let valueCount = value['count'];
+                data[key] = valueCount;
+
+                socpSeriesNames.add(key);
+            });
+
+            chartData.push(data);
+        });
+
+        console.log(chartData);
+        console.log(socpSeriesNames);
+
+        let socpChartObject = getSoCPChartObject('socpChart');
+        let socpChartObjectYAxis = socpChartObject['yAxis'];
+        socpChartObjectYAxis.data.setAll(chartData);
+
+        socpSeriesNames.forEach(socpSeriesName => {
+            createSoCPSeries(socpChartObject, chartData, socpSeriesName, socpSeriesName);
+        })
+    })
+    .catch(error => console.log(error))
+
+
+
 // Create forecasting max-min rack cell charts
 let forecastingMaxRackCellVoltageObject = {
     name: 'forecastingMaxRackCellVoltage',
