@@ -1231,7 +1231,7 @@ function getSoCPChartSeries(elementId, option) {
 
     xAxis.children.push(
         am5.Label.new(root, {
-            text: "[bold]배터리 셀 번호",
+            text: `[bold]${i18next.t('batteryCellNumber')}`,
             x: am5.p50,
             centerX: am5.p50
         })
@@ -1245,7 +1245,7 @@ function getSoCPChartSeries(elementId, option) {
     yAxis.children.unshift(
         am5.Label.new(root, {
             rotation: -90,
-            text: "[bold]빈도수",
+            text: `[bold]${i18next.t('frequency')}`,
             y: am5.p50,
             centerX: am5.p50
         })
@@ -1258,7 +1258,7 @@ function getSoCPChartSeries(elementId, option) {
         valueXField: "cellNumber",
         valueYField: "count",
         tooltip: am5.Tooltip.new(root, {
-            labelText: "배터리 셀 번호([bold]#{valueX}): {valueY}"
+            labelText: `${i18next.t('batteryCellNumber')}([bold]#{valueX}): {valueY}`
         })
     }));
 
@@ -3863,7 +3863,7 @@ loadData(requestUrl)
     .then(requestData => {
         // Set SoCP chart info
         let socpChartSourceDataInfoElement = document.getElementById('socpChartSourceDataInfo');
-        socpChartSourceDataInfoElement.textContent = `판리 태양광 / Bank 1 / Rack 1 - ${currentDateTime.minus({ days: 1 }).toFormat(customFullDateFormat)}, 기간: 1일, 상태: 충전`
+        socpChartSourceDataInfoElement.textContent = `${i18next.t('panriESS')} / Bank 1 / Rack 1 - ${currentDateTime.minus({ days: 1 }).toFormat(customFullDateFormat)}, ${i18next.t('period')}: 1${i18next.t('day')}, ${i18next.t('status')}: ${i18next.t('charge')}`
 
         // Create SoCP chart data
         let socRangeValueObject = {};
