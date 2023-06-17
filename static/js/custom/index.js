@@ -1201,6 +1201,75 @@ function changeDetailEXSoSSafetyChart(option) {
 }
 
 /**
+ * Get SoCP chart series
+ * @param {string} elementId 
+ * @param {object} option 
+ * @returns {object}
+ */
+function getSoCPChartSeries(elementId, option) {
+    let root = getChartRoot(elementId);
+    let chart = getInitialLineChart(root);
+    let chartTitle = option['chartTitle'];
+
+    chart.children.unshift(am5.Label.new(root, {
+        text: chartTitle,
+        fontSize: 25,
+        fontWeight: "500",
+        textAlign: "center",
+        x: am5.percent(50),
+        centerX: am5.percent(50),
+        paddingTop: 0,
+        paddingBottom: 0
+    }));
+
+    let xAxis = chart.xAxes.push(am5xy.ValueAxis.new(root, {
+        renderer: am5xy.AxisRendererX.new(root, {
+            minGridDistance: 100
+        }),
+        tooltip: am5.Tooltip.new(root, {})
+    }));
+
+    xAxis.children.push(
+        am5.Label.new(root, {
+            text: "[bold]배터리 셀 번호",
+            x: am5.p50,
+            centerX: am5.p50
+        })
+    );
+
+    let yAxis = chart.yAxes.push(am5xy.ValueAxis.new(root, {
+        renderer: am5xy.AxisRendererY.new(root, {}),
+        tooltip: am5.Tooltip.new(root, {})
+    }));
+
+    yAxis.children.unshift(
+        am5.Label.new(root, {
+            rotation: -90,
+            text: "[bold]빈도수",
+            y: am5.p50,
+            centerX: am5.p50
+        })
+    );
+
+    let series = chart.series.push(am5xy.ColumnSeries.new(root, {
+        name: "Series",
+        xAxis: xAxis,
+        yAxis: yAxis,
+        valueXField: "cellNumber",
+        valueYField: "count",
+        tooltip: am5.Tooltip.new(root, {
+            labelText: "배터리 셀 번호([bold]#{valueX}): {valueY}"
+        })
+    }));
+
+    series.columns.template.setAll({
+        strokeWidth: 5
+    });
+
+    return series;
+}
+
+/**
  * Create avg chart line
  * @param {object} chartSeries 
  */
@@ -3782,134 +3851,50 @@ if (!staticExSoSChartData) {
 }
 
 // Create SoCP chart
-// startTime = currentDateTime.toFormat(customFullDateFormat);
-// endTime = currentDateTime.plus({ days: 1 }).toFormat(customFullDateFormat);
+startTime = currentDateTime.minus({ days: 1 }).toFormat(customFullDateFormat);
+endTime = currentDateTime.toFormat(customFullDateFormat);
 requestUrl = new URL(`${window.location.origin}/api/ess/stats/socp/operating-sites/2/banks/1/racks/1/`);
 requestUrl.searchParams.append('period', 1);
 requestUrl.searchParams.append('charge_status', 0);
-// requestUrl.searchParams.append('start-time', startTime);
-// requestUrl.searchParams.append('end-time', endTime);
-requestUrl.searchParams.append('start-time', '2023-06-10');
-requestUrl.searchParams.append('end-time', '2023-06-11');
-
-function getSoCPChartObject(elementId) {
-    let root = getChartRoot(elementId);
-    let chart = getInitialLineChart(root);
-
-    // Create axes
-    // https://www.amcharts.com/docs/v5/charts/xy-chart/axes/
-    let xAxis = chart.xAxes.push(am5xy.ValueAxis.new(root, {
-        renderer: am5xy.AxisRendererX.new(root, {
-            strokeOpacity: 0.1
-        }),
-        min: 0
-    }));
-
-    let yAxis = chart.yAxes.push(am5xy.CategoryAxis.new(root, {
-        categoryField: "soc_range",
-        renderer: am5xy.AxisRendererY.new(root, {
-        }),
-        cellStartLocation: 0.1,
-        cellEndLocation: 0.9
-    }));
-
-    let chartObject = {
-        root: root,
-        chart: chart,
-        xAxis: xAxis,
-        yAxis: yAxis
-    }
-
-    return chartObject;
-}
-
-function createSoCPSeries(chartObject, chartData, field, name) {
-    let root = chartObject['root'];
-    let chart = chartObject['chart'];
-    let xAxis = chartObject['xAxis'];
-    let yAxis = chartObject['yAxis'];
-
-    let series = chart.series.push(am5xy.ColumnSeries.new(root, {
-        name: name,
-        xAxis: xAxis,
-        yAxis: yAxis,
-        valueXField: field,
-        categoryYField: "soc_range",
-        sequencedInterpolation: true,
-        tooltip: am5.Tooltip.new(root, {
-            pointerOrientation: "right",
-            labelText: "[bold]셀({name}번)[/]: 빈도수 - {valueX}"
-        })
-    }));
-
-    series.columns.template.setAll({
-        width: am5.p100,
-        strokeOpacity: 0
-    });
-
-
-    series.bullets.push(function () {
-        return am5.Bullet.new(root, {
-            locationX: 1,
-            locationY: 0.5,
-            sprite: am5.Label.new(root, {
-                centerY: am5.p50,
-                text: "{valueX}",
-                populateText: true
-            })
-        });
-    });
-
-    series.bullets.push(function () {
-        return am5.Bullet.new(root, {
-            locationX: 1,
-            locationY: 0.5,
-            sprite: am5.Label.new(root, {
-                centerX: am5.p100,
-                centerY: am5.p50,
-                text: "{name}",
-                fill: am5.color(0xffffff),
-                populateText: true
-            })
-        });
-    });
-
-    series.data.setAll(chartData);
-}
-
+requestUrl.searchParams.append('start-time', startTime);
+requestUrl.searchParams.append('end-time', endTime);
 
 loadData(requestUrl)
     .then(requestData => {
-        let chartData = [];
-        let socpSeriesNames = new Set();
+        // Set SoCP chart info
+        let socpChartSourceDataInfoElement = document.getElementById('socpChartSourceDataInfo');
+        socpChartSourceDataInfoElement.textContent = `판리 태양광 / Bank 1 / Rack 1 - ${currentDateTime.minus({ days: 1 }).toFormat(customFullDateFormat)}, 기간: 1일, 상태: 충전`
+
+        // Create SoCP chart data
+        let socRangeValueObject = {};
 
         requestData.forEach(element => {
-            let data = {};
-            let socRange = `${element['soc_range']}`;
-            data['soc_range'] = socRange;
+            let socRange = Number(element['soc_range']);
+            let value = element['value'];
 
-            let responseDataValue = element['value'];
-
-            Object.entries(responseDataValue).forEach(([key, value]) => {
-                let valueCount = value['count'];
-                data[key] = valueCount;
-
-                socpSeriesNames.add(key);
-            });
-
-            chartData.push(data);
+            socRangeValueObject[socRange] = value;
         });
 
-        console.log(chartData);
-        console.log(socpSeriesNames);
+        for (let socRange = 0; socRange < 100; socRange = socRange + 10) {
+            let chartElementId = `socRange${socRange}SoCPChart`;
+            let chartOption = {
+                'chartTitle': `SoC ${socRange} ~ ${socRange + 10}`
+            }
+            let socpChartSeries = getSoCPChartSeries(chartElementId, chartOption);
 
-        let socpChartObject = getSoCPChartObject('socpChart');
-        let socpChartObjectYAxis = socpChartObject['yAxis'];
-        socpChartObjectYAxis.data.setAll(chartData);
+            let chartData = Object.keys(socRangeValueObject[socRange]).map(key => {
+                let cellNumberStr = key;
+                let count = socRangeValueObject[socRange][cellNumberStr]['count'];
 
-        socpSeriesNames.forEach(socpSeriesName => {
-            createSoCPSeries(socpChartObject, chartData, socpSeriesName, socpSeriesName);
-        })
+                return {
+                    cellNumber: Number(cellNumberStr),
+                    count: count
+                }
+            });
+
+            // Create SoCP Chart
+            socpChartSeries.data.setAll(chartData);
+        }
     })
     .catch(error => console.log(error))
 
