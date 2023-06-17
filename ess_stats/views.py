@@ -314,7 +314,6 @@ class ForecastingSoSViewSet(ReadOnlyModelViewSet):
         return queryset
 
     def paginate_queryset(self, queryset):
-
         return None
 
     def retrieve(self, request, *args, **kwargs):
@@ -324,26 +323,27 @@ class ForecastingSoSViewSet(ReadOnlyModelViewSet):
         serializer = ForecastingSoSSeriealizer(filter_queryset, many=True)
 
         return Response(serializer.data)
-    
+
 
 class SoCPViewSet(ReadOnlyModelViewSet):
     serializer_class = SoCPSeriealizer
     filter_backends = [DjangoFilterBackend, CustomDateTimeFilterBackend]
-    filterset_fields = ['charge_status', 'period']
+    filterset_fields = ["charge_status", "period"]
 
     def get_queryset(self):
-        operating_site_id = self.kwargs['operating_site_id']
-        bank_id = self.kwargs['bank_id']
-        queryset = SoCP.objects.filter(operating_site=operating_site_id, bank_id=bank_id).order_by('time', 'bank_id', 'rack_id')
+        operating_site_id = self.kwargs["operating_site_id"]
+        bank_id = self.kwargs["bank_id"]
+        queryset = SoCP.objects.filter(operating_site=operating_site_id, bank_id=bank_id).order_by(
+            "time", "bank_id", "rack_id"
+        )
 
         return queryset
-    
-    def paginate_queryset(self, queryset):
 
+    def paginate_queryset(self, queryset):
         return None
-    
+
     def retrieve(self, request, *args, **kwargs) -> list:
-        rack_id = kwargs['rack_id']
+        rack_id = kwargs["pk"]
         queryset = self.get_queryset().filter(rack_id=rack_id)
         filter_queryset = self.filter_queryset(queryset)
         serializer = SoCPSeriealizer(filter_queryset, many=True)

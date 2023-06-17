@@ -1201,6 +1201,75 @@ function changeDetailEXSoSSafetyChart(option) {
 }
 
 /**
+ * Get SoCP chart series
+ * @param {string} elementId 
+ * @param {object} option 
+ * @returns {object}
+ */
+function getSoCPChartSeries(elementId, option) {
+    let root = getChartRoot(elementId);
+    let chart = getInitialLineChart(root);
+    let chartTitle = option['chartTitle'];
+
+    chart.children.unshift(am5.Label.new(root, {
+        text: chartTitle,
+        fontSize: 25,
+        fontWeight: "500",
+        textAlign: "center",
+        x: am5.percent(50),
+        centerX: am5.percent(50),
+        paddingTop: 0,
+        paddingBottom: 0
+    }));
+
+    let xAxis = chart.xAxes.push(am5xy.ValueAxis.new(root, {
+        renderer: am5xy.AxisRendererX.new(root, {
+            minGridDistance: 100
+        }),
+        tooltip: am5.Tooltip.new(root, {})
+    }));
+
+    xAxis.children.push(
+        am5.Label.new(root, {
+            text: `[bold]${i18next.t('batteryCellNumber')}`,
+            x: am5.p50,
+            centerX: am5.p50
+        })
+    );
+
+    let yAxis = chart.yAxes.push(am5xy.ValueAxis.new(root, {
+        renderer: am5xy.AxisRendererY.new(root, {}),
+        tooltip: am5.Tooltip.new(root, {})
+    }));
+
+    yAxis.children.unshift(
+        am5.Label.new(root, {
+            rotation: -90,
+            text: `[bold]${i18next.t('frequency')}`,
+            y: am5.p50,
+            centerX: am5.p50
+        })
+    );
+
+    let series = chart.series.push(am5xy.ColumnSeries.new(root, {
+        name: "Series",
+        xAxis: xAxis,
+        yAxis: yAxis,
+        valueXField: "cellNumber",
+        valueYField: "count",
+        tooltip: am5.Tooltip.new(root, {
+            labelText: `${i18next.t('batteryCellNumber')}([bold]#{valueX}): {valueY}`
+        })
+    }));
+
+    series.columns.template.setAll({
+        strokeWidth: 5
+    });
+
+    return series;
+}
+
+/**
  * Create avg chart line
  * @param {object} chartSeries 
  */
@@ -3780,6 +3849,56 @@ if (!staticExSoSChartData) {
         series.data.setAll(JSON.parse(staticExSoSChartData)['over_temperature_safety']);
     });
 }
+
+// Create SoCP chart
+startTime = currentDateTime.minus({ days: 1 }).toFormat(customFullDateFormat);
+endTime = currentDateTime.toFormat(customFullDateFormat);
+requestUrl = new URL(`${window.location.origin}/api/ess/stats/socp/operating-sites/2/banks/1/racks/1/`);
+requestUrl.searchParams.append('period', 1);
+requestUrl.searchParams.append('charge_status', 0);
+requestUrl.searchParams.append('start-time', startTime);
+requestUrl.searchParams.append('end-time', endTime);
+
+loadData(requestUrl)
+    .then(requestData => {
+        // Set SoCP chart info
+        let socpChartSourceDataInfoElement = document.getElementById('socpChartSourceDataInfo');
+        socpChartSourceDataInfoElement.textContent = `${i18next.t('panriESS')} / Bank 1 / Rack 1 - ${currentDateTime.minus({ days: 1 }).toFormat(customFullDateFormat)}, ${i18next.t('period')}: 1${i18next.t('day')}, ${i18next.t('status')}: ${i18next.t('charge')}`
+
+        // Create SoCP chart data
+        let socRangeValueObject = {};
+
+        requestData.forEach(element => {
+            let socRange = Number(element['soc_range']);
+            let value = element['value'];
+
+            socRangeValueObject[socRange] = value;
+        });
+
+        for (let socRange = 0; socRange < 100; socRange = socRange + 10) {
+            let chartElementId = `socRange${socRange}SoCPChart`;
+            let chartOption = {
+                'chartTitle': `SoC ${socRange} ~ ${socRange + 10}`
+            }
+            let socpChartSeries = getSoCPChartSeries(chartElementId, chartOption);
+
+            let chartData = Object.keys(socRangeValueObject[socRange]).map(key => {
+                let cellNumberStr = key;
+                let count = socRangeValueObject[socRange][cellNumberStr]['count'];
+
+                return {
+                    cellNumber: Number(cellNumberStr),
+                    count: count
+                }
+            });
+
+            // Create SoCP Chart
+            socpChartSeries.data.setAll(chartData);
+        }
+    })
+    .catch(error => console.log(error))
+
+
 
 // Create forecasting max-min rack cell charts
 let forecastingMaxRackCellVoltageObject = {
