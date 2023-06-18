@@ -460,7 +460,7 @@
                                 </div>
                                 <div class="card-body">
                                     <!-- Loading -->
-                                    <div class="row d-none">
+                                    <div class="row">
                                         <div class="text-center">
                                             <div class="spinner-border" role="status">
                                                 <span class="visually-hidden">Loading...</span>
@@ -468,7 +468,7 @@
                                         </div>
                                     </div>
                                     <p id="socpChartSourceDataInfo"></p>
-                                    <div class="d-flex flex-row w-100 overflow-auto">
+                                    <div id="socpChartsRow" class="d-flex flex-row w-100 overflow-auto d-none">
                                         <div id="socRange0SoCPChart" class="col-4 mr-2 socp-chart"></div>
                                         <div id="socRange10SoCPChart" class="col-4 mr-2 socp-chart"></div>
                                         <div id="socRange20SoCPChart" class="col-4 mr-2 socp-chart"></div>
@@ -1217,6 +1217,100 @@
                                             placeholder="Set the end time." />
                                         <span class='input-group-text'
                                             data-td-target='#essEXSoSVisualizationSearchModalFormEndDateTimePicker'
+                                            data-td-toggle='datetimepicker'>
+                                            <span class='fas fa-calendar'></span>
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <button type="submit" class="btn btn-primary">Search</button>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SoCP visualization search modal -->
+            <div class="modal fade" id="essSoCPVisualizationSearchModal" tabindex="-1"
+                aria-labelledby="essSoCPVisualizationSearchModalFormLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="essSoCPVisualizationSearchModalFormLabel">SoCP Chart Search</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form action="#" id="essSoCPVisualizationSearchModalForm" autocomplete="off">
+                                <div class="form-group">
+                                    <label class='form-label'>Structure:</label>
+                                    <div class="input-group m-b-10">
+                                        <select id="essSoCPVisualizationSearchModalFormOperatingSiteSelect"
+                                            class="form-select">
+                                            <option value="" selected disabled>Select an operating site.</option>
+                                            <option value="2">Panri ESS</option>
+                                            <option value="3">Hwangguem #6 ESS</option>
+                                            <option value="1">Sionyu ESS(Not working)</option>
+                                        </select>
+                                    </div>
+                                    <div class="input-group m-b-10">
+                                        <select name="" id="essSoCPVisualizationSearchModalFormBankSelect"
+                                            class="form-select" disabled>
+                                            <option value="" selected disabled>Select a bank.</option>
+                                        </select>
+                                    </div>
+                                    <div class="input-group m-b-10">
+                                        <select id="essSoCPVisualizationSearchModalFormRackSelect" class="form-select"
+                                            disabled>
+                                            <option value="" selected disabled>Select a rack.</option>
+                                        </select>
+                                    </div>
+                                    <label class='form-label'>Period:</label>
+                                    <div class="input-group m-b-10">
+                                        <select id="essSoCPVisualizationSearchModalFormPeriodSelect"
+                                            class="form-select">
+                                            <option value="" selected disabled>Select a period.(unit: day)</option>
+                                            <option value="1">1</option>
+                                            <option value="7">7</option>
+                                            <option value="30">30</option>
+                                        </select>
+                                    </div>
+                                    <label class='form-label'>Status:</label>
+                                    <div class="input-group m-b-10">
+                                        <select id="essSoCPVisualizationSearchModalFormStatusSelect"
+                                            class="form-select">
+                                            <option value="" selected disabled>Select a status.</option>
+                                            <option value="0">Charge</option>
+                                            <option value="1">Discharge</option>
+                                            <option value="2">Rest</option>
+                                        </select>
+                                    </div>
+                                    <label class='form-label'>Time:</label>
+                                    <div class='input-group log-event m-b-10'
+                                        id='essSoCPVisualizationSearchModalFormStartDateTimePicker'
+                                        data-td-target-input='nearest' data-td-target-toggle='nearest'>
+                                        <input id='essSoCPVisualizationSearchModalFormStartDateTimeInput' type='text'
+                                            class='form-control'
+                                            data-td-target='#essSoCPVisualizationSearchModalFormStartDateTimePicker'
+                                            placeholder="Set the start time." />
+                                        <span class='input-group-text'
+                                            data-td-target='#essSoCPVisualizationSearchModalFormStartDateTimePicker'
+                                            data-td-toggle='datetimepicker'>
+                                            <span class='fas fa-calendar'></span>
+                                        </span>
+                                    </div>
+                                    <div class='input-group log-event'
+                                        id='essSoCPVisualizationSearchModalFormEndDateTimePicker'
+                                        data-td-target-input='nearest' data-td-target-toggle='nearest'>
+                                        <input id='essSoCPVisualizationSearchModalFormEndDateTimeInput' type='text'
+                                            class='form-control'
+                                            data-td-target='#essSoCPVisualizationSearchModalFormEndDateTimePicker'
+                                            placeholder="Set the end time." />
+                                        <span class='input-group-text'
+                                            data-td-target='#essSoCPVisualizationSearchModalFormEndDateTimePicker'
                                             data-td-toggle='datetimepicker'>
                                             <span class='fas fa-calendar'></span>
                                         </span>
