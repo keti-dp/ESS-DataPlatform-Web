@@ -1223,6 +1223,9 @@ function getSoCPChartSeries(elementId, option) {
     }));
 
     let xAxis = chart.xAxes.push(am5xy.ValueAxis.new(root, {
+        min: 1,
+        max: 240,
+        strictMinMaxSelection: true,
         renderer: am5xy.AxisRendererX.new(root, {
             minGridDistance: 100
         }),
@@ -1251,6 +1254,9 @@ function getSoCPChartSeries(elementId, option) {
         })
     );
 
+    // HTML Code 'Degree Celsius': &#8451;
+    let degreeCelsius = '&#8451;';
+
     let series = chart.series.push(am5xy.ColumnSeries.new(root, {
         name: "Series",
         xAxis: xAxis,
@@ -1258,7 +1264,13 @@ function getSoCPChartSeries(elementId, option) {
         valueXField: "cellNumber",
         valueYField: "count",
         tooltip: am5.Tooltip.new(root, {
-            labelText: `${i18next.t('batteryCellNumber')}([bold]#{valueX}): {valueY}`
+            labelHTML: `
+                <p class="text-white">${i18next.t('batteryCellNumber')}(<strong>#{valueX}</strong>)</p>
+                <p class="text-white">- ${i18next.t('frequency')}: {valueY}</p>
+                <p class="text-white">- ${i18next.t('average')} ${i18next.t('voltage')}: {voltage}(V)</p>
+                <p class="text-white">- ${i18next.t('average')} ${i18next.t('temperature')}: {temperature}(${degreeCelsius})</p>
+                <p class="text-white">- ${i18next.t('average')} ${i18next.t('current')}: {current}(A)</p>
+            `
         })
     }));
 
@@ -3103,10 +3115,16 @@ essSoCPVisualizationSearchModalFormValidation
                     let chartData = Object.keys(socRangeValueObject[socRange]).map(key => {
                         let cellNumberStr = key;
                         let count = socRangeValueObject[socRange][cellNumberStr]['count'];
+                        let voltage = socRangeValueObject[socRange][cellNumberStr]['voltage'];
+                        let temperature = socRangeValueObject[socRange][cellNumberStr]['temp'];
+                        let current = socRangeValueObject[socRange][cellNumberStr]['current'];
 
                         return {
                             cellNumber: Number(cellNumberStr),
-                            count: count
+                            count: count,
+                            voltage,
+                            temperature,
+                            current
                         }
                     });
 
@@ -4094,10 +4112,16 @@ loadData(requestUrl)
             let chartData = Object.keys(socRangeValueObject[socRange]).map(key => {
                 let cellNumberStr = key;
                 let count = socRangeValueObject[socRange][cellNumberStr]['count'];
+                let voltage = socRangeValueObject[socRange][cellNumberStr]['voltage'];
+                let temperature = socRangeValueObject[socRange][cellNumberStr]['temp'];
+                let current = socRangeValueObject[socRange][cellNumberStr]['current'];
 
                 return {
                     cellNumber: Number(cellNumberStr),
-                    count: count
+                    count: count,
+                    voltage,
+                    temperature,
+                    current
                 }
             });
 
