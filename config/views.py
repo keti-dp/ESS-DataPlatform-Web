@@ -129,7 +129,4 @@ class SimulationView(APIView):
         if "/en/" in request.path:
             template_name = f"en/{template_name}"
 
-        with open("simulation_spec.yaml", encoding="utf-8") as f:
-            simulation_spec = yaml.load(f, Loader=yaml.FullLoader)
-
-        return Response({"simulation_spec": simulation_spec}, template_name=template_name)
+        return Response(template_name=template_name)

@@ -36,6 +36,11 @@
             <div class="wrapper">
                 <div id="simulationResourcePanel" class="col-2"></div>
                 <div id="simulationPipelineWorkflowPanel" class="col-10">
+                    <div class="menu">
+                        <ul>
+                            <li class="disabled" aria-disabled="true">Execution Result >>></li>
+                        </ul>
+                    </div>
                     <div id="drawflow"></div>
                 </div>
             </div>
@@ -46,8 +51,6 @@
 {% endblock %}
 
 {% block js %}
-{{ simulation_spec|json_script:"simulationSpec" }}
-
 <!-- i18next -->
 <script src="https://unpkg.com/i18next@22.4.13/dist/umd/i18next.min.js"></script>
 
