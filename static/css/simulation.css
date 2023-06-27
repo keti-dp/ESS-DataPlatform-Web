@@ -29,6 +29,34 @@
     padding-left: 20px;
 }
 
+#simulationPipelineWorkflowPanel .menu {
+    /* position: absolute; */
+    height: 40px;
+    display: block;
+    background: white;
+    width: 100%;
+}
+
+#simulationPipelineWorkflowPanel .menu ul {
+    padding: 0px;
+    margin: 0px;
+    line-height: 40px;
+}
+  
+#simulationPipelineWorkflowPanel .menu ul li {
+    display: inline-block;
+    margin-left: 10px;
+    border-right: 1px solid var(--border-color);
+    padding-right: 10px;
+    line-height: 40px;
+    cursor: pointer;
+}
+  
+#simulationPipelineWorkflowPanel .menu ul li.selected {
+    font-weight: bold;
+}
+  
+
 #drawflow {
     position: relative;
     height: 100%;

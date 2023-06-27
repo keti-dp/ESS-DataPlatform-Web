@@ -26,7 +26,6 @@
     "period": "Period",
     "pipeline": "Pipeline",
     "power": "Power",
-    "resetOnlyNewPipeline": "Reset(Only new Pipeline)",
     "rest": "Rest",
     "status": "Status",
     "temperature": "Temperature",
