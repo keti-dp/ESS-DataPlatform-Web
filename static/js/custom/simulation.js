@@ -3,31 +3,50 @@ let mobile_last_move = null;
 let transform = '';
 
 /**
- * Get draw flow box script string
- * @param {object} componentObject
+ * Get data with async
+ * @param {object} requestUrl 
+ * @returns {object}
+ */
+async function loadData(requestUrl) {
+    let response = await fetch(requestUrl);
+
+    if (response.ok) {
+        return await response.json();
+    }
+
+    throw new Error(response.status);
+}
+
+/**
+ * Get pipeline draflow box script
+ * @param {object} component 
+ * @param {string} componentName 
  * @returns {string}
  */
-function getDrawFlowBoxScript(componentObject) {
-    let name = componentObject['name'];
+function getPipelineDrawFlowBoxScript(component, componentName) {
     let inputScript = '';
+    let componentArgs = component['args'];
 
-    for (const [key, value] of Object.entries(componentObject['args'])) {
-        let newKey = key.replace('--', '');
+    for (const [componentArgName, componentArgValue] of Object.entries(componentArgs)) {
+        let componentNewArgName = componentArgName.replace('--', '');
 
         inputScript += `
-            <p>${newKey}</p>
-            <input type="text" df-${newKey} placeholder="${newKey}" value="${value}">
+            <p>${componentNewArgName}</p>
+            <input type="text" df-${componentNewArgName} placeholder="${componentNewArgName}" value="${componentArgValue}">
             <br>
             <br>
         `;
     }
 
     return `
-        <div>
-            <div class="title-box"><i class="fas fa-box"></i> ${name} </div>
-            <div class="box">
+        <div">
+            <div class="title-box">
+                <i class="fas fa-box"></i> ${componentName}
+            </div>
+            <div class="box" style="max-height: 300px; overflow-y: auto;">
                 ${inputScript}
             </div>
+            <div class="box-footer text-center"></div>
         </div>
     `;
 }
@@ -53,7 +72,7 @@ function getSimulationResourcePanelScript(simulationPipelines) {
     `;
 
     let simulationResourcePanelScript = `
-        <div class="row my-3">
+        <div class="row my-3" style="white-space: nowrap;">
             <h3>${i18next.t('pipeline')}</h3>
             ${pipelineElementListScript}
         </div>
@@ -167,16 +186,9 @@ function addNodeToDrawFlow(name, pos_x, pos_y) {
 }
 
 function showpopup(event) {
-    event.target.closest(".drawflow-node").style.zIndex = "9999";
-    event.target.children[0].style.display = "block";
-
-    transform = editor.precanvas.style.transform;
-
-    editor.precanvas.style.transform = '';
-    editor.precanvas.style.left = editor.canvas_x + 'px';
-    editor.precanvas.style.top = editor.canvas_y + 'px';
-    editor.editor_mode = "fixed";
-
+    let button = event.currentTarget;
+    
+    drawflowLogModal.show(button);
 }
 
 function closemodal(event) {
@@ -188,14 +200,16 @@ function closemodal(event) {
     editor.editor_mode = "edit";
 }
 
+
 /**
- * Change drawflow module
+ * Change run result menu event
  * @param {object} event 
+ * @returns
  */
-function changeModule(event) {
-    let runMenus = document.querySelectorAll('#simulationPipelineWorkflowPanel .menu ul li');
-    runMenus.forEach(runMenu => {
-        runMenu.classList.remove('text-primary');
+async function changeRunResultMenu(event, currentDrawFlowNodesObject) {
+    let runResultMenus = document.querySelectorAll('#simulationPipelineWorkflowPanel .menu ul li');
+    runResultMenus.forEach(runResultMenu => {
+        runResultMenu.classList.remove('text-primary');
     });
 
     let button = event.currentTarget;
@@ -203,7 +217,24 @@ function changeModule(event) {
 
     let buttonId = button.id;
 
+    // Change module process -> clear and new create UI
     editor.changeModule(buttonId);
+
+    // Re set-up - run status of components
+    let requestUrl = new URL(`${window.location.origin}/api/simulation/runs/${buttonId}/`);
+    let runInfo = await loadData(requestUrl);
+    let componentsRunStatus = runInfo['run_status']['components'];
+
+    // Re set-up - run status of drawflow nodes
+    createDrawflowNodesRunStatus(componentsRunStatus, currentDrawFlowNodesObject);
+
+    // Re set-up - components modal
+    let currentDrawFlowNodeElements = document.querySelectorAll(".drawflow-node ");
+    currentDrawFlowNodeElements.forEach(currentDrawflowNodeElement => {
+        currentDrawflowNodeElement.addEventListener('dblclick', currentDrawflowNodeElementEvent => {
+            showpopup(currentDrawflowNodeElementEvent);
+        });
+    });
 }
 
 function changeMode(option) {
@@ -215,6 +246,55 @@ function changeMode(option) {
         unlock.style.display = 'none';
     }
 
+}
+
+/**
+ * Create run status of draflow nodes
+ * @param {object} componentsRunStatus 
+ * @param {object} currentDrawFlowNodesObject 
+ */
+function createDrawflowNodesRunStatus(componentsRunStatus, currentDrawFlowNodesObject) {
+    Object.keys(componentsRunStatus).forEach(componentName => {
+        let phase = componentsRunStatus[componentName]['phase'];
+        let logPath = componentsRunStatus[componentName]['log_path'];
+        let drawflowNodeElement = document.getElementById(currentDrawFlowNodesObject[componentName]);
+        let drawflowNodeStatusElement = drawflowNodeElement.querySelector('.box-footer');
+        
+        switch (phase) {
+            case 'Failed':
+                drawflowNodeStatusElement.innerHTML = `
+                    <i class="fas fa-ban" style="color: #DC4C64;"></i>
+                `;
+
+                break;
+            case 'Pending':
+                drawflowNodeStatusElement.innerHTML = `
+                    <i class="fas fa-spinner"></i>
+                `;
+
+                break;
+            case 'Running':
+                drawflowNodeStatusElement.innerHTML = `
+                    <div class="spinner-border spinner-border-sm" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                `;
+
+                break;
+            case 'Succeeded':
+                drawflowNodeStatusElement.innerHTML = `
+                    <i class="fas fa-check" style="color: #14A44D;"></i>
+                `;
+
+                break;
+            default:
+                break;
+        }
+
+        if (logPath) {
+            drawflowNodeElement.setAttribute('data-bs-log-path', logPath);
+        }
+    });
 }
 
 /**
@@ -249,31 +329,6 @@ fetch(requestUrl).then(response => {
             fetch(pipelineRequestUrl).then(pipelineResponse => {
                 return pipelineResponse.json();
             }).then(pipelineResponseData => {
-                function getPipelineDrawFlowBoxScript(component, componentName) {
-                    let inputScript = '';
-                    let componentArgs = component['args'];
-
-                    for (const [componentArgName, componentArgValue] of Object.entries(componentArgs)) {
-                        let componentNewArgName = componentArgName.replace('--', '');
-                
-                        inputScript += `
-                            <p>${componentNewArgName}</p>
-                            <input type="text" df-${componentNewArgName} placeholder="${componentNewArgName}" value="${componentArgValue}">
-                            <br>
-                            <br>
-                        `;
-                    }
-                
-                    return `
-                        <div>
-                            <div class="title-box"><i class="fas fa-box"></i> ${componentName} </div>
-                            <div class="box" style="max-height: 300px; overflow-y: auto;">
-                                ${inputScript}
-                            </div>
-                        </div>
-                    `;
-                }
-
                 let entrypoint = pipelineResponseData['entrypoint'];
                 let pipelineInfo = pipelineResponseData['pipeline_info'];
                 let componentNodeIdObject = {};
@@ -375,24 +430,74 @@ fetch(requestUrl).then(response => {
         })
         .then(data => {
             let runId = data['id'];
-            let simulationPipelineWorkflowPanelRunMenuElement = document.querySelector('#simulationPipelineWorkflowPanel .menu ul');
-            simulationPipelineWorkflowPanelRunMenuElement.insertAdjacentHTML('beforeend', `
-                <li id="${runId}">실행 결과 ${pipelineRunButtonClickCount++}</li>
+            let simulationPipelineWorkflowPanelRunResultMenuElement = document.querySelector('#simulationPipelineWorkflowPanel .menu ul');
+            simulationPipelineWorkflowPanelRunResultMenuElement.insertAdjacentHTML('beforeend', `
+                <li id="${runId}">${i18next.t('execution')} ${i18next.t('result')} ${pipelineRunButtonClickCount++}</li>
             `);
-
-            let runMenu = simulationPipelineWorkflowPanelRunMenuElement.lastElementChild;
-            runMenu.addEventListener('click', async (event) => {
-                changeModule(event);
-
-                let requestUrl = new URL(`${window.location.origin}/api/simulation/runs/${runId}/`);
-                let runInfo = await fetch(requestUrl);
-            });
 
             let drawflowOriginExportedData = editor.export();
             drawflowOriginExportedData['drawflow'][runId] = drawflowOriginExportedData['drawflow']['Home'];
             editor.import(drawflowOriginExportedData);
+
+            let currentDrawFlowNodesObject = {};
+            let currentDrawFlowNodeElements = document.querySelectorAll(".drawflow-node ");
+            currentDrawFlowNodeElements.forEach(currentDrawflowNodeElement => {
+                let nodeId = currentDrawflowNodeElement.id;
+                let nodeName = currentDrawflowNodeElement.classList[1];
+
+                currentDrawFlowNodesObject[nodeName] = nodeId;
+
+                currentDrawflowNodeElement.addEventListener('dblclick', event => {
+                    showpopup(event);
+                });
+            });
+
+            let runResultMenu = simulationPipelineWorkflowPanelRunResultMenuElement.lastElementChild;
+            runResultMenu.addEventListener('click', async (event) => {
+                await changeRunResultMenu(event, currentDrawFlowNodesObject);
+            });
+
+            let runInterval = setInterval(async () => {
+                let requestUrl = new URL(`${window.location.origin}/api/simulation/runs/${runId}/`);
+                let runInfo = await loadData(requestUrl);
+                let pipelineRunStatus = runInfo['run_status']['pipeline'];
+                let componentsRunStatus = runInfo['run_status']['components'];
+
+                createDrawflowNodesRunStatus(componentsRunStatus, currentDrawFlowNodesObject);
+
+                if (pipelineRunStatus != 'Running') {
+                    clearInterval(runInterval);
+                }
+            }, 2000);
             
         })
         .catch(error => console.log(error));
     });
 });
+
+// Modal event
+let drawflowLogModalElement = document.getElementById('drawflowLogModal');
+drawflowLogModalElement.addEventListener('show.bs.modal', function (event) {
+    let button = event.relatedTarget;
+    let nodeName = button.classList[1];
+    let logPath = button.getAttribute('data-bs-log-path');
+
+    if (logPath) {
+        let requestUrl = new URL(`${window.location.origin}/api/simulation/get-log/`);
+        requestUrl.searchParams.append('log-path', logPath);
+
+        fetch(requestUrl).then(response => {
+            return response.json();
+        }).then(responseData => {
+            let logData = responseData['data'];
+
+            let modalTitle = drawflowLogModalElement.querySelector('.modal-title');
+            let modalBody = drawflowLogModalElement.querySelector('.modal-body');
+
+            modalTitle.textContent = nodeName;
+            modalBody.innerHTML = logData;
+        }).catch(error => console.log(error));
+    }
+});
+
+let drawflowLogModal = new bootstrap.Modal(drawflowLogModalElement);

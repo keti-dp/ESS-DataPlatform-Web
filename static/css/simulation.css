@@ -111,9 +111,27 @@
     right: 10px;
 }
 
-.drawflow .drawflow-node .input {
+/* .drawflow .drawflow-node .input {
     left: -10px;
     background: white;
+} */
+
+.drawflow .drawflow-node .input {
+    left: -10px;
+    background: transparent;
+}
+
+.drawflow .drawflow-node .input {
+    /* height: 15px; */
+    /* width: 15px; */
+    /* border: 2px solid var(--border-color); */
+    width: 0;
+    height: 0;
+    border-style: solid;
+    border-width: 10px 0 10px 10px;
+    border-color: transparent transparent transparent #007bff;
+    background: transparent;
+    border-radius: 0px;
 }
 
 .drawflow>.drawflow-delete {
@@ -150,6 +168,13 @@
     font-size: 14px;
     color: #555555;
 
+}
+
+.drawflow-node .box-footer {
+    background: var(--background-box-title);
+    height: 30px;
+    padding: 5px;
+    border-radius: 0px 0px 4px 4px;
 }
 
 .drawflow-node .box p {

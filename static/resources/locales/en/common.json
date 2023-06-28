@@ -27,6 +27,7 @@
     "pipeline": "Pipeline",
     "power": "Power",
     "rest": "Rest",
+    "result": "Result",
     "status": "Status",
     "temperature": "Temperature",
     "temperatureGap": "Temperature Gap",

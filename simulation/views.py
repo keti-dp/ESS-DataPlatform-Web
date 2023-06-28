@@ -1,3 +1,4 @@
+import json
 import kfp
 import networkx as nx
 import os
@@ -6,7 +7,7 @@ import yaml
 from datetime import datetime
 from minio import Minio
 from rest_framework.decorators import action
-from rest_framework.views import Response
+from rest_framework.views import APIView, Response
 from rest_framework.viewsets import ViewSet
 from rest_framework import status
 from rest_framework_simplejwt.tokens import AccessToken
@@ -212,6 +213,9 @@ class SimulationPipelineViewSet(ViewSet):
     @action(detail=True, methods=["post"])
     def pipeline_run(self, request, pk=None):
         pipeline_id = pk
+        pipeline = kubeflow_client.get_pipeline(pipeline_id)
+        pipeline_name = pipeline.name
+
         bucket_name = "mlpipeline"
         object_name = f"pipelines/{pipeline_id}"
 
@@ -245,7 +249,7 @@ class SimulationPipelineViewSet(ViewSet):
         pipeline = kubeflow_client.create_run_from_pipeline_package(
             pipeline_file=pipeline_temp_file,
             arguments=None,
-            run_name=f"[ESS DataPlatform Web][{username}] {datetime.now()}",
+            run_name=f"[ESS DP Web][{username}][{pipeline_name}] {datetime.strftime(datetime.now(), '%Y-%m-%dT%H:%M:%S')}",
         )
 
         run_id = pipeline.run_id
@@ -258,4 +262,48 @@ class SimulationPipelineRunViewSet(ViewSet):
         run_id = pk
         run_info = kubeflow_client.get_run(run_id)
 
-        return Response({"run_info": run_info.run.status}, status=status.HTTP_200_OK)
+        pipeline_runtime = run_info.pipeline_runtime
+        pipeline_run_status = run_info.run.status
+
+        workflow_manifest = pipeline_runtime.workflow_manifest
+        workflow_manifest_object = json.loads(workflow_manifest)
+        nodes = workflow_manifest_object["status"]["nodes"]
+        nodes_status = {}
+
+        for key, value in nodes.items():
+            if value["type"] == "Pod":
+                node_template_name = value["templateName"]
+                node_phase = value["phase"]
+
+                nodes_status[node_template_name] = {
+                    "phase": node_phase,
+                }
+
+                if "outputs" in value:
+                    node_outputs = value["outputs"]
+                    log_path = node_outputs["artifacts"][-1]["s3"]["key"]
+                    nodes_status[node_template_name]["log_path"] = log_path
+
+        response_data = {
+            "run_id": run_id,
+            "run_status": {"components": nodes_status, "pipeline": pipeline_run_status},
+        }
+
+        return Response(response_data, status=status.HTTP_200_OK)
+
+
+class SimulationPipelineLogView(APIView):
+    def get(self, request, pk=None):
+        try:
+            bucket_name = "mlpipeline"
+            object_name = request.query_params.get("log-path")
+            response = minio_client.get_object(
+                bucket_name,
+                object_name,
+            )
+            response_data = response.read().decode("utf-8")
+
+            return Response({"data": response_data}, status=status.HTTP_200_OK)
+        finally:
+            response.close()
+            response.release_conn()
