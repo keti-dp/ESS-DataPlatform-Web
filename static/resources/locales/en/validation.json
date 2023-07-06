@@ -1,4 +1,5 @@
 {
+    "enterName": "Enter name.",
     "selectAnOperatingSite": "Select an operating site.",
     "selectABank": "Select a bank.",
     "selectARack": "Select a rack.",
@@ -10,5 +11,6 @@
     "setTheStartTime": "Set the start time.",
     "setTheEndTime": "Set the end time.",
     "selectDataTypes": "Select data types.",
-    "selectDataDe-Identification": "Select data de-identification."
+    "selectDataDe-Identification": "Select data de-identification.",
+    "uploadAPipelineFile": "Upload a pipeline file."
 }

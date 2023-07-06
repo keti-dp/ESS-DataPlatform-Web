@@ -11,6 +11,7 @@ from rest_framework.views import APIView, Response
 from rest_framework.viewsets import ViewSet
 from rest_framework import status
 from rest_framework_simplejwt.tokens import AccessToken
+from yaml.scanner import ScannerError
 
 
 KUBERFLOW_HOST = os.getenv("KUBEFLOW_HOST")
@@ -307,3 +308,26 @@ class SimulationPipelineLogView(APIView):
         finally:
             response.close()
             response.release_conn()
+
+class SimulationPipelineUploadView(APIView):
+    def post(self, request, pk=None):
+        pipeline_package_path = 'pipeline_upload.yaml'
+        file_obj = request.data['file']
+
+        try:
+            with open(pipeline_package_path, 'w') as f:
+                pipeline_upload_dict = yaml.safe_load(file_obj)
+                yaml.dump(pipeline_upload_dict, f)
+
+            request_data = {
+                'pipeline_name': request.data['name'],
+                'description': request.data['description'],
+                'pipeline_package_path': pipeline_package_path
+            }
+
+            pipeline_info = kubeflow_client.upload_pipeline(**request_data)
+            pipeline_id = pipeline_info.id
+
+            return Response({'pipeline_id': pipeline_id}, status=status.HTTP_201_CREATED)
+        except ScannerError:
+            return Response({'message': '올바르지 않는 파일 형식입니다.'}, status=status.HTTP_400_BAD_REQUEST)
