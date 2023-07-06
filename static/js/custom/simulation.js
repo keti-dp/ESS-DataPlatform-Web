@@ -69,6 +69,9 @@ function getSimulationResourcePanelScript(simulationPipelines) {
         <div id="pipelineRun" class="tool">
             <i class="fas fa-tools"></i><span> ${i18next.t('execution')}</span>
         </div>
+        <div id="pipelineUpload" class="tool" data-bs-toggle="modal"  data-bs-target="#pipelineUploadModal">
+            <i class="fas fa-tools"></i><span> ${i18next.t('pipeline')} ${i18next.t('upload')}</span>
+        </div>
     `;
 
     let simulationResourcePanelScript = `
@@ -187,7 +190,7 @@ function addNodeToDrawFlow(name, pos_x, pos_y) {
 
 function showpopup(event) {
     let button = event.currentTarget;
-    
+
     drawflowLogModal.show(button);
 }
 
@@ -259,7 +262,7 @@ function createDrawflowNodesRunStatus(componentsRunStatus, currentDrawFlowNodesO
         let logPath = componentsRunStatus[componentName]['log_path'];
         let drawflowNodeElement = document.getElementById(currentDrawFlowNodesObject[componentName]);
         let drawflowNodeStatusElement = drawflowNodeElement.querySelector('.box-footer');
-        
+
         switch (phase) {
             case 'Failed':
                 drawflowNodeStatusElement.innerHTML = `
@@ -298,12 +301,84 @@ function createDrawflowNodesRunStatus(componentsRunStatus, currentDrawFlowNodesO
 }
 
 /**
+ * Create drawflow
+ * @param {object} pipelineData 
+ */
+function createDrawFlow(pipelineData) {
+    let entrypoint = pipelineData['entrypoint'];
+    let pipelineInfo = pipelineData['pipeline_info'];
+    let componentNodeIdObject = {};
+    let componentLevelCountObject = {};
+    let componentLevelObject = {};
+
+    Object.keys(pipelineInfo).forEach(componentName => {
+        if (componentName !== entrypoint) {
+            let component = pipelineInfo[componentName];
+            let pipelineDrawFlowBoxScript = getPipelineDrawFlowBoxScript(component, componentName);
+
+            let componentArgs = component['args'];
+            let componentArgsData = {};
+
+            Object.keys(componentArgs).forEach(componentArgName => {
+                let componentArgNewName = componentArgName.replace('--', '');
+                let componentArgValue = componentArgs[componentArgName];
+
+                componentArgsData[componentArgNewName] = componentArgValue
+            });
+
+            let componentLevel = component['level'];
+
+            componentLevelObject[componentLevel] = componentLevel;
+
+            if (componentLevelCountObject.hasOwnProperty(componentLevel)) {
+                componentLevelCountObject[componentLevel] += 1;
+            } else {
+                componentLevelCountObject[componentLevel] = 0;
+            }
+
+            let pos_x = 100 + 400 * componentLevel;
+            let pos_y = 100 + 400 * componentLevelCountObject[componentLevel];
+
+            let nodeInputCount;
+            let nodeOutputCount = 1
+
+            if (componentLevel == 0) {
+                nodeInputCount = 0;
+            } else {
+                nodeInputCount = 1;
+            }
+
+            let nodeId = editor.addNode(componentName, nodeInputCount, nodeOutputCount, pos_x, pos_y, componentName, componentArgsData, pipelineDrawFlowBoxScript);
+
+            componentNodeIdObject[componentName] = nodeId;
+        }
+    });
+
+    Object.keys(pipelineInfo).forEach(componentName => {
+        let component = pipelineInfo[componentName];
+        let componentDependencies = component['dependencies'];
+
+        if (componentDependencies) {
+            componentDependencies.forEach(componentDependency => {
+                let inputId = componentNodeIdObject[componentDependency];
+                let outputId = componentNodeIdObject[componentName];
+
+                editor.addConnection(inputId, outputId, 'output_1', 'input_1');
+            });
+        }
+    });
+}
+
+/**
  * Init tasks
  */
 let drawflowElement = document.getElementById('drawflow');
 let editor = new Drawflow(drawflowElement);
 editor.reroute = true;
 editor.start();
+
+// When pipeline menu click event, pipeline id is saved.
+let pipelineId;
 
 let requestUrl = new URL(`${window.location.origin}/api/simulation/pipelines/`);
 
@@ -315,83 +390,18 @@ fetch(requestUrl).then(response => {
     simulationResourcePanelElement.innerHTML = getSimulationResourcePanelScript(responseData);
 
     // Create pipeline and event in drawflow
-    let pipelineId;
     let pipelineElements = document.querySelectorAll('.pipeline-drawflow');
     pipelineElements.forEach(pipelineElement => {
-        pipelineElement.addEventListener('click', (event) => {
+        pipelineElement.addEventListener('click', async (event) => {
             editor.changeModule('Home');
             editor.clearModuleSelected();
-            
+
             let button = event.currentTarget;
             pipelineId = button.id;
-            let pipelineRequestUrl = new URL(`${window.location.origin}/api/simulation/pipelines/${pipelineId}`);
+            let pipelineDataRequestUrl = new URL(`${window.location.origin}/api/simulation/pipelines/${pipelineId}`);
+            let pipelineData = await loadData(pipelineDataRequestUrl);
 
-            fetch(pipelineRequestUrl).then(pipelineResponse => {
-                return pipelineResponse.json();
-            }).then(pipelineResponseData => {
-                let entrypoint = pipelineResponseData['entrypoint'];
-                let pipelineInfo = pipelineResponseData['pipeline_info'];
-                let componentNodeIdObject = {};
-                let componentLevelCountObject = {};
-                let componentLevelObject = {};
-
-                Object.keys(pipelineInfo).forEach(componentName => {
-                    if (componentName !== entrypoint) {
-                        let component = pipelineInfo[componentName];
-                        let pipelineDrawFlowBoxScript = getPipelineDrawFlowBoxScript(component, componentName);
-
-                        let componentArgs = component['args'];
-                        let componentArgsData = {};
-
-                        Object.keys(componentArgs).forEach(componentArgName => {
-                            let componentArgNewName = componentArgName.replace('--', '');
-                            let componentArgValue = componentArgs[componentArgName];
-
-                            componentArgsData[componentArgNewName] = componentArgValue
-                        });
-
-                        let componentLevel = component['level'];
-
-                        componentLevelObject[componentLevel] = componentLevel;
-
-                        if (componentLevelCountObject.hasOwnProperty(componentLevel)) {
-                            componentLevelCountObject[componentLevel] += 1;
-                        } else {
-                            componentLevelCountObject[componentLevel] = 0;
-                        }
-
-                        let pos_x = 100 + 400 * componentLevel;
-                        let pos_y = 100 + 400 * componentLevelCountObject[componentLevel];
-
-                        let nodeInputCount;
-                        let nodeOutputCount = 1
-
-                        if (componentLevel == 0) {
-                            nodeInputCount = 0;
-                        } else {
-                            nodeInputCount = 1;
-                        }
-
-                        let nodeId = editor.addNode(componentName, nodeInputCount, nodeOutputCount, pos_x, pos_y, componentName, componentArgsData, pipelineDrawFlowBoxScript);
-
-                        componentNodeIdObject[componentName] = nodeId;
-                    }
-                });
-
-                Object.keys(pipelineInfo).forEach(componentName => {
-                    let component = pipelineInfo[componentName];
-                    let componentDependencies = component['dependencies'];
-
-                    if (componentDependencies) {
-                        componentDependencies.forEach(componentDependency => {
-                            let inputId = componentNodeIdObject[componentDependency];
-                            let outputId = componentNodeIdObject[componentName];
-
-                            editor.addConnection(inputId, outputId, 'output_1','input_1');
-                        });
-                    }
-                });
-            });
+            createDrawFlow(pipelineData);
         });
     });
 
@@ -403,7 +413,7 @@ fetch(requestUrl).then(response => {
     pipelineRunButton.addEventListener('click', event => {
         let exportedData = editor.export();
         let exportedDataObject = exportedData['drawflow']['Home']['data'];
-        
+
         Object.entries(exportedDataObject).forEach(([exportedDataObjectKey, exportedDataObjectValue]) => {
             let componentName = exportedDataObjectValue['name'];
             let componentArgs = [];
@@ -425,57 +435,58 @@ fetch(requestUrl).then(response => {
             },
             body: JSON.stringify(componentChangeArgsObject)
         })
-        .then(response => {
-            return response.json();
-        })
-        .then(data => {
-            let runId = data['id'];
-            let simulationPipelineWorkflowPanelRunResultMenuElement = document.querySelector('#simulationPipelineWorkflowPanel .menu ul');
-            simulationPipelineWorkflowPanelRunResultMenuElement.insertAdjacentHTML('beforeend', `
+            .then(response => {
+                return response.json();
+            })
+            .then(data => {
+                let runId = data['id'];
+                let simulationPipelineWorkflowPanelRunResultMenuElement = document.querySelector('#simulationPipelineWorkflowPanel .menu ul');
+                simulationPipelineWorkflowPanelRunResultMenuElement.insertAdjacentHTML('beforeend', `
                 <li id="${runId}">${i18next.t('execution')} ${i18next.t('result')} ${pipelineRunButtonClickCount++}</li>
             `);
 
-            let drawflowOriginExportedData = editor.export();
-            drawflowOriginExportedData['drawflow'][runId] = drawflowOriginExportedData['drawflow']['Home'];
-            editor.import(drawflowOriginExportedData);
+                let drawflowOriginExportedData = editor.export();
+                drawflowOriginExportedData['drawflow'][runId] = drawflowOriginExportedData['drawflow']['Home'];
+                editor.import(drawflowOriginExportedData);
 
-            let currentDrawFlowNodesObject = {};
-            let currentDrawFlowNodeElements = document.querySelectorAll(".drawflow-node ");
-            currentDrawFlowNodeElements.forEach(currentDrawflowNodeElement => {
-                let nodeId = currentDrawflowNodeElement.id;
-                let nodeName = currentDrawflowNodeElement.classList[1];
+                let currentDrawFlowNodesObject = {};
+                let currentDrawFlowNodeElements = document.querySelectorAll(".drawflow-node ");
+                currentDrawFlowNodeElements.forEach(currentDrawflowNodeElement => {
+                    let nodeId = currentDrawflowNodeElement.id;
+                    let nodeName = currentDrawflowNodeElement.classList[1];
 
-                currentDrawFlowNodesObject[nodeName] = nodeId;
+                    currentDrawFlowNodesObject[nodeName] = nodeId;
 
-                currentDrawflowNodeElement.addEventListener('dblclick', event => {
-                    showpopup(event);
+                    currentDrawflowNodeElement.addEventListener('dblclick', event => {
+                        showpopup(event);
+                    });
                 });
-            });
 
-            let runResultMenu = simulationPipelineWorkflowPanelRunResultMenuElement.lastElementChild;
-            runResultMenu.addEventListener('click', async (event) => {
-                await changeRunResultMenu(event, currentDrawFlowNodesObject);
-            });
+                let runResultMenu = simulationPipelineWorkflowPanelRunResultMenuElement.lastElementChild;
+                runResultMenu.addEventListener('click', async (event) => {
+                    await changeRunResultMenu(event, currentDrawFlowNodesObject);
+                });
 
-            let runInterval = setInterval(async () => {
-                let requestUrl = new URL(`${window.location.origin}/api/simulation/runs/${runId}/`);
-                let runInfo = await loadData(requestUrl);
-                let pipelineRunStatus = runInfo['run_status']['pipeline'];
-                let componentsRunStatus = runInfo['run_status']['components'];
+                let runInterval = setInterval(async () => {
+                    let requestUrl = new URL(`${window.location.origin}/api/simulation/runs/${runId}/`);
+                    let runInfo = await loadData(requestUrl);
+                    let pipelineRunStatus = runInfo['run_status']['pipeline'];
+                    let componentsRunStatus = runInfo['run_status']['components'];
 
-                createDrawflowNodesRunStatus(componentsRunStatus, currentDrawFlowNodesObject);
+                    createDrawflowNodesRunStatus(componentsRunStatus, currentDrawFlowNodesObject);
 
-                if (pipelineRunStatus != 'Running') {
-                    clearInterval(runInterval);
-                }
-            }, 2000);
-            
-        })
-        .catch(error => console.log(error));
+                    if (pipelineRunStatus != 'Running') {
+                        clearInterval(runInterval);
+                    }
+                }, 2000);
+
+            })
+            .catch(error => console.log(error));
     });
 });
 
 // Modal event
+// - Pipeline run
 let drawflowLogModalElement = document.getElementById('drawflowLogModal');
 drawflowLogModalElement.addEventListener('show.bs.modal', function (event) {
     let button = event.relatedTarget;
@@ -501,3 +512,83 @@ drawflowLogModalElement.addEventListener('show.bs.modal', function (event) {
 });
 
 let drawflowLogModal = new bootstrap.Modal(drawflowLogModalElement);
+
+// - Pipeline upload
+const pipelineUploadModalFormValidation = new JustValidate('#pipelineUploadModalForm', {
+    errorFieldCssClass: 'is-invalid',
+    focusInvalidField: true,
+    lockForm: true,
+    tooltip: {
+        position: 'right',
+    }
+});
+pipelineUploadModalFormValidation
+    .addField('#pipelineUploadModalFormInputName', [
+        {
+            rule: 'required',
+            errorMessage: `${i18next.t('enterName', { ns: 'validation' })}`
+        }
+    ])
+    .addField('#pipelineUploadModalFormInputFile', [
+        {
+            rule: 'minFilesCount',
+            value: 1,
+            errorMessage: `${i18next.t('uploadAPipelineFile', { ns: 'validation' })}`
+
+        },
+        {
+            rule: 'maxFilesCount',
+            value: 1,
+            errorMessage: `${i18next.t('uploadAPipelineFile', { ns: 'validation' })}`
+
+        }
+    ])
+    .onSuccess(async (event) => {
+        let pipelineUploadModalFormInputName = document.getElementById('pipelineUploadModalFormInputName').value;
+        let pipelineUploadModalFormInputDescription = document.getElementById('pipelineUploadModalFormInputDescription').value;
+        let pipelineUploadModalFormInputFile = document.getElementById('pipelineUploadModalFormInputFile').files[0];
+
+        let formData = new FormData();
+        formData.append('name', pipelineUploadModalFormInputName);
+        formData.append('description', pipelineUploadModalFormInputDescription);
+        formData.append('file', pipelineUploadModalFormInputFile);
+
+        let requestUrl = new URL(`${window.location.origin}/api/simulation/pipeline-upload/`);
+
+        fetch(requestUrl, {
+            method: 'POST',
+            body: formData
+        }).then(response => {
+            if (response.ok) {
+                return response.json();
+            }
+
+            throw new Error(response.statusText);
+        }).then(data => {
+            let simulationPipelineId = data['pipeline_id'];
+            let simulationPipelineMenuScript = `
+                <div id="${simulationPipelineId}" class="pipeline-drawflow">
+                    <i class="fas fa-project-diagram"></i><span> ${pipelineUploadModalFormInputName}</span>
+                </div>
+            `;
+
+            let simulationResourcePanel = document.getElementById('simulationResourcePanel');
+            let simulationResourcePanelPipelineListRow = simulationResourcePanel.querySelector('.row');
+            simulationResourcePanelPipelineListRow.insertAdjacentHTML('beforeend', simulationPipelineMenuScript);
+            simulationResourcePanelPipelineListRow.lastElementChild.addEventListener('click', async (event) => {
+                editor.changeModule('Home');
+                editor.clearModuleSelected();
+
+                let button = event.currentTarget;
+                pipelineId = button.id;
+                let pipelineDataRequestUrl = new URL(`${window.location.origin}/api/simulation/pipelines/${pipelineId}`);
+                let pipelineData = await loadData(pipelineDataRequestUrl);
+
+                createDrawFlow(pipelineData);
+            });
+
+            // Off modal
+            let pipelineUploadModalElement = document.getElementById('pipelineUploadModal');
+            bootstrap.Modal.getInstance(pipelineUploadModalElement).hide();
+        }).catch(error => console.log(error));
+    });

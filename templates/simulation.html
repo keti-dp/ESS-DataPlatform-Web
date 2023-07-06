@@ -49,7 +49,7 @@
     </div>
 </div>
 
-<!-- Modal -->
+<!-- [ Modal ] start -->
 <div class="modal fade" id="drawflowLogModal" tabindex="-1" aria-labelledby="drawflowLogModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -64,6 +64,44 @@
         </div>
     </div>
 </div>
+
+<div class="modal fade" id="pipelineUploadModal" tabindex="-1" aria-labelledby="pipelineUploadLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="pipelineUploadLabel">파이프라인 업로드</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form action="#" id="pipelineUploadModalForm" enctype="multipart/form-data" autocomplete="off">
+                    <div class="form-group">
+                        <label class='form-label'>이름:</label>
+                        <div class="input-group m-b-10">
+                            <input type="text" class="form-control" id="pipelineUploadModalFormInputName" name="name">
+                        </div>
+                        <label class='form-label'>설명:</label>
+                        <div class="input-group m-b-10">
+                            <input type="text" class="form-control" id="pipelineUploadModalFormInputDescription"
+                                name="decription">
+                        </div>
+                        <label class='form-label'>파일:</label>
+                        <div class="input-group m-b-10">
+                            <input type="file" class="form-control" id="pipelineUploadModalFormInputFile" name="file"
+                                accept="yaml">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary">업로드</button>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- [ Modal ] end -->
 {% endblock %}
 
 {% block js %}
@@ -71,6 +109,9 @@
 <script src="https://unpkg.com/i18next@22.4.13/dist/umd/i18next.min.js"></script>
 
 <script src="https://cdn.jsdelivr.net/gh/jerosoler/Drawflow/dist/drawflow.min.js"></script>
+
+<!-- JustValidate JavaScript -->
+<script src="https://unpkg.com/just-validate@3.3.1/dist/just-validate.production.min.js"></script>
 
 <script type="module" src="{% static 'js/custom/simulation.js' %}"></script>
 {% endblock %}
