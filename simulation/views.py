@@ -184,7 +184,7 @@ class SimulationPipelineViewSet(ViewSet):
 
         data = [{"id": pipeline.id, "name": pipeline.name} for pipeline in pipelines]
 
-        return Response(data)
+        return Response(data, status=status.HTTP_200_OK)
 
     def retrieve(self, request, pk=None):
         pipeline_id = pk
