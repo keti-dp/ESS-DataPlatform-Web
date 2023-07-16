@@ -2,6 +2,7 @@ import json
 import kfp
 import networkx as nx
 import os
+import re
 import requests
 import yaml
 from datetime import datetime
@@ -60,6 +61,16 @@ def convert_to_dict(args):
         result_dict[key] = result_dict[key][0]
 
     return result_dict
+
+
+def condition_parse_string(input_str):
+    # Regular expression to match the task name
+    pattern = r"{{tasks\.(.*?)\.outputs\.parameters\..*}}"
+    match = re.search(pattern, input_str)
+    if match:
+        return match.group(1)
+    else:
+        return None
 
 
 def get_pipeline_entrypoint(pipeline):
@@ -141,29 +152,65 @@ def get_pipeline_component_level(pipeline_info, root_component_name):
 
 def get_pipeline_info(pipeline):
     pipeline_info = {}
-    dag_seq_dict = {}
 
     # Set 'args' & 'dependencies'
 
-    for template in pipeline["spec"]["templates"]:
-        pipeline_info[template["name"]] = {}
+    entrypoint_tasks = []
+    entrypoint = pipeline["spec"]["entrypoint"]
 
-        try:
-            pipeline_info[template["name"]]["args"] = convert_to_dict(template["container"]["args"])
-        except KeyError:
-            pass
+    for component in pipeline["spec"]["templates"]:
+        dag_list = []
 
-        try:
-            for dag_seq in template["dag"]["tasks"]:
+        # 1-1: entrypoint 기준으로 dependencies 획득
+        if component["name"] == entrypoint:
+            for tasks in component["dag"]["tasks"]:
+                if tasks["name"] not in pipeline_info:
+                    pipeline_info[tasks["name"]] = {}
+
+                entrypoint_tasks.append(tasks["name"])
+
                 try:
-                    dag_seq_dict[dag_seq["name"]] = dag_seq["dependencies"]
+                    pipeline_info[tasks["name"]]["dependencies"] = tasks["dependencies"]
                 except KeyError:
-                    pass
-        except KeyError:
-            pass
+                    continue
 
-    for key in dag_seq_dict.keys():
-        pipeline_info[key]["dependencies"] = dag_seq_dict[key]
+        else:
+            # 1-2: DAG 기록
+            try:
+                for tasks in component["dag"]["tasks"]:
+                    if component["name"] not in pipeline_info:
+                        pipeline_info[component["name"]] = {}
+                    dag_list.append(tasks["name"])
+                pipeline_info[component["name"]]["dag"] = dag_list
+            except KeyError:
+                pass
+
+            # 1-3: entrypoint 와 같은 이름 이외에 DAG이 존재할 경우 (dependecies, condition 파싱)
+            try:
+                for tasks in component["dag"]["tasks"]:
+                    if tasks["name"] not in pipeline_info:
+                        pipeline_info[tasks["name"]] = {}
+
+                    try:
+                        pipeline_info[tasks["name"]]["dependencies"] = tasks["dependencies"]
+                    except KeyError:
+                        pass
+
+                    # Condition에 따른 DAG 표현을 위함
+                    if "when" in tasks:
+                        task_name = condition_parse_string(tasks["when"])
+                        pipeline_info[tasks["name"]]["condition"] = task_name
+
+            except KeyError:
+                pass  # dag의 key error 예외처리
+
+    # 1-4: entrypoint의 task들의 args 획득
+    for component in pipeline["spec"]["templates"]:
+        if component["name"] in entrypoint_tasks:
+            try:
+                pipeline_info[component["name"]]["args"] = convert_to_dict(component["container"]["args"])
+            except KeyError:
+                pass
 
     # Set 'level'
 
@@ -202,11 +249,13 @@ class SimulationPipelineViewSet(ViewSet):
         entrypoint = get_pipeline_entrypoint(pipeline)
         root_component_name = get_pipeline_root_component_name(pipeline)
         pipeline_info = get_pipeline_info(pipeline)
+        pipeline_version = pipeline["apiVersion"]
 
         response_data = {
             "entrypoint": entrypoint,
             "root_component_name": root_component_name,
             "pipeline_info": pipeline_info,
+            "pipeline_version": pipeline_version,
         }
 
         return Response(response_data, status=status.HTTP_200_OK)
@@ -309,25 +358,26 @@ class SimulationPipelineLogView(APIView):
             response.close()
             response.release_conn()
 
+
 class SimulationPipelineUploadView(APIView):
     def post(self, request, pk=None):
-        pipeline_package_path = 'pipeline_upload.yaml'
-        file_obj = request.data['file']
+        pipeline_package_path = "pipeline_upload.yaml"
+        file_obj = request.data["file"]
 
         try:
-            with open(pipeline_package_path, 'w') as f:
+            with open(pipeline_package_path, "w") as f:
                 pipeline_upload_dict = yaml.safe_load(file_obj)
                 yaml.dump(pipeline_upload_dict, f)
 
             request_data = {
-                'pipeline_name': request.data['name'],
-                'description': request.data['description'],
-                'pipeline_package_path': pipeline_package_path
+                "pipeline_name": request.data["name"],
+                "description": request.data["description"],
+                "pipeline_package_path": pipeline_package_path,
             }
 
             pipeline_info = kubeflow_client.upload_pipeline(**request_data)
             pipeline_id = pipeline_info.id
 
-            return Response({'pipeline_id': pipeline_id}, status=status.HTTP_201_CREATED)
+            return Response({"pipeline_id": pipeline_id}, status=status.HTTP_201_CREATED)
         except ScannerError:
-            return Response({'message': '올바르지 않는 파일 형식입니다.'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"message": "올바르지 않는 파일 형식입니다."}, status=status.HTTP_400_BAD_REQUEST)
