@@ -27,20 +27,22 @@ function getPipelineDrawFlowBoxScript(component, componentName) {
     let inputScript = '';
     let componentArgs = component['args'];
 
-    for (const [componentArgName, componentArgValue] of Object.entries(componentArgs)) {
-        let componentNewArgName = componentArgName.replace('--', '');
+    if (componentArgs) {
+        for (const [componentArgName, componentArgValue] of Object.entries(componentArgs)) {
+            let componentNewArgName = componentArgName.replace('--', '');
 
-        inputScript += `
-            <p>${componentNewArgName}</p>
-            <input type="text" df-${componentNewArgName} placeholder="${componentNewArgName}" value="${componentArgValue}">
-            <br>
-            <br>
-        `;
+            inputScript += `
+                <p>${componentNewArgName}</p>
+                <input type="text" df-${componentNewArgName} placeholder="${componentNewArgName}" value="${componentArgValue}">
+                <br>
+                <br>
+            `;
+        }
     }
 
     return `
         <div">
-            <div class="title-box">
+            <div class="title-box text-truncate">
                 <i class="fas fa-box"></i> ${componentName}
             </div>
             <div class="box" style="max-height: 300px; overflow-y: auto;">
@@ -319,12 +321,14 @@ function createDrawFlow(pipelineData) {
             let componentArgs = component['args'];
             let componentArgsData = {};
 
-            Object.keys(componentArgs).forEach(componentArgName => {
-                let componentArgNewName = componentArgName.replace('--', '');
-                let componentArgValue = componentArgs[componentArgName];
+            if (componentArgs) {
+                Object.keys(componentArgs).forEach(componentArgName => {
+                    let componentArgNewName = componentArgName.replace('--', '');
+                    let componentArgValue = componentArgs[componentArgName];
 
-                componentArgsData[componentArgNewName] = componentArgValue
-            });
+                    componentArgsData[componentArgNewName] = componentArgValue
+                });
+            }
 
             let componentLevel = component['level'];
 
@@ -400,6 +404,11 @@ fetch(requestUrl).then(response => {
             pipelineId = button.id;
             let pipelineDataRequestUrl = new URL(`${window.location.origin}/api/simulation/pipelines/${pipelineId}`);
             let pipelineData = await loadData(pipelineDataRequestUrl);
+
+            // Set pipeline version
+            let pipelineVersionElement = document.getElementById('pipelineVersion');
+            pipelineVersionElement.textContent = pipelineData['pipeline_version'];
+            pipelineVersionElement.classList.remove('d-none');
 
             createDrawFlow(pipelineData);
         });
