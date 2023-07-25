@@ -225,7 +225,7 @@ def get_pipeline_info(pipeline):
 
 class SimulationPipelineViewSet(ViewSet):
     def list(self, request):
-        list_pipelines = kubeflow_client.list_pipelines(page_size=10000)
+        list_pipelines = kubeflow_client.list_pipelines(page_size=100)
 
         pipelines = list_pipelines.pipelines
 
