@@ -243,4 +243,8 @@ pip-selfcheck.json
 .history
 .ionide
 
+### Kubeflow ###
+pipeline.yaml
+pipeline_upload.yaml
+
 # End of https://www.toptal.com/developers/gitignore/api/python,django,venv,visualstudiocode

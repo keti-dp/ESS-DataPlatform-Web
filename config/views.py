@@ -1,5 +1,6 @@
 import os
 import json
+import yaml
 from django.views.generic import TemplateView
 from django.shortcuts import redirect
 from rest_framework import status
@@ -20,7 +21,6 @@ class IndexView(APIView):
             status.HTTP_401_UNAUTHORIZED,
             status.HTTP_403_FORBIDDEN,
         ):
-
             return redirect(os.getenv("REDIRECT_TO_MAIN_WEB_LOGIN_URL"))
 
         return response
@@ -57,7 +57,6 @@ class DataMonitoringView(APIView):
             status.HTTP_401_UNAUTHORIZED,
             status.HTTP_403_FORBIDDEN,
         ):
-
             return redirect(os.getenv("REDIRECT_TO_MAIN_WEB_LOGIN_URL") + "data-monitoring/")
 
         return response
@@ -89,8 +88,7 @@ class DemoView(APIView):
             status.HTTP_401_UNAUTHORIZED,
             status.HTTP_403_FORBIDDEN,
         ):
-
-            return redirect(os.getenv("REDIRECT_TO_MAIN_WEB_LOGIN_URL") + "data-monitoring/")
+            return redirect(os.getenv("REDIRECT_TO_MAIN_WEB_LOGIN_URL"))
 
         return response
 
@@ -99,6 +97,34 @@ class DemoView(APIView):
 
     def get(self, request):
         template_name = "demo.html"
+
+        if "/en/" in request.path:
+            template_name = f"en/{template_name}"
+
+        return Response(template_name=template_name)
+
+
+class SimulationView(APIView):
+    renderer_classes = [TemplateHTMLRenderer]
+
+    @staticmethod
+    def custom_exception_handler(exc, context):
+        response = exception_handler(exc, context)
+
+        if response.status_code in (
+            status.HTTP_400_BAD_REQUEST,
+            status.HTTP_401_UNAUTHORIZED,
+            status.HTTP_403_FORBIDDEN,
+        ):
+            return redirect(os.getenv("REDIRECT_TO_MAIN_WEB_LOGIN_URL"))
+
+        return response
+
+    def get_exception_handler(self):
+        return self.custom_exception_handler
+
+    def get(self, request):
+        template_name = "simulation.html"
 
         if "/en/" in request.path:
             template_name = f"en/{template_name}"

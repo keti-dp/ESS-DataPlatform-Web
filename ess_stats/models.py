@@ -220,3 +220,18 @@ class StaticChartData(models.Model):
 
     class Meta:
         db_table = "static_chart_data"
+
+
+class SoCP(models.Model):
+    time = models.DateTimeField(db_column='TIMESTAMP', primary_key=True)
+    operating_site = models.IntegerField(db_column='OPERATING_SITE', blank=True, null=True)
+    bank_id = models.IntegerField(db_column='BANK_ID', blank=True, null=True)
+    rack_id = models.IntegerField(db_column='RACK_ID', blank=True, null=True)
+    period = models.IntegerField(db_column='PERIOD', blank=True, null=True)
+    charge_status = models.IntegerField(db_column='CHARGE_STATUS', blank=True, null=True)
+    soc_range = models.IntegerField(db_column='SOC_RANGE', blank=True, null=True)
+    value = models.TextField(db_column='VALUE', blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'ess_socp'

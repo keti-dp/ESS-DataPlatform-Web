@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% load static %}
+
+{% block title %}시뮬레이션{% endblock %}
+
+{% block html_head %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jerosoler/Drawflow/dist/drawflow.min.css">
+<link rel="stylesheet" href="{% static 'css/simulation.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="pc-container">
+    <div class="pcoded-content">
+        <!-- [ breadcrumb ] start -->
+        <div class="page-header">
+            <div class="page-block">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <div class="page-header-title">
+                            <h5 class="m-b-10">시뮬레이션</h5>
+                        </div>
+                        <ul class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="{% url 'index' %}">메인</a></li>
+                            <li class="breadcrumb-item">시뮬레이션</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- [ breadcrumb ] end -->
+
+        <!-- [ Main Content ] start -->
+        <div class="row" style="position: relative;">
+            <div class="wrapper">
+                <div id="simulationResourcePanel" class="col-2"></div>
+                <div id="simulationPipelineWorkflowPanel" class="col-10">
+                    <div class="menu">
+                        <ul>
+                            <li id="pipelineVersion" class="disabled d-none" aria-disabled="true"></li>
+                            <li class="disabled" aria-disabled="true">실행 결과 >>></li>
+                        </ul>
+                    </div>
+                    <div id="drawflow"></div>
+                </div>
+            </div>
+        </div>
+        <!-- [ Main Content ] end -->
+    </div>
+</div>
+
+<!-- [ Modal ] start -->
+<div class="modal fade" id="drawflowLogModal" tabindex="-1" aria-labelledby="drawflowLogModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="drawflowLogModalLabel">Modal title</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body overflow-auto" style="max-height: 700px"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="pipelineUploadModal" tabindex="-1" aria-labelledby="pipelineUploadLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="pipelineUploadLabel">파이프라인 업로드</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form action="#" id="pipelineUploadModalForm" enctype="multipart/form-data" autocomplete="off">
+                    <div class="form-group">
+                        <label class='form-label'>이름:</label>
+                        <div class="input-group m-b-10">
+                            <input type="text" class="form-control" id="pipelineUploadModalFormInputName" name="name">
+                        </div>
+                        <label class='form-label'>설명:</label>
+                        <div class="input-group m-b-10">
+                            <input type="text" class="form-control" id="pipelineUploadModalFormInputDescription"
+                                name="decription">
+                        </div>
+                        <label class='form-label'>파일:</label>
+                        <div class="input-group m-b-10">
+                            <input type="file" class="form-control" id="pipelineUploadModalFormInputFile" name="file"
+                                accept="yaml">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary">업로드</button>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- [ Modal ] end -->
+{% endblock %}
+
+{% block js %}
+<!-- i18next -->
+<script src="https://unpkg.com/i18next@22.4.13/dist/umd/i18next.min.js"></script>
+
+<script src="https://cdn.jsdelivr.net/gh/jerosoler/Drawflow/dist/drawflow.min.js"></script>
+
+<!-- JustValidate JavaScript -->
+<script src="https://unpkg.com/just-validate@3.3.1/dist/just-validate.production.min.js"></script>
+
+<script type="module" src="{% static 'js/custom/simulation.js' %}"></script>
+{% endblock %}

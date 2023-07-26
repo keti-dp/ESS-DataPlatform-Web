@@ -1,5 +1,8 @@
 {
+    "choiceNewComponentOrPipelineMessage": "Add a new component or select an existing pipeline.",
     "fault": "Fault",
     "monitoringLogSuccessMessage": "It's normally working at today.",
+    "notAddingComponentMessage": "Can't add component to pipeline.",
+    "notResetPipelineMessage": "The pipeline can't be reset.",
     "warning": "Warning"
 }

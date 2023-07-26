@@ -1,12 +1,16 @@
 {
+    "enterName": "이름을 입력하세요.",
     "selectAnOperatingSite": "운영 사이트를 선택하세요.",
     "selectABank": "Bank를 선택하세요.",
     "selectARack": "Rack을 선택하세요.",
     "selectAMode": "Mode를 선택하세요.",
+    "selectAPeriod": "기간을 선택하세요.",
+    "selectAStatus": "상태를 선택하세요.",
     "setTheStartDate": "시작 날짜를 설정하세요.",
     "setTheEndDate": "마지막 날짜를 설정하세요.",
     "setTheStartTime": "시작 시간을 설정하세요.",
     "setTheEndTime": "마지막 시간을 설정하세요.",
     "selectDataTypes": "1가지 이상의 데이터 타입을 선택하세요.",
-    "selectDataDe-Identification": "데이터 비식별화 유무를 선택하세요."
+    "selectDataDe-Identification": "데이터 비식별화 유무를 선택하세요.",
+    "uploadAPipelineFile": "파이프라인 파일을 업로드하세요."
 }

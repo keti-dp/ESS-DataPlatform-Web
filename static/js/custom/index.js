@@ -1201,6 +1201,87 @@ function changeDetailEXSoSSafetyChart(option) {
 }
 
 /**
+ * Get SoCP chart series
+ * @param {string} elementId 
+ * @param {object} option 
+ * @returns {object}
+ */
+function getSoCPChartSeries(elementId, option) {
+    let root = getChartRoot(elementId);
+    let chart = getInitialLineChart(root);
+    let chartTitle = option['chartTitle'];
+
+    chart.children.unshift(am5.Label.new(root, {
+        text: chartTitle,
+        fontSize: 25,
+        fontWeight: "500",
+        textAlign: "center",
+        x: am5.percent(50),
+        centerX: am5.percent(50),
+        paddingTop: 0,
+        paddingBottom: 0
+    }));
+
+    let xAxis = chart.xAxes.push(am5xy.ValueAxis.new(root, {
+        min: 1,
+        max: 240,
+        strictMinMaxSelection: true,
+        renderer: am5xy.AxisRendererX.new(root, {
+            minGridDistance: 100
+        }),
+        tooltip: am5.Tooltip.new(root, {})
+    }));
+
+    xAxis.children.push(
+        am5.Label.new(root, {
+            text: `[bold]${i18next.t('batteryCellNumber')}`,
+            x: am5.p50,
+            centerX: am5.p50
+        })
+    );
+
+    let yAxis = chart.yAxes.push(am5xy.ValueAxis.new(root, {
+        renderer: am5xy.AxisRendererY.new(root, {}),
+        tooltip: am5.Tooltip.new(root, {})
+    }));
+
+    yAxis.children.unshift(
+        am5.Label.new(root, {
+            rotation: -90,
+            text: `[bold]${i18next.t('frequency')}`,
+            y: am5.p50,
+            centerX: am5.p50
+        })
+    );
+
+    // HTML Code 'Degree Celsius': &#8451;
+    let degreeCelsius = '&#8451;';
+
+    let series = chart.series.push(am5xy.ColumnSeries.new(root, {
+        name: "Series",
+        xAxis: xAxis,
+        yAxis: yAxis,
+        valueXField: "cellNumber",
+        valueYField: "count",
+        tooltip: am5.Tooltip.new(root, {
+            labelHTML: `
+                <p class="text-white">${i18next.t('batteryCellNumber')}(<strong>#{valueX}</strong>)</p>
+                <p class="text-white">- ${i18next.t('frequency')}: {valueY}</p>
+                <p class="text-white">- ${i18next.t('average')} ${i18next.t('voltage')}: {voltage}(V)</p>
+                <p class="text-white">- ${i18next.t('average')} ${i18next.t('temperature')}: {temperature}(${degreeCelsius})</p>
+                <p class="text-white">- ${i18next.t('average')} ${i18next.t('current')}: {current}(A)</p>
+            `
+        })
+    }));
+
+    series.columns.template.setAll({
+        strokeWidth: 5
+    });
+
+    return series;
+}
+
+/**
  * Create avg chart line
  * @param {object} chartSeries 
  */
@@ -2838,6 +2919,227 @@ essEXSoSVisualizationSearchModalFormValidation
         loadingElement.classList.add('d-none');
     });
 
+// Search SoCP card
+let essSoCPVisualizationSearchModalFormPeriodSelectElement = document.getElementById('essSoCPVisualizationSearchModalFormPeriodSelect');
+let essSoCPVisualizationSearchModalFormStatusSelectElement = document.getElementById('essSoCPVisualizationSearchModalFormStatusSelect');
+let essSoCPVisualizationSearchModalFormOperatingSiteSelectElement = document.getElementById('essSoCPVisualizationSearchModalFormOperatingSiteSelect');
+let essSoCPVisualizationSearchModalFormBankSelectElement = document.getElementById('essSoCPVisualizationSearchModalFormBankSelect');
+let essSoCPVisualizationSearchModalFormRackSelectElement = document.getElementById('essSoCPVisualizationSearchModalFormRackSelect');
+let essSoCPVisualizationSearchModalFormStartDateTimePickerElement = document.getElementById('essSoCPVisualizationSearchModalFormStartDateTimePicker');
+let essSoCPVisualizationSearchModalFormEndDateTimePickerElement = document.getElementById('essSoCPVisualizationSearchModalFormEndDateTimePicker');
+
+essSoCPVisualizationSearchModalFormOperatingSiteSelectElement.addEventListener('change', (event) => {
+    essSoCPVisualizationSearchModalFormBankSelectElement.innerHTML = '';
+    essSoCPVisualizationSearchModalFormBankSelectElement.insertAdjacentHTML('afterbegin', `<option value="" selected disabled>${i18next.t('selectABank', { ns: 'validation' })}</option>`);
+    essSoCPVisualizationSearchModalFormBankSelectElement.setAttribute('disabled', '');
+
+    essSoCPVisualizationSearchModalFormRackSelectElement.innerHTML = '';
+    essSoCPVisualizationSearchModalFormRackSelectElement.insertAdjacentHTML('afterbegin', `<option value="" selected disabled>${i18next.t('selectARack', { ns: 'validation' })}</option>`);
+    essSoCPVisualizationSearchModalFormRackSelectElement.setAttribute('disabled', '');
+
+    let operatingSiteId = event.target.value;
+    let essProtectionMapInfoRackCountObject = essProtectionMap['info']['rackCount'];
+
+    if (essProtectionMapInfoRackCountObject[`operatingSite${operatingSiteId}`]) {
+        let bankCount = Object.keys(essProtectionMapInfoRackCountObject[`operatingSite${operatingSiteId}`]).length;
+
+        for (let i = 0; i < bankCount; i++) {
+            essSoCPVisualizationSearchModalFormBankSelectElement.insertAdjacentHTML('beforeend', `<option value="${i + 1}">${i + 1}</option>`)
+        }
+
+        essSoCPVisualizationSearchModalFormBankSelectElement.removeAttribute('disabled');
+    }
+});
+
+essSoCPVisualizationSearchModalFormBankSelectElement.addEventListener('change', (event) => {
+    essSoCPVisualizationSearchModalFormRackSelectElement.innerHTML = '';
+    essSoCPVisualizationSearchModalFormRackSelectElement.insertAdjacentHTML('afterbegin', `<option value="" selected disabled>${i18next.t('selectARack', { ns: 'validation' })}</option>`)
+
+    let operatingSiteId = essSoCPVisualizationSearchModalFormOperatingSiteSelectElement.value;
+    let bankId = event.target.value;
+    let essProtectionMapInfoRackCountObject = essProtectionMap['info']['rackCount'];
+
+    if (essProtectionMapInfoRackCountObject[`operatingSite${operatingSiteId}`]) {
+        let rackCount = essProtectionMapInfoRackCountObject[`operatingSite${operatingSiteId}`][`bank${bankId}`];
+
+        for (let i = 0; i < rackCount; i++) {
+            essSoCPVisualizationSearchModalFormRackSelectElement.insertAdjacentHTML('beforeend', `<option value="${i + 1}">${i + 1}</option>`)
+        }
+        essSoCPVisualizationSearchModalFormRackSelectElement.removeAttribute('disabled');
+    } else {
+        essSoCPVisualizationSearchModalFormRackSelectElement.setAttribute('disabled', '');
+    }
+});
+
+const essSoCPVisualizationSearchModalFormStartDateTimeTempusDominus = new tempusDominus.TempusDominus(essSoCPVisualizationSearchModalFormStartDateTimePickerElement, {
+    display: {
+        components: {
+            clock: false
+        }
+    },
+    hooks: {
+        inputFormat: (context, date) => { return DateTime.fromISO(date.toISOString()).toFormat(customFullDateFormat) }
+    }
+});
+
+const essSoCPVisualizationSearchModalFormEndDateTimeTempusDominus = new tempusDominus.TempusDominus(essSoCPVisualizationSearchModalFormEndDateTimePickerElement, {
+    display: {
+        components: {
+            clock: false
+        }
+    },
+    hooks: {
+        inputFormat: (context, date) => { return DateTime.fromISO(date.toISOString()).toFormat(customFullDateFormat) }
+    },
+    useCurrent: false
+});
+
+essSoCPVisualizationSearchModalFormStartDateTimePickerElement.addEventListener(tempusDominus.Namespace.events.change, (e) => {
+    essSoCPVisualizationSearchModalFormEndDateTimeTempusDominus.updateOptions({
+        restrictions: {
+            minDate: e.detail.date
+        },
+    });
+});
+
+const essSoCPVisualizationSearchModalFormEndDateTimeTempusDominusSubscription = essSoCPVisualizationSearchModalFormEndDateTimeTempusDominus.subscribe(tempusDominus.Namespace.events.change, (e) => {
+    essSoCPVisualizationSearchModalFormStartDateTimeTempusDominus.updateOptions({
+        restrictions: {
+            maxDate: e.date
+        }
+    });
+});
+
+const essSoCPVisualizationSearchModalFormValidation = new JustValidate('#essSoCPVisualizationSearchModalForm', {
+    errorFieldCssClass: 'is-invalid',
+    focusInvalidField: true,
+    lockForm: true,
+    tooltip: {
+        position: 'right',
+    }
+});
+essSoCPVisualizationSearchModalFormValidation
+    .addField('#essSoCPVisualizationSearchModalFormOperatingSiteSelect', [
+        {
+            rule: 'required',
+            errorMessage: `${i18next.t('selectAnOperatingSite', { ns: 'validation' })}`
+        }
+    ])
+    .addField('#essSoCPVisualizationSearchModalFormBankSelect', [
+        {
+            rule: 'required',
+            errorMessage: `${i18next.t('selectABank', { ns: 'validation' })}`
+        }
+    ])
+    .addField('#essSoCPVisualizationSearchModalFormRackSelect', [
+        {
+            rule: 'required',
+            errorMessage: `${i18next.t('selectARack', { ns: 'validation' })}`
+        }
+    ])
+    .addField('#essSoCPVisualizationSearchModalFormPeriodSelect', [
+        {
+            rule: 'required',
+            errorMessage: `${i18next.t('selectAPeriod', { ns: 'validation' })}`
+        }
+    ])
+    .addField('#essSoCPVisualizationSearchModalFormStatusSelect', [
+        {
+            rule: 'required',
+            errorMessage: `${i18next.t('selectAStatus', { ns: 'validation' })}`
+        }
+    ])
+    .addField('#essSoCPVisualizationSearchModalFormStartDateTimeInput', [
+        {
+            plugin: JustValidatePluginDate(fields => ({
+                required: true,
+                format: customFullDateFormat
+            })),
+            errorMessage: `${i18next.t('setTheStartTime', { ns: 'validation' })}`
+        },
+    ])
+    .addField('#essSoCPVisualizationSearchModalFormEndDateTimeInput', [
+        {
+            plugin: JustValidatePluginDate(fields => ({
+                required: true,
+                format: customFullDateFormat
+            })),
+            errorMessage: `${i18next.t('setTheEndTime', { ns: 'validation' })}`
+        },
+    ])
+    .onSuccess(async (event) => {
+        let cardElement = document.getElementById('socpCard');
+        let chartsRowElement = document.getElementById('socpChartsRow');
+        let loadingElement = cardElement.querySelector('.spinner-border');
+        let modalElement = document.getElementById('essSoCPVisualizationSearchModal');
+
+        // Off modal
+        bootstrap.Modal.getInstance(modalElement).hide();
+
+        // On loading UI
+        chartsRowElement.classList.add('d-none');
+        loadingElement.classList.remove('d-none');
+
+        let operatingSiteId = essSoCPVisualizationSearchModalFormOperatingSiteSelectElement.value;
+        let bankId = essSoCPVisualizationSearchModalFormBankSelectElement.value;
+        let rackId = essSoCPVisualizationSearchModalFormRackSelectElement.value;
+        let period = essSoCPVisualizationSearchModalFormPeriodSelectElement.value;
+        let status = essSoCPVisualizationSearchModalFormStatusSelectElement.value;
+        let startTime = DateTime.fromFormat(essSoCPVisualizationSearchModalFormStartDateTimeInput.value, customFullDateFormat).toFormat(customFullDateFormat);
+        let endTime = DateTime.fromFormat(essSoCPVisualizationSearchModalFormEndDateTimeInput.value, customFullDateFormat).toFormat(customFullDateFormat);
+
+        let requestUrl = new URL(`${window.location.origin}/api/ess/stats/socp/operating-sites/${operatingSiteId}/banks/${bankId}/racks/${rackId}/`);
+        requestUrl.searchParams.append('period', period);
+        requestUrl.searchParams.append('status', status);
+        requestUrl.searchParams.append('start-time', startTime);
+        requestUrl.searchParams.append('end-time', endTime);
+
+        loadData(requestUrl)
+            .then(responseData => {
+                // Set SoCP chart info
+                let socpChartSourceDataInfoElement = document.getElementById('socpChartSourceDataInfo');
+                socpChartSourceDataInfoElement.textContent = `${essSoCPVisualizationSearchModalFormOperatingSiteSelectElement.options[essSoCPVisualizationSearchModalFormOperatingSiteSelectElement.selectedIndex].text} / Bank ${bankId} / Rack ${rackId}
+                 - ${startTime}, ${i18next.t('period')}: ${period}${i18next.t('day')}, ${i18next.t('status')}: ${essSoCPVisualizationSearchModalFormStatusSelectElement.options[essSoCPVisualizationSearchModalFormStatusSelectElement.selectedIndex].text}`
+
+                // Create SoCP chart data
+                let socRangeValueObject = {};
+
+                responseData.forEach(element => {
+                    let socRange = Number(element['soc_range']);
+                    let value = element['value'];
+
+                    socRangeValueObject[socRange] = value;
+                });
+
+                for (let socRange = 0; socRange < 100; socRange = socRange + 10) {
+                    let chartData = Object.keys(socRangeValueObject[socRange]).map(key => {
+                        let cellNumberStr = key;
+                        let count = socRangeValueObject[socRange][cellNumberStr]['count'];
+                        let voltage = socRangeValueObject[socRange][cellNumberStr]['voltage'];
+                        let temperature = socRangeValueObject[socRange][cellNumberStr]['temp'];
+                        let current = socRangeValueObject[socRange][cellNumberStr]['current'];
+
+                        return {
+                            cellNumber: Number(cellNumberStr),
+                            count: count,
+                            voltage,
+                            temperature,
+                            current
+                        }
+                    });
+
+                    // Create SoCP Chart
+                    let socpChartSeries = window[`socRange${socRange}SoCPChartSeries`];
+                    socpChartSeries.data.setAll(chartData);
+                }
+
+                // Off loading UI
+                loadingElement.classList.add('d-none');
+                chartsRowElement.classList.remove('d-none');
+            })
+            .catch(error => console.log(error));
+    });
+
 // Search forecasting max-min rack cell modal
 let forecastingObjectVisualizationSearchModalElement = document.getElementById('forecastingObjectVisualizationSearchModal');
 forecastingObjectVisualizationSearchModalElement.addEventListener('show.bs.modal', event => {
@@ -3780,6 +4082,71 @@ if (!staticExSoSChartData) {
         series.data.setAll(JSON.parse(staticExSoSChartData)['over_temperature_safety']);
     });
 }
+
+// Create SoCP chart
+startTime = currentDateTime.minus({ days: 1 }).toFormat(customFullDateFormat);
+endTime = currentDateTime.toFormat(customFullDateFormat);
+requestUrl = new URL(`${window.location.origin}/api/ess/stats/socp/operating-sites/2/banks/1/racks/1/`);
+requestUrl.searchParams.append('period', 1);
+requestUrl.searchParams.append('charge_status', 0);
+requestUrl.searchParams.append('start-time', startTime);
+requestUrl.searchParams.append('end-time', endTime);
+
+loadData(requestUrl)
+    .then(responseData => {
+        // Set SoCP chart info
+        let socpChartSourceDataInfoElement = document.getElementById('socpChartSourceDataInfo');
+        socpChartSourceDataInfoElement.textContent = `${i18next.t('panriESS')} / Bank 1 / Rack 1 - ${currentDateTime.minus({ days: 1 }).toFormat(customFullDateFormat)}, ${i18next.t('period')}: 1${i18next.t('day')}, ${i18next.t('status')}: ${i18next.t('charge')}`
+
+        // Create SoCP chart data
+        let socRangeValueObject = {};
+
+        responseData.forEach(element => {
+            let socRange = Number(element['soc_range']);
+            let value = element['value'];
+
+            socRangeValueObject[socRange] = value;
+        });
+
+        for (let socRange = 0; socRange < 100; socRange = socRange + 10) {
+            let chartData = Object.keys(socRangeValueObject[socRange]).map(key => {
+                let cellNumberStr = key;
+                let count = socRangeValueObject[socRange][cellNumberStr]['count'];
+                let voltage = socRangeValueObject[socRange][cellNumberStr]['voltage'];
+                let temperature = socRangeValueObject[socRange][cellNumberStr]['temp'];
+                let current = socRangeValueObject[socRange][cellNumberStr]['current'];
+
+                return {
+                    cellNumber: Number(cellNumberStr),
+                    count: count,
+                    voltage,
+                    temperature,
+                    current
+                }
+            });
+
+            // Create SoCP Chart
+            let chartElementId = `socRange${socRange}SoCPChart`;
+            let chartOption = {
+                'chartTitle': `SoC ${socRange} ~ ${socRange + 10}`
+            }
+
+            window[`socRange${socRange}SoCPChartSeries`] = getSoCPChartSeries(chartElementId, chartOption);
+
+            let socpChartSeries = window[`socRange${socRange}SoCPChartSeries`];
+            socpChartSeries.data.setAll(chartData);
+        }
+
+        let cardElement = document.getElementById('socpCard');
+        let chartsRowElement = document.getElementById('socpChartsRow');
+        let loadingElement = cardElement.querySelector('.spinner-border');
+
+        loadingElement.classList.add('d-none');
+        chartsRowElement.classList.remove('d-none');
+    })
+    .catch(error => console.log(error))
+
+
 
 // Create forecasting max-min rack cell charts
 let forecastingMaxRackCellVoltageObject = {
