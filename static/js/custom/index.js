@@ -3712,7 +3712,7 @@ visualizationTypes.forEach(visualizationType => {
 // Create avg bank SoH chart
 let avgBankSoHChartSeries = getAvgSoHChartSeries('avgBankSoHChart');
 
-let requestUrl = new URL(`${window.location.origin}/api/ess/stats/avg-soh/operating-sites/2/banks/1/`);
+let requestUrl = new URL(`${window.location.origin}/api/ess/stats/avg-soh/operating-sites/3/banks/1/`);
 
 loadData(requestUrl)
     .then(responseData => {
@@ -3737,7 +3737,7 @@ loadData(requestUrl)
 // Create avg rack SoH chart
 let avgRackSoHChartSeries = getAvgSoHChartSeries('avgRackSoHChart');
 
-requestUrl = new URL(`${window.location.origin}/api/ess/stats/avg-soh/operating-sites/2/banks/1/racks/1/`);
+requestUrl = new URL(`${window.location.origin}/api/ess/stats/avg-soh/operating-sites/3/banks/1/racks/1/`);
 
 loadData(requestUrl)
     .then(responseData => {

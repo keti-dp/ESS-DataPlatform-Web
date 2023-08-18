@@ -132,6 +132,14 @@ DATABASES = {
             "NAME": os.getenv("ESS3_TEST_DB_NAME"),
         },
     },
+    "ess4": {
+        "ENGINE": os.getenv("ESS4_DB_ENGINE"),
+        "HOST": os.getenv("ESS4_DB_HOST"),
+        "PORT": os.getenv("ESS4_DB_PORT"),
+        "NAME": os.getenv("ESS4_DB_NAME"),
+        "USER": os.getenv("ESS4_DB_USER"),
+        "PASSWORD": os.getenv("ESS4_DB_PASSWORD"),
+    },
     "ess_feature": {
         "ENGINE": os.getenv("ESS_FEATURE_DB_ENGINE"),
         "HOST": os.getenv("ESS_FEATURE_DB_HOST"),
@@ -212,7 +220,9 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
-    "DEFAULT_AUTHENTICATION_CLASSES": ("config.authenticate.CustomJWTTokenUserAuthentication",),
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "config.authenticate.CustomJWTTokenUserAuthentication",
+    ),
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 100,
 }

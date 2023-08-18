@@ -971,6 +971,10 @@
                     "value": "0,1"
                 }
             }
+        },
+        "operatingSite4": {
+            "bank": {},
+            "rack": {}
         }
     },
     "info": {
@@ -984,6 +988,9 @@
             },
             "operatingSite3": {
                 "bank1": 11
+            },
+            "operatingSite4": {
+                "bank1": 9
             }
         }
     },
