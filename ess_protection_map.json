@@ -971,24 +971,30 @@
                     "value": "0,1"
                 }
             }
-        }
-    },
-    "info": {
-        "rackCount": {
-            "operatingSite1": {
-                "bank1": 8
-            },
-            "operatingSite2": {
-                "bank1": 9,
-                "bank2": 8
-            },
-            "operatingSite3": {
-                "bank1": 11
+        },
+        "operatingSite4": {
+            "bank": {},
+            "rack": {}
+        },
+        "info": {
+            "rackCount": {
+                "operatingSite1": {
+                    "bank1": 8
+                },
+                "operatingSite2": {
+                    "bank1": 9,
+                    "bank2": 8
+                },
+                "operatingSite3": {
+                    "bank1": 11
+                },
+                "operatingSite4": {
+                    "bank1": 9
+                }
             }
+        },
+        "meta": {
+            "description": "ESS Protection Map",
+            "version": "4.0"
         }
-    },
-    "meta": {
-        "description": "ESS Protection Map",
-        "version": "4.0"
     }
-}
