@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     "ess",
     "ess_feature",
     "ess_stats",
+    "simulation",
 ]
 
 MIDDLEWARE = [
