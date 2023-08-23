@@ -1,12 +1,9 @@
 import json
-import kfp
 import networkx as nx
-import os
 import re
-import requests
 import yaml
 from datetime import datetime
-from minio import Minio
+from django.apps import apps
 from rest_framework.decorators import action
 from rest_framework.views import APIView, Response
 from rest_framework.viewsets import ViewSet
@@ -14,35 +11,8 @@ from rest_framework import status
 from rest_framework_simplejwt.tokens import AccessToken
 from yaml.scanner import ScannerError
 
-
-KUBERFLOW_HOST = os.getenv("KUBEFLOW_HOST")
-KUBEFLOW_USERNAME = os.getenv("KUBEFLOW_USERNAME")
-KUBEFLOW_PASSWORD = os.getenv("KUBEFLOW_PASSWORD")
-KUBEFLOW_NAMESPACE = os.getenv("KUBEFLOW_NAMESPACE")
-
-session = requests.Session()
-response = session.get(KUBERFLOW_HOST)
-
-headers = {
-    "Content-Type": "application/x-www-form-urlencoded",
-}
-
-user_data = {"login": KUBEFLOW_USERNAME, "password": KUBEFLOW_PASSWORD}
-session.post(response.url, headers=headers, data=user_data)
-session_cookie = session.cookies.get_dict()["authservice_session"]
-
-kubeflow_client = kfp.Client(
-    host=f"{KUBERFLOW_HOST}/pipeline",
-    namespace=f"{KUBEFLOW_NAMESPACE}",
-    cookies=f"authservice_session={session_cookie}",
-)
-
-minio_access_key = os.getenv("MINIO_ACCESS_KEY")
-minio_secret_key = os.getenv("MINIO_SECRET_KEY")
-minio_endpoint = os.getenv("MINIO_ENDPOINT")
-
-minio_client = Minio(minio_endpoint, minio_access_key, minio_secret_key, secure=False)
-
+kubeflow_client = apps.get_app_config('simulation').kubeflow_client
+minio_client = apps.get_app_config('simulation').minio_client
 
 def convert_to_dict(args):
     result_dict = {}
