@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "debug_toolbar",
+    "django_apscheduler",
     "django_filters",
     "django_elasticsearch_dsl",
     "django_elasticsearch_dsl_drf",
@@ -221,9 +222,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
-    "DEFAULT_AUTHENTICATION_CLASSES": (
-        "config.authenticate.CustomJWTTokenUserAuthentication",
-    ),
+    "DEFAULT_AUTHENTICATION_CLASSES": ("config.authenticate.CustomJWTTokenUserAuthentication",),
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 100,
 }
@@ -239,3 +238,11 @@ SIMPLE_JWT = {
 INTERNAL_IPS = [
     "127.0.0.1",
 ]
+
+# Django APScheduler settings
+
+APSCHEDULER_DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S"
+
+APSCHEDULER_RUN_NOW_TIMEOUT = 25
+
+SCHEDULER_DEFAULT = True

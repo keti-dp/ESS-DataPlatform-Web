@@ -11,8 +11,9 @@ from rest_framework import status
 from rest_framework_simplejwt.tokens import AccessToken
 from yaml.scanner import ScannerError
 
-kubeflow_client = apps.get_app_config('simulation').kubeflow_client
-minio_client = apps.get_app_config('simulation').minio_client
+
+minio_client = apps.get_app_config("simulation").minio_client
+
 
 def convert_to_dict(args):
     result_dict = {}
@@ -195,7 +196,7 @@ def get_pipeline_info(pipeline):
 
 class SimulationPipelineViewSet(ViewSet):
     def list(self, request):
-        list_pipelines = kubeflow_client.list_pipelines(page_size=100)
+        list_pipelines = apps.get_app_config("simulation").kubeflow_client.list_pipelines(page_size=100)
 
         pipelines = list_pipelines.pipelines
 
@@ -233,7 +234,7 @@ class SimulationPipelineViewSet(ViewSet):
     @action(detail=True, methods=["post"])
     def pipeline_run(self, request, pk=None):
         pipeline_id = pk
-        pipeline = kubeflow_client.get_pipeline(pipeline_id)
+        pipeline = apps.get_app_config("simulation").kubeflow_client.get_pipeline(pipeline_id)
         pipeline_name = pipeline.name
 
         bucket_name = "mlpipeline"
@@ -266,7 +267,7 @@ class SimulationPipelineViewSet(ViewSet):
         access_token = AccessToken(access_token_str)
         username = access_token["name"]
 
-        pipeline = kubeflow_client.create_run_from_pipeline_package(
+        pipeline = apps.get_app_config("simulation").kubeflow_client.create_run_from_pipeline_package(
             pipeline_file=pipeline_temp_file,
             arguments=None,
             run_name=f"[ESS DP Web][{username}][{pipeline_name}] {datetime.strftime(datetime.now(), '%Y-%m-%dT%H:%M:%S')}",
@@ -280,7 +281,7 @@ class SimulationPipelineViewSet(ViewSet):
 class SimulationPipelineRunViewSet(ViewSet):
     def retrieve(self, request, pk=None):
         run_id = pk
-        run_info = kubeflow_client.get_run(run_id)
+        run_info = apps.get_app_config("simulation").kubeflow_client.get_run(run_id)
 
         pipeline_runtime = run_info.pipeline_runtime
         pipeline_run_status = run_info.run.status
@@ -345,7 +346,7 @@ class SimulationPipelineUploadView(APIView):
                 "pipeline_package_path": pipeline_package_path,
             }
 
-            pipeline_info = kubeflow_client.upload_pipeline(**request_data)
+            pipeline_info = apps.get_app_config("simulation").kubeflow_client.upload_pipeline(**request_data)
             pipeline_id = pipeline_info.id
 
             return Response({"pipeline_id": pipeline_id}, status=status.HTTP_201_CREATED)
