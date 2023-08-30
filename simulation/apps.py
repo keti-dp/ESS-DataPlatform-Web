@@ -4,6 +4,7 @@ import kfp
 import requests
 
 from django.apps import AppConfig
+from django.conf import settings
 from minio import Minio
 
 # Kubeflow settings
@@ -30,8 +31,8 @@ minio_endpoint = os.getenv("MINIO_ENDPOINT")
 
 
 class SimulationConfig(AppConfig):
-    default_auto_field = 'django.db.models.BigAutoField'
-    name = 'simulation'
+    default_auto_field = "django.db.models.BigAutoField"
+    name = "simulation"
 
     kubeflow_client = kfp.Client(
         host=f"{KUBERFLOW_HOST}/pipeline",
@@ -40,3 +41,9 @@ class SimulationConfig(AppConfig):
     )
 
     minio_client = Minio(minio_endpoint, minio_access_key, minio_secret_key, secure=False)
+
+    def ready(self):
+        if settings.SCHEDULER_DEFAULT:
+            from . import runapscheduler
+
+            runapscheduler.start()
