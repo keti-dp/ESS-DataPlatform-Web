@@ -19,8 +19,7 @@ KUBEFLOW_USERNAME = os.getenv("KUBEFLOW_USERNAME")
 KUBEFLOW_PASSWORD = os.getenv("KUBEFLOW_PASSWORD")
 KUBEFLOW_NAMESPACE = os.getenv("KUBEFLOW_NAMESPACE")
 
-SCHEDULER_INTERVAL_TIME_HOURS = 23
-SCHEDULER_INTERVAL_TIME_MINUTES = 1
+SCHEDULER_INTERVAL_TIME_HOURS = 1
 
 
 def refresh_simulation_job():
@@ -53,7 +52,7 @@ def start():
 
     scheduler.add_job(
         refresh_simulation_job,
-        trigger=IntervalTrigger(minutes=SCHEDULER_INTERVAL_TIME_MINUTES),
+        trigger=IntervalTrigger(hours=1),
         id="refresh_simulation_job",
         max_instances=1,
         replace_existing=True,
