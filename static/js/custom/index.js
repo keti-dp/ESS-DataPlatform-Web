@@ -310,7 +310,7 @@ async function createForecastingBankSoLChart() {
 
     let chartData = [];
 
-    let requestUrl = new URL(`${window.location.origin}/api/ess/stats/avg-soh/operating-sites/2/banks/1/`);
+    let requestUrl = new URL(`${window.location.origin}/api/ess/stats/avg-soh/operating-sites/1/banks/1/`);
 
     let avgBankSoHData = await loadData(requestUrl);
     avgBankSoHData.forEach(element => {
@@ -321,7 +321,7 @@ async function createForecastingBankSoLChart() {
     });
 
     // - Save forecasting SoL
-    requestUrl = new URL(`${window.location.origin}/api/ess/stats/forecasting-sol/operating-sites/2/banks/1/`);
+    requestUrl = new URL(`${window.location.origin}/api/ess/stats/forecasting-sol/operating-sites/1/banks/1/`);
 
     let forecastingBankSoLData = await loadData(requestUrl);
 
