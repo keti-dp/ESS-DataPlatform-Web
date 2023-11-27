@@ -555,7 +555,7 @@ function loadPrimaryMonitoringLogPagination() {
             }
 
             if (!requestUrl.searchParams.get('page') || requestUrl.searchParams.get('page') == 1) {
-                primaryMonitoringLogInterval = setInterval(loadLatestMonitoringLog(primaryMonitoringLogColumnContainerElement.id, url, getPrimaryMonitoringLogAlertElement), 1000);
+                primaryMonitoringLogInterval = setInterval(loadLatestMonitoringLog(primaryMonitoringLogColumnContainerElement.id, url, getPrimaryMonitoringLogAlertElement), 60 * 1000);
             }
 
             loadData(requestUrl)
@@ -707,7 +707,7 @@ async function monitoringLogColumnSelectHandler(event, url) {
                 monitoringLogColumnContainerElement.appendChild(alertElement);
             }
         });
-    }, 1000);
+    }, 60 * 1000);
 }
 
 /**
@@ -783,7 +783,7 @@ async function monitoringLogColumnInputHandler(event, url) {
                 monitoringLogColumnContainerElement.appendChild(alertElement);
             }
         });
-    }, 1000);
+    }, 60 * 1000);
 }
 
 /* Initial task */
@@ -829,7 +829,7 @@ operatingSiteMonitoringListColumnIds.forEach((operatingSiteMonitoringListColumnI
             }).catch(error => {
                 console.log(error);
             });
-        }, 1000);
+        }, 60 * 1000);
 
         // - Draw monitoring list(icon signal)
         setInterval(async () => {
@@ -870,7 +870,7 @@ operatingSiteMonitoringListColumnIds.forEach((operatingSiteMonitoringListColumnI
                 operatingSiteMonitoringListBankIcon.classList.remove('text-secondary', 'text-danger');
                 operatingSiteMonitoringListBankIcon.classList.add('text-success');
             }
-        }, 1000);
+        }, 60 * 1000);
     });
 });
 
@@ -966,7 +966,7 @@ monitoringLogColumnIds.forEach(async (monitoringLogColumnId, index) => {
         let url = `${window.location.origin}/api/ess-feature/protectionmap/operating-sites/${operatingSiteId}/`;
 
         loadLatestMonitoringLog(monitoringLogColumnContainerElementId, url, getMonitoringLogAlertElement);
-    }, 1000);
+    }, 60 * 1000);
 });
 
 // - Download operating data
@@ -1509,7 +1509,7 @@ fetch(requestUrl).then(response => {
     setUpPaginationButton(responseData, primaryMonitoringLogPagination, primaryMonitoringLogPaginationUlElement);
 
     // Load latest primary monitoring log
-    primaryMonitoringLogInterval = setInterval(loadLatestMonitoringLog(primaryMonitoringLogColumnContainerElement.id, normalFullMonitoringLogUrl, getPrimaryMonitoringLogAlertElement), 1000);
+    primaryMonitoringLogInterval = setInterval(loadLatestMonitoringLog(primaryMonitoringLogColumnContainerElement.id, normalFullMonitoringLogUrl, getPrimaryMonitoringLogAlertElement), 60 * 1000);
 
     // Pagination event
     loadPrimaryMonitoringLogPagination();
@@ -1693,7 +1693,7 @@ testModSwitchElement.addEventListener('change', event => {
             // Load latest primary monitoring log
             primaryMonitoringLogInterval = setInterval(() => {
                 loadLatestMonitoringLog(primaryMonitoringLogColumnContainerElement.id, testFullMonitoringLogUrl, getPrimaryMonitoringLogAlertElement);
-            }, 1000);
+            }, 60 * 1000);
 
             // Pagination event
             loadPrimaryMonitoringLogPagination();
@@ -1761,7 +1761,7 @@ testModSwitchElement.addEventListener('change', event => {
             // Set interval of initial monitoring log
             initialMonitoringLogLoadInterval[monitoringLogColumnId] = setInterval(async () => {
                 loadLatestMonitoringLog(monitoringLogColumnContainerElementId, url, getMonitoringLogAlertElement);
-            }, 1000);
+            }, 60 * 1000);
 
             // Event log search & tag
             testMonitoringLogSelectHandlers[monitoringLogColumnId] = (event) => monitoringLogColumnSelectHandler(event, url);
@@ -1790,7 +1790,7 @@ testModSwitchElement.addEventListener('change', event => {
             }
 
             // Load latest primary monitoring log
-            primaryMonitoringLogInterval = setInterval(loadLatestMonitoringLog(primaryMonitoringLogColumnContainerElement.id, normalFullMonitoringLogUrl, getPrimaryMonitoringLogAlertElement), 1000);
+            primaryMonitoringLogInterval = setInterval(loadLatestMonitoringLog(primaryMonitoringLogColumnContainerElement.id, normalFullMonitoringLogUrl, getPrimaryMonitoringLogAlertElement), 60 * 1000);
 
             // Pagination event
             loadPrimaryMonitoringLogPagination();
@@ -1858,7 +1858,7 @@ testModSwitchElement.addEventListener('change', event => {
 
             initialMonitoringLogLoadInterval[monitoringLogColumnId] = setInterval(async () => {
                 loadLatestMonitoringLog(monitoringLogColumnContainerElementId, url, getMonitoringLogAlertElement);
-            }, 1000);
+            }, 60 * 1000);
 
             // Event log search & tag
             normalMonitoringLogSelectHandlers[monitoringLogColumnId] = (event) => monitoringLogColumnSelectHandler(event, url);
