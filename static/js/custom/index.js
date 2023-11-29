@@ -4312,91 +4312,91 @@ loadData(requestUrl)
 
 
 // Create multi step forecasting max cell voltage chart
-let multiStepForecastingMaxCellVoltageSeriesList;
-let multiStepForecastingMaxCellChartDefaultOption = {
-    seriesInfo: [
-        {
-            name: "Observed",
-            value: 'value1'
-        }, {
-            name: "LSTM_Attention",
-            value: 'value2'
-        },
-    ]
-};
+// let multiStepForecastingMaxCellVoltageSeriesList;
+// let multiStepForecastingMaxCellChartDefaultOption = {
+//     seriesInfo: [
+//         {
+//             name: "Observed",
+//             value: 'value1'
+//         }, {
+//             name: "LSTM_Attention",
+//             value: 'value2'
+//         },
+//     ]
+// };
 
-startTime = currentDateTime.startOf('day').toFormat(customTimeDesignatorFullDateTimeFormat);
-endTime = currentDateTime.startOf('day').plus({ days: 1 }).toFormat(customTimeDesignatorFullDateTimeFormat);
-requestUrl = new URL(`${window.location.origin}/api/ess/stats/multi-step-forecasting-max-cell-voltage/operating-sites/2/banks/1/racks/1/`);
-requestUrl.searchParams.append('start-time', startTime);
-requestUrl.searchParams.append('end-time', endTime);
+// startTime = currentDateTime.startOf('day').toFormat(customTimeDesignatorFullDateTimeFormat);
+// endTime = currentDateTime.startOf('day').plus({ days: 1 }).toFormat(customTimeDesignatorFullDateTimeFormat);
+// requestUrl = new URL(`${window.location.origin}/api/ess/stats/multi-step-forecasting-max-cell-voltage/operating-sites/2/banks/1/racks/1/`);
+// requestUrl.searchParams.append('start-time', startTime);
+// requestUrl.searchParams.append('end-time', endTime);
 
-loadData(requestUrl)
-    .then(async (responseData) => {
-        let cardElementId = 'multiStepForecastingMaxCellVoltageCard';
-        let chartElementId = 'multiStepForecastingMaxCellVoltageChart';
-        let currentDate = currentDateTime.toFormat(customFullDateFormat);
+// loadData(requestUrl)
+//     .then(async (responseData) => {
+//         let cardElementId = 'multiStepForecastingMaxCellVoltageCard';
+//         let chartElementId = 'multiStepForecastingMaxCellVoltageChart';
+//         let currentDate = currentDateTime.toFormat(customFullDateFormat);
 
-        let observedDataRequestUrl = new URL(`${window.location.origin}/api/ess/operating-sites/2/banks/1/racks/1/`);
-        observedDataRequestUrl.searchParams.append('fields', 'timestamp,rack_max_cell_voltage');
-        observedDataRequestUrl.searchParams.append('date', currentDate);
-        observedDataRequestUrl.searchParams.append('no_page', '');
+//         let observedDataRequestUrl = new URL(`${window.location.origin}/api/ess/operating-sites/2/banks/1/racks/1/`);
+//         observedDataRequestUrl.searchParams.append('fields', 'timestamp,rack_max_cell_voltage');
+//         observedDataRequestUrl.searchParams.append('date', currentDate);
+//         observedDataRequestUrl.searchParams.append('no_page', '');
 
-        let observedData = await loadData(observedDataRequestUrl);
+//         let observedData = await loadData(observedDataRequestUrl);
 
-        let valueDataObject = {};
+//         let valueDataObject = {};
 
-        observedData.forEach(element => {
-            valueDataObject[DateTime.fromISO(element['timestamp']).toMillis()] = {
-                value1: element['rack_max_cell_voltage']
-            };
-        });
+//         observedData.forEach(element => {
+//             valueDataObject[DateTime.fromISO(element['timestamp']).toMillis()] = {
+//                 value1: element['rack_max_cell_voltage']
+//             };
+//         });
 
-        let responseDataValues = responseData[0]['values'];
-        responseDataValues['time'].forEach((element, index) => {
-            let timeMillis = DateTime.fromFormat(element, customFullDateTimeFormat).toMillis();
-            let value2 = responseDataValues['lstm_attention'][index];
+//         let responseDataValues = responseData[0]['values'];
+//         responseDataValues['time'].forEach((element, index) => {
+//             let timeMillis = DateTime.fromFormat(element, customFullDateTimeFormat).toMillis();
+//             let value2 = responseDataValues['lstm_attention'][index];
 
-            if (valueDataObject[timeMillis]) {
-                valueDataObject[timeMillis]['value2'] = value2;
-            } else {
-                valueDataObject[timeMillis] = {
-                    value2: value2
-                }
-            }
-        });
+//             if (valueDataObject[timeMillis]) {
+//                 valueDataObject[timeMillis]['value2'] = value2;
+//             } else {
+//                 valueDataObject[timeMillis] = {
+//                     value2: value2
+//                 }
+//             }
+//         });
 
-        let chartData = [];
+//         let chartData = [];
 
-        Object.keys(valueDataObject).forEach(timeMillis => {
-            if (Object.keys(valueDataObject[timeMillis]).length >= 2) {
-                chartData.push({
-                    time: Number.parseInt(timeMillis),
-                    ...valueDataObject[timeMillis]
-                });
-            }
+//         Object.keys(valueDataObject).forEach(timeMillis => {
+//             if (Object.keys(valueDataObject[timeMillis]).length >= 2) {
+//                 chartData.push({
+//                     time: Number.parseInt(timeMillis),
+//                     ...valueDataObject[timeMillis]
+//                 });
+//             }
 
-            if (timeMillis > currentDateTime.toMillis()) {
-                chartData.push({
-                    time: Number.parseInt(timeMillis),
-                    ...valueDataObject[timeMillis]
-                });
-            }
-        });
+//             if (timeMillis > currentDateTime.toMillis()) {
+//                 chartData.push({
+//                     time: Number.parseInt(timeMillis),
+//                     ...valueDataObject[timeMillis]
+//                 });
+//             }
+//         });
 
-        multiStepForecastingMaxCellVoltageSeriesList = getMultiStepForecastingMaxCellVoltageSeriesList(chartElementId, multiStepForecastingMaxCellChartDefaultOption);
-        multiStepForecastingMaxCellVoltageSeriesList.forEach(chartSeries => {
-            chartSeries.data.setAll(chartData);
-        });
+//         multiStepForecastingMaxCellVoltageSeriesList = getMultiStepForecastingMaxCellVoltageSeriesList(chartElementId, multiStepForecastingMaxCellChartDefaultOption);
+//         multiStepForecastingMaxCellVoltageSeriesList.forEach(chartSeries => {
+//             chartSeries.data.setAll(chartData);
+//         });
 
-        // Setup loading UI
-        let cardElement = document.getElementById(cardElementId);
-        cardElement.querySelector('.spinner-border').classList.add('d-none');
+//         // Setup loading UI
+//         let cardElement = document.getElementById(cardElementId);
+//         cardElement.querySelector('.spinner-border').classList.add('d-none');
 
-        let chartElement = document.getElementById(chartElementId);
-        chartElement.parentNode.classList.remove('d-none');
-    })
-    .catch(error => console.log(error));
+//         let chartElement = document.getElementById(chartElementId);
+//         chartElement.parentNode.classList.remove('d-none');
+//     })
+//     .catch(error => console.log(error));
 
 
 //GAP chart
