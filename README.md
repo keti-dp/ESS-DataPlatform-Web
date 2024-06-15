@@ -51,5 +51,3 @@ root $ docker run -i -p 8002:8002 web
 ```sh
 (.venv) $ python manage.py test --keepdb --nomigrations
 ```
-
-...
