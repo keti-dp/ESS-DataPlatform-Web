@@ -1,9 +1,9 @@
-import commonEN from '../../resources/locales/en/common.json' assert { type: "json" };
-import messageEN from '../../resources/locales/en/message.json' assert { type: "json" };
-import validationEN from '../../resources/locales/en/validation.json' assert { type: "json" };
-import commonKO from '../../resources/locales/ko/common.json' assert { type: "json" };
-import messageKO from '../../resources/locales/ko/message.json' assert { type: "json" };
-import validationKO from '../../resources/locales/ko/validation.json' assert { type: "json" };
+import commonEN from '../../resources/locales/en/common.json' with { type: "json" };
+import messageEN from '../../resources/locales/en/message.json' with { type: "json" };
+import validationEN from '../../resources/locales/en/validation.json' with { type: "json" };
+import commonKO from '../../resources/locales/ko/common.json' with { type: "json" };
+import messageKO from '../../resources/locales/ko/message.json' with { type: "json" };
+import validationKO from '../../resources/locales/ko/validation.json' with { type: "json" };
 
 let token = Cookies.get('access_token');
 let decoded = jwt_decode(token);
