@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block html_head %}
+<link rel="stylesheet" href="{% static 'css/custom/openapi_detail.css' %}">
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/default.min.css">
+{% endblock %}
+
+{% block content %}
+<!-- [Header] Start -->
+<header class="ex-header">
+    <div class="container">
+        <div class="row">
+            <div class="col-xl-10 offset-xl-1">
+                <h1>{{ openapi.name }} API</h1>
+            </div>
+        </div>
+    </div>
+</header>
+<!-- [Header] End -->
+
+<!-- [Content] Start -->
+<div class="ex-basic-1 pt-5 pb-5">
+    <div class="container-fluid">
+        <div class="row mx-1 gx-5">
+            <div class="col-12 col-lg-3 col-xl-2">
+                <div id="apiListGroup" class="list-group"></div>
+            </div>
+            <div class="col-12 col-lg-7 col-xl-8">
+                <div id="apiContent"></div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- [Content] End -->
+
+<!-- [Modal] Start -->
+<div class="modal fade" id="datasetListModal" tabindex="-1" aria-labelledby="datasetListModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="datasetListModalLabel">{{ openapi.name }} 데이터셋</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                {% for dataset in object.dataset_set.all %}
+                <h5>{{ dataset.name }}</h5>
+                <p class="mb-3">{{ dataset.description }}</p>
+                <a href="{{dataset.file.url }}" class="text-primary">다운로드</a>
+                <hr>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+<!-- [Modal] End -->
+{% endblock %}
+
+{% block js %}
+{{ openapi.api_definition|json_script:'apiDefinition' }}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
+
+<script>
+    let bodyAttributes = [
+        ['data-bs-target', '#apiListGroup'],
+        ['data-bs-spy', 'scroll'],
+        ['data-bs-offset', '0'],
+        ['tabindex', '0'],
+    ];
+
+    bodyAttributes.forEach(element => {
+        let [attributeName, attributeValue] = element;
+
+        document.body.setAttribute(attributeName, attributeValue);
+    })
+
+
+    let scrollSpy = new bootstrap.ScrollSpy(document.body, {
+        target: '#apiListGroup'
+    })
+</script>
+
+<script src="{% static 'js/custom/openapi_detail.js' %}" defer data-api-description="{{ openapi.description }}"
+    data-api-type="{{ openapi.type }}" data-api-version="{{ openapi.version }}"
+    data-api-updated-time="{{ openapi.updated_time|date:'Y-m-d H:i:s'}}"
+    data-api-context="{{ openapi.context }}"></script>
+{% endblock %}

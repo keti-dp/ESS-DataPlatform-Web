@@ -1,0 +1,26 @@
+body {
+    position: relative;
+}
+
+code {
+    font-family: 'Noto Sans KR', sans-serif;
+}
+
+#apiListGroup {
+    position: sticky;
+    top: 2px;
+    height: calc(100vh - 7em);
+}
+
+.list-group-item {
+    border: 0px;
+}
+
+.list-group-item.list-group-item-action.active {
+    background: var(--primary);
+}
+
+code.language-json {
+    max-height: 700px;
+    overflow-y: auto;
+}

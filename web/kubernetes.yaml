@@ -1,0 +1,52 @@
+# "" 부분에는 본인 프로젝트에 맞는 값을 입력하세요
+# - name/app: Deployment, Service, 컨테이너 이름 (예: open-web)
+# - image: "<리전>-docker.pkg.dev/GOOGLE_CLOUD_PROJECT/<Artifact Registry 저장소명>/<이미지명>:COMMIT_SHA"
+#   (GOOGLE_CLOUD_PROJECT, COMMIT_SHA는 cloudbuild에서 sed로 치환됨)
+# - configMapRef.name: 환경 변수가 정의된 ConfigMap 이름
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ""
+  labels:
+    app: ""
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: ""
+  template:
+    metadata:
+      labels:
+        app: ""
+    spec:
+      volumes:
+      - name: service-account-key
+        secret:
+          secretName: cloud-service-account-key
+      containers:
+      - name: ""
+        image: ""
+        ports:
+        - containerPort: 8000
+        volumeMounts:
+        - name: service-account-key
+          mountPath: /var/secrets/google
+        env:
+        - name: GOOGLE_APPLICATION_CREDENTIALS
+          value: /var/secrets/google/key.json
+        envFrom:
+          - configMapRef:
+              name: ""
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: ""
+spec:
+  selector:
+    app: ""
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 8000
+  type: LoadBalancer

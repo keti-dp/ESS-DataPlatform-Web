@@ -1,0 +1,44 @@
+/* Color Info
+* Useful color info sites
+  - Color naming site: https://www.htmlcsscolor.com/
+  - Color palettes site: https://coolors.co/
+
+* Color naming
+  - #1c262f > black pearl
+  - #212d37 > tangaroa
+  - #00589b > cobalt
+  - #08A898 > persian green
+  - #f73161 > radical red
+  - #ead5e6 > snuff
+  - #aaaaaa > dark gray
+*/
+
+:root {
+	--primary: #1c262f;
+	--primary-light: #212d37;
+	--secondary: #00589b;
+	--tertiary: #08A898;
+	--gradient: linear-gradient(to right, #00589b, #08A898);
+	--gradient-warning: linear-gradient(to right, #f73161, #ead5e6);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-family: 'Noto Sans KR', sans-serif;
+}
+
+button {
+    font-family: 'Noto Sans KR', sans-serif;
+}
+
+p {
+    font-family: 'Noto Sans KR', sans-serif;
+}
+
+a {
+    font-family: 'Noto Sans KR', sans-serif;
+}

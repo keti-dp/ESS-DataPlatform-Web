@@ -1,0 +1,118 @@
+/* Description: Master CSS file */
+
+/*****************************************
+Table Of Contents:
+- General Styles
+- Login
+******************************************/
+
+
+/**************************/
+/*     General Styles     */
+/**************************/
+
+h1 {
+	font-size: 60px;
+	font-weight: 500;
+}
+
+p,
+ul,
+h4 {
+	margin: 0;
+	padding: 0;
+}
+
+a {
+	color: white;
+	text-decoration: none;
+}
+
+li {
+	list-style-type: none;
+}
+
+/* Section Background */
+.signin {
+	height: 100vh;
+	position: relative;
+}
+
+/* Gradient Border And Background On Icons */
+.signin_text,
+.signin .fas {
+	padding: 15px 0;
+	background: -webkit-gradient(linear,
+			left top,
+			left bottom,
+			from(#0ee951),
+			to(#00dabf));
+	background-clip: text;
+	-webkit-background-clip: text;
+	-webkit-text-fill-color: transparent;
+}
+
+
+/****************/
+/*     Home     */
+/****************/
+.signin {
+	background-image: url(../../assets/images/home.jpg);
+	background-size: cover;
+	background-position: center;
+	background-repeat: no-repeat;
+	background-attachment: fixed;
+}
+
+.signin form {
+	border: 10px solid;
+	border-image-slice: 1;
+	border-width: 3px;
+	border-image-source: var(--gradient);
+}
+
+#signinForm button:hover {
+	color: #00589b;
+}
+
+.btn-google {
+	background-color: white;
+	color: #333333;
+	font-family: 'Noto Sans KR', sans-serif;
+}
+
+.btn-github {
+	background-color: white;
+	color: #333333;
+	font-family: 'Noto Sans KR', sans-serif;
+}
+
+.btn-naver {
+	background-color: white;
+	color: #333333;
+	font-family: 'Noto Sans KR', sans-serif;
+}
+
+.icon-google {
+	background-image: url(../../assets/images/google-logo.png);
+	background-size: cover;
+	display: inline-block;
+	width: 14px;
+	height: 14px;
+}
+
+.icon-github {
+	background-image: url(../../assets/images/github-logo.png);
+	background-size: cover;
+	display: inline-block;
+	width: 14px;
+	height: 14px;
+}
+
+.icon-naver {
+	background-image: url(../../assets/images/naver-logo.png);
+	background-size: cover;
+	display: inline-block;
+	width: 14px;
+	height: 14px;
+}

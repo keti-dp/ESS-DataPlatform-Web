@@ -1,0 +1,65 @@
+.ex-basic-1 {
+    min-height: 700px;
+}
+
+.navbar .fa-stack-4x {
+    background: -webkit-gradient(linear,
+            left top,
+            left bottom,
+            from(#00589b),
+            to(#08A898));
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    transition: all 0.2s ease;
+}
+
+#button-addon2 {
+    background-color: #1c262f;
+    border: 10px solid;
+    border-image-slice: 1;
+    border-width: 3px;
+    border-image-source: linear-gradient(to right, #00589b, #08A898);
+}
+
+.custom-card {
+    background-color: #1c262f;
+    padding: 20px;
+    border: 10px solid;
+    border-image-slice: 1;
+    border-width: 3px;
+    border-image-source: linear-gradient(to right, #00589b, #08A898);
+    min-height: 240px;
+}
+
+.custom-card:hover {
+    border: 10px solid;
+    transform: scale(1.01);
+    border-image-slice: 1;
+    border-width: 2px;
+    box-shadow: 5px 5px 0px 0px #00589b;
+}
+
+.custom-card .fas {
+    padding: 15px 0;
+    background: -webkit-gradient(linear,
+            left top,
+            left bottom,
+            from(#00589b),
+            to(#08A898));
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.custom-card .img {
+    padding: 15px 0;
+    background: -webkit-gradient(linear,
+            left top,
+            left bottom,
+            from(#00589b),
+            to(#08A898));
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}

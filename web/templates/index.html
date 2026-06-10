@@ -1,0 +1,142 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block html_head %}
+<link href="{% static 'css/custom/index.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<!-- [Home] Start -->
+<section class="home py-5 d-flex align-items-center" id="header">
+    <div class="container text-light py-5" data-aos="fade-right">
+        {# 기관/조직명을 입력하세요 (예: KETI) #}
+        <h1 class="headline">""의 <span class="home_text">공개 API와 데이터셋</span>을<br>마음껏 사용하세요.</h1>
+        {# 기관/조직명을 입력하세요 #}
+        <p class="para para-light py-3">""와 함께한 프로젝트의 데이터와 기술을 여러분에게 제공합니다.<br>지금 서비스에 가입하고 사용해보세요.</p>
+        <div class="d-flex align-items-center">
+            <p class="p-2"><i class="fas fa-cog fa-lg"></i></p>
+            <p>API</p>
+        </div>
+        <div class="d-flex align-items-center">
+            <p class="p-2"><i class="fas fa-cog fa-lg"></i></p>
+            <p>데이터셋</p>
+        </div>
+        {% if user.is_anonymous%}
+        <div class="my-3">
+            <a class="btn btn-home" href="{% url 'login' %}">Start</a>
+        </div>
+        {% endif %}
+    </div>
+</section>
+<!-- [Home] End -->
+
+<!-- [About] Start -->
+<section class="about d-flex align-items-center text-light py-5" id="about">
+    <div class="container">
+        <div class="row d-flex align-items-center">
+            <div class="col-lg-6" data-aos="fade-right">
+                <p>ABOUT US</p>
+                {# 기관/조직명 및 부서명을 입력하세요 (예: KETI 지능융합SW연구센터) #}
+                <h1>""<br>""</h1>
+                <p class="py-2 para-light">산업 현장의 데이터를 활용한 데이터 플랫폼 서비스를 제공합니다.</p>
+                <p class="py-2 para-light">다양한 산업 환경의 디지털 전환을 지원합니다.</p>
+                <p class="py-2 para-light">데이터와 AI 응용 기술로 산업 구조 혁신 및 적용을 확대합니다.</p>
+            </div>
+            <div class="col-lg-6 text-center py-4 py-sm-0" data-aos="fade-down">
+                <img class="img-fluid" src="{% static 'assets/images/about.png' %}" alt="about">
+            </div>
+        </div>
+    </div>
+</section>
+<!-- [About] End -->
+
+<!-- [Services] Start -->
+<section class="services d-flex align-items-center py-5" id="features">
+    <div class="container text-light">
+        <div class="text-center pb-4">
+            <p>OUR FEATURES</p>
+            <h2 class="py-2">Explore special know-how</h2>
+        </div>
+        <div class="row gy-4 py-2" data-aos="zoom-in">
+            <div class="col-lg-4">
+                <div class="card bg-transparent">
+                    <i class="fas fa-industry fa-2x"></i>
+                    <h4 class="py-2">실제 산업 현장의 데이터</h4>
+                    <p class="para-light">산업 현장의 원천 데이터부터 전처리&centerdot;분석&centerdot;학습 처리를 거친 가공 데이터까지
+                        전주기별 데이터셋을 API와 파일 형태로 제공합니다.</p>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="card bg-transparent">
+                    <i class="fas fa-star fa-2x"></i>
+                    <h4 class="py-2">유용한 기술</h4>
+                    <p class="para-light">신속하고, 안정적인 산업 맞춤형 서비스 개발과 운영을 위해 체계적으로 데이터를 관리하고, 가상화, 클라우드, AI 기반 기술을
+                        활용합니다.</p>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="card bg-transparent">
+                    <i class="fas fa-chart-bar fa-2x"></i>
+                    <h4 class="py-2">지속적 관리</h4>
+                    <p class="para-light">데이터 이상, 시스템 가용, 공개 API 등의 정상적인 서비스 운영에 필요한 모든 자원과 비용을 지속적으로 모니터링합니다.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- [Services] End -->
+
+<!-- [Contact] Start -->
+<section class="contact d-flex align-items-center py-5" id="contact">
+    <div class="container-fluid text-light">
+        <div class="row">
+            <div class="col-lg-12 d-flex justify-content-center" data-aos="fade-down">
+                <div class="text-center pb-4">
+                    <p>Contact Us</p>
+                </div>
+            </div>
+            <div class="col-lg-12 d-flex justify-content-center" data-aos="fade-down">
+                {# Google Maps 임베드 URL을 입력하세요 (Google Maps에서 '지도 공유' → 'iframe 코드' 복사) #}
+                <iframe
+                    src=""
+                    width="800" height="600" style="border:0;" allowfullscreen="" loading="lazy"
+                    referrerpolicy="no-referrer-when-downgrade">
+                </iframe>
+            </div>
+        </div>
+        <div class="container" data-aos="zoom-in">
+            <div class="row mt-5">
+                <div class="col-lg-4 d-flex justify-content-center align-items-center">
+                    <div class="p-2"><i class="far fa-map fa-3x"></i></div>
+                    <div class="ms-2">
+                        <h6>주소</h6>
+                        {# 주소를 입력하세요 (도로명 주소 1번째 줄) #}
+                        <p>""</p>
+                        {# 주소를 입력하세요 (도로명 주소 2번째 줄, 상세 호수/층 등) #}
+                        <p>""</p>
+                    </div>
+                </div>
+                <div class="col-lg-4 d-flex justify-content-center  align-items-center">
+                    <div class="p-2"><i class="fas fa-mobile-alt fa-3x"></i></div>
+                    <div class="ms-2">
+                        <h6>연락처</h6>
+                        {# 전화번호를 입력하세요 (예: 031-000-0000) #}
+                        <p>""</p>
+                        {# 담당자 이름/직책을 입력하세요 #}
+                        <p>""</p>
+                    </div>
+                </div>
+                <div class="col-lg-4 d-flex justify-content-center  align-items-center">
+                    <div class="p-2"><i class="far fa-envelope fa-3x"></i></div>
+                    <div class="ms-2">
+                        <h6>이메일</h6>
+                        {# 담당자 이메일을 입력하세요 (href와 표시 텍스트 모두) #}
+                        <a href="mailto:">""</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- [Contact] End -->
+{% endblock%}

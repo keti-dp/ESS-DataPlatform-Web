@@ -1,0 +1,88 @@
+{% load static %}
+{% load socialaccount %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Your description">
+    <meta name="author" content="Your name">
+
+    <!-- OG Meta Tags to improve the way the post looks when you share the page on Facebook, Twitter, LinkedIn -->
+    <meta property="og:site_name" content="" /> <!-- website name -->
+    <meta property="og:site" content="" /> <!-- website link -->
+    <meta property="og:title" content="" /> <!-- title shown in the actual shared post -->
+    <meta property="og:description" content="" /> <!-- description shown in the actual shared post -->
+    <meta property="og:image" content="" /> <!-- image link, make sure it's jpg -->
+    <meta property="og:url" content="" /> <!-- where do you want your post to link to -->
+    <meta name="twitter:card" content="summary_large_image"> <!-- to have large image post format in Twitter -->
+
+    <!-- Webpage Title -->
+    {# 로그인 페이지 제목을 입력하세요 #}
+    <title>""</title>
+
+    <!-- Styles -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet">
+    <link href="{% static 'css/fontawesome-all.min.css' %}" rel="stylesheet">
+    <link href="{% static 'css/custom/default.css' %}" rel="stylesheet">
+    <link href="{% static 'css/custom/login.css' %}" rel="stylesheet">
+
+    <!-- Favicon -->
+    <link rel="icon" href="./assets/images/favicon.png">
+</head>
+
+<body>
+    <!-- Home -->
+    <section class="signin d-flex align-items-center" id="header">
+        <div class="container text-light" data-aos="fade-right">
+            <div class="row justify-content-center">
+                <form class="w-50 p-3" id="signinForm" method="post" style="background-color: #212d37;">
+                    {% csrf_token %}
+                    <div class="my-3 text-center">
+                        {# 로그인 화면에 표시할 서비스명을 입력하세요 #}
+                        <h3>""</h3>
+                    </div>
+                    <div class="mb-3 text-center">
+                        <h5>Sign In</h5>
+                    </div>
+                    <div class="mb-3 text-center">
+                        <h5>Connect With</h5>
+                    </div>
+                    <div class="mb-3 text-center">
+                        <button class="btn btn-google w-50 text-start"
+                            data-url="{% provider_login_url 'google' next='/' %}">
+                            <i class="icon-google"></i> Sign in with Google
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div> <!-- end of container -->
+    </section> <!-- end of home -->
+
+
+    <!-- Scripts -->
+    <!-- Bootstrap framework -->
+    <script src="{% static 'js/bootstrap.min.js' %}"></script>
+
+    <script>
+        let signinForm = document.getElementById('signinForm');
+        let signinButtons = signinForm.querySelectorAll('button');
+
+        signinButtons.forEach(signinButton => {
+            signinButton.addEventListener('click', event => {
+                let button = event.target;
+
+                signinForm.setAttribute('action', button.dataset.url);
+            });
+        });
+    </script>
+</body>
+
+</html>

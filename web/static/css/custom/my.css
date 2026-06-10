@@ -1,0 +1,63 @@
+.badge-custom {
+    display: inline-block;
+    padding: .35em .65em;
+    font-size: .75em;
+    font-weight: 700;
+    line-height: 1;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: baseline;
+    border-radius: .25rem;
+    background: var(--gradient);
+    color: white;
+}
+
+.navbar .fa-stack-2x {
+    background: -webkit-gradient(linear,
+            left top,
+            left bottom,
+            from(#00589b),
+            to(#08A898));
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    transition: all 0.2s ease;
+}
+
+.nav-link {
+    color: #aaaaaa;
+}
+
+.nav-pills .nav-link.active {
+    background-color: #1c262f;
+    border: 10px solid;
+    border-image-slice: 1;
+    border-width: 3px;
+    border-image-source: var(--gradient);
+}
+
+.btn-custom-primary {
+    color: #ffffff;
+    border-radius: 0;
+    border-width: 2px;
+    padding: 10px 30px;
+    border-image-slice: 1;
+    background: #1c262f;
+    border-image-source: var(--gradient);
+    box-shadow: 5px 5px 0px 0px #00589b;
+}
+
+.btn-custom-danger {
+    color: #ffffff;
+    border-radius: 0;
+    border-width: 2px;
+    padding: 10px 30px;
+    border-image-slice: 1;
+    background: #1c262f;
+    border-image-source: var(--gradient-warning);
+    box-shadow: 5px 5px 0px 0px #f73161;
+}
+
+.ex-basic-1 {
+    min-height: 700px;
+}

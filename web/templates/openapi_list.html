@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block html_head %}
+<link href="{% static 'css/custom/openapi_list.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<!-- [Header] Start -->
+<header class="ex-header">
+    <div class="container">
+        <div class="row">
+            <div class="col-xl-10 offset-xl-1">
+                <h1>APIs</h1>
+            </div>
+        </div>
+    </div>
+</header>
+<!-- [Header] End -->
+
+<!-- [Content] Start -->
+<div class="ex-basic-1 py-5 d-flex align-items-center">
+    <div class="container">
+        <div class="row">
+            <div class="col-xl-10 offset-xl-1">
+                <div class="row gy-4 py-2" data-aos="zoom-in">
+                    {% for openapi in openapi_list %}
+                    <div class="col-lg-6">
+                        <a href="{% url 'openapi_detail' openapi.slug %}">
+                            <div class="card custom-card">
+                                <i class="fas fa-cog fa-4x"></i>
+                                <h4 class="py-2 text-light">{{ openapi.name }}</h4>
+                                <p class="para-light text-light">{{ openapi.description }}</p>
+                            </div>
+                        </a>
+                    </div>
+                    {% endfor %}
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+<!-- [Content] End -->
+{% endblock %}

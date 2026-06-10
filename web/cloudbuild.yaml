@@ -1,0 +1,101 @@
+steps:
+  # [START cloudbuild-trigger-ci]
+  # Install dependencies And Run tests
+  - name: "python:3.8-slim"
+    id: Test
+    entrypoint: /bin/sh
+    args:
+      - -c
+      - "pip install -r requirements.txt && python manage.py test --keepdb"
+    env:
+      - "DJANGO_SETTINGS_MODULE=${_DJANGO_SETTINGS_MODULE}"
+      - "DJANGO_SECRET_KEY=${_DJANGO_SECRET_KEY}"
+      - "DEFAULT_DB_ENGINE=${_DEFAULT_DB_ENGINE}"
+      - "DEFAULT_DB_HOST=${_DEFAULT_DB_HOST}"
+      - "DEFAULT_DB_PORT=${_DEFAULT_DB_PORT}"
+      - "DEFAULT_DB_NAME=${_DEFAULT_DB_NAME}"
+      - "DEFAULT_DB_USER=${_DEFAULT_DB_USER}"
+      - "DEFAULT_DB_PASSWORD=${_DEFAULT_DB_PASSWORD}"
+      - "TEST_DB_ENGINE=${_TEST_DB_ENGINE}"
+      - "TEST_DB_HOST=${_TEST_DB_HOST}"
+      - "TEST_DB_PORT=${_TEST_DB_PORT}"
+      - "TEST_DB_NAME=${_TEST_DB_NAME}"
+      - "TEST_DB_USER=${_TEST_DB_USER}"
+      - "TEST_DB_PASSWORD=${_TEST_DB_PASSWORD}"
+      - "TEST_USER_NAME=${_TEST_USER_NAME}"
+      - "TEST_USER_PASSWORD=${_TEST_USER_PASSWORD}"
+      - "API_MANAGEMENT_ACCESS_TOKEN=${_API_MANAGEMENT_ACCESS_TOKEN}"
+      - "API_MANAGEMENT_DEVELOPER_PORTAL_URL_PATH=${_API_MANAGEMENT_DEVELOPER_PORTAL_URL_PATH}"
+      - "API_MANAGEMENT_TEST_API_ID=${_API_MANAGEMENT_TEST_API_ID}"
+      - "API_MANAGEMENT_TEST_APPLICATION_ID=${_API_MANAGEMENT_TEST_APPLICATION_ID}"
+      - "API_MANAGEMENT_URL=${_API_MANAGEMENT_URL}"
+
+  # Docker build
+  # 이미지 태그 형식: "<리전>-docker.pkg.dev/${PROJECT_ID}/<Artifact Registry 저장소명>/<이미지명>:${SHORT_SHA}"
+  # 예시 리전: asia-northeast3, 저장소명/이미지명은 본인 프로젝트에 맞게 입력
+  - name: "gcr.io/cloud-builders/docker"
+    id: Build
+    args:
+      [
+        "build",
+        "-t",
+        "",
+        ".",
+      ]
+
+  # Docker push to Google Artifact Registry
+  # 위 Build 단계와 동일한 이미지 태그를 입력
+  - name: "gcr.io/cloud-builders/docker"
+    id: Push
+    args:
+      [
+        "push",
+        "",
+      ]
+  # [END cloudbuild-trigger-ci]
+
+  # [START cloudbuild-trigger-cd]
+  # This step clones the env repository
+  # "" 부분에 환경(매니페스트) 저장소 이름을 입력하세요 (예: open-web-env)
+  - name: "gcr.io/cloud-builders/gcloud"
+    id: Clone env repository
+    entrypoint: /bin/sh
+    args:
+      - "-c"
+      - |
+        gcloud source repos clone "" && \
+        cd "" && \
+        git checkout candidate && \
+        git config user.email $(gcloud auth list --filter=status:ACTIVE --format='value(account)')
+
+  # This step generates the new manifest
+  # "" 부분에 환경(매니페스트) 저장소 이름을 입력하세요
+  - name: "gcr.io/cloud-builders/gcloud"
+    id: Generate manifest
+    entrypoint: /bin/sh
+    args:
+      - "-c"
+      - |
+        sed "s/GOOGLE_CLOUD_PROJECT/${PROJECT_ID}/g" kubernetes.yaml | \
+        sed "s/COMMIT_SHA/${SHORT_SHA}/g" > ""/kubernetes.yaml
+
+  # This step pushes the manifest back to env repository
+  # 아래 <ENV_REPO_NAME>, <IMAGE_TAG>, <APP_REPO_NAME>을 본인 프로젝트 값으로 치환하세요
+  # - <ENV_REPO_NAME>: 환경(매니페스트) 저장소 이름
+  # - <IMAGE_TAG>: 위 Build 단계에서 사용한 이미지 태그
+  # - <APP_REPO_NAME>: 애플리케이션(현재) 저장소 이름
+  - name: "gcr.io/cloud-builders/gcloud"
+    id: Push manifest
+    entrypoint: /bin/sh
+    args:
+      - "-c"
+      - |
+        set -x && \
+        cd  <ENV_REPO_NAME> && \
+        git add kubernetes.yaml && \
+        git commit -m "Deploying image <IMAGE_TAG>
+        Built from commit ${COMMIT_SHA} of repository <APP_REPO_NAME> application
+        Author: $(git log --format='%an <%ae>' -n 1 HEAD)" && \
+        git push origin candidate
+
+  # [END cloudbuild-trigger-cd]
